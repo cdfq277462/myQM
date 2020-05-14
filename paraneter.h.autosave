@@ -1,0 +1,12 @@
+#ifndef PARANETER_H
+#define PARANETER_H
+
+
+class paraneter : public 
+{
+    Q_OBJECT
+public:
+    paraneter();
+};
+
+#endif // PARANETER_H
