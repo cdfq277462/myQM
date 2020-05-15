@@ -31,6 +31,7 @@ HEADERS += \
 FORMS += \
     qualitymonitor.ui
 
+
 #LIBS += -lpigpio -lrt -lpthread
 
 # Default rules for deployment.

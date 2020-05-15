@@ -1,18 +1,21 @@
 #ifndef MYTHREAD_H
 #define MYTHREAD_H
 
-#include <QtCore>
+#include <QObject>
 #include <QThread>
-class MyThread : public QThread
+class MyThread : public QObject
 {
     Q_OBJECT
 public:
     explicit MyThread(QObject *parent = 0);
-    void run();
+    void DoSetup(QThread &SigTrig);
     bool Stop;
 
 signals:
-    void sig(int);
+
+
+public slots:
+    void onDateTrigSig();
 
 };
 

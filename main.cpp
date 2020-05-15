@@ -7,6 +7,7 @@
 #include <QtCore>
 #include <QtGui>
 #include <QDebug>
+#include <QThread>
 
 #include "fft.h"
 #include "mythread.h"
@@ -53,7 +54,12 @@ int main(int argc, char *argv[])
     //mythread isr;
 
     //isr.start();
+    QThread SigTrig;
+    MyThread cObject;
 
+    cObject.DoSetup(SigTrig);
+    cObject.moveToThread(&SigTrig);
+    SigTrig.start();
 
     w.show();
     return a.exec();

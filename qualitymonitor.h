@@ -17,13 +17,12 @@ public:
     qualitymonitor(QWidget *parent = nullptr);
     void setupParameter();
     void toSaveDate(int);
-    MyThread *mThread;
     ~qualitymonitor();
 
 private slots:
     void on_saveButton_clicked();
 
-    void on_Index_clicked();
+    void on_IndexButton_clicked();
 
     void on_LVDT_Button_clicked();
 
@@ -40,9 +39,10 @@ private slots:
     void on_pushButton_2_clicked();
 
 public slots:
-    void onDateSlot(int);
+    void DateTimeSlot();
 
 private:
     Ui::qualitymonitor *ui;
+    QTimer *timer;
 };
 #endif // QUALITYMONITOR_H

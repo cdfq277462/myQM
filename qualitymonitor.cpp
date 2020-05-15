@@ -7,10 +7,14 @@
 #include <QString>
 #include <QFile>
 #include <QMessageBox>
+#include <QTimer>
 #include <QDateTime>
 
 #include "mythread.h"
 #include "parameter.h"
+
+#define  normalParameter    1
+#define  EEParameter        2
 
 
 qualitymonitor::qualitymonitor(QWidget *parent)
@@ -19,11 +23,16 @@ qualitymonitor::qualitymonitor(QWidget *parent)
 {
 
     ui->setupUi(this);
+//set timer
+    timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(DateTimeSlot()));
+    timer->start(1000);
+//setup parameter
     setupParameter();
+//set runframe on toplevel
     ui->runframe->raise();
-    mThread = new MyThread(this);
-    connect(mThread, SIGNAL(sig(int)), this, SLOT(onDateSlot(int)));
-    mThread->start();
+    ui->Dateframe->raise();
+
 
 }
 
@@ -32,18 +41,15 @@ qualitymonitor::~qualitymonitor()
     delete ui;
 }
 
-void qualitymonitor::onDateSlot(int a)
-{
+void qualitymonitor::DateTimeSlot()
+{   //label_14
     QDateTime DateTime = QDateTime::currentDateTime();
-    //qDebug() << "DateTime";
     QString Date = DateTime.toString("yyyy/MM/dd");
     QString Time = DateTime.toString("hh:mm:ss");
-
     ui->Date -> setText(Date);
     ui->Time -> setText(Time);
-    //ui->label_14    ->setText(Time);
-
 }
+
 void qualitymonitor::setupParameter()
 {
     parameter initParameter;
@@ -97,7 +103,7 @@ void qualitymonitor::setupParameter()
 void qualitymonitor::toSaveDate(int indx){
     parameter writeParameter;
     switch (indx) {
-        case 1 :
+        case normalParameter :
         {
             QString saveData;
             QString L_feedoutcenter = writeParameter.TrantoNumberType(ui->L_feedoutcenter->text());
@@ -132,20 +138,20 @@ void qualitymonitor::toSaveDate(int indx){
             writeParameter.Write("D:/pyqttest/myQM/myQM/config", saveData);
             break;
         }
-    case 2 :{
-        QString saveData;
-        QString CR_diameter = writeParameter.TrantoNumberType(ui->CR_diameter->text());
-        QString DetectGear  = writeParameter.TrantoNumberType(ui->DetectGear->text());
-        QString Filter_1    = writeParameter.TrantoNumberType(ui->Filter_1->text());
-        QString Filter_2    = writeParameter.TrantoNumberType(ui->Filter_2->text());
-        QString BiasAdjust  = writeParameter.TrantoNumberType(ui->BiasAdjust->text());
-        saveData = (CR_diameter     + "\n");
-        saveData.append(DetectGear  + "\n");
-        saveData.append(Filter_1    + "\n");
-        saveData.append(Filter_2    + "\n");
-        saveData.append(BiasAdjust        );
-        writeParameter.Write("D:/pyqttest/myQM/myQM/EEconfig", saveData);
-    }
+        case EEParameter :{
+            QString saveData;
+            QString CR_diameter = writeParameter.TrantoNumberType(ui->CR_diameter->text());
+            QString DetectGear  = writeParameter.TrantoNumberType(ui->DetectGear->text());
+            QString Filter_1    = writeParameter.TrantoNumberType(ui->Filter_1->text());
+            QString Filter_2    = writeParameter.TrantoNumberType(ui->Filter_2->text());
+            QString BiasAdjust  = writeParameter.TrantoNumberType(ui->BiasAdjust->text());
+            saveData = (CR_diameter     + "\n");
+            saveData.append(DetectGear  + "\n");
+            saveData.append(Filter_1    + "\n");
+            saveData.append(Filter_2    + "\n");
+            saveData.append(BiasAdjust        );
+            writeParameter.Write("D:/pyqttest/myQM/myQM/EEconfig", saveData);
+        }
 
     }
 
@@ -153,53 +159,69 @@ void qualitymonitor::toSaveDate(int indx){
 }
 void qualitymonitor::on_saveButton_clicked()
 {
-    toSaveDate(1);
+    toSaveDate(normalParameter);
 }
 void qualitymonitor::on_saveEEpraButton_clicked()
 {
-    toSaveDate(2);
+    toSaveDate(EEParameter);
+}
+void qualitymonitor::on_pushButton_2_clicked()
+{   //thread stop
+    //mThread->start();
+    //mThread->Stop = true;
 }
 
-void qualitymonitor::on_Index_clicked()
+
+
+
+
+
+
+
+
+//frame switch
+void qualitymonitor::on_IndexButton_clicked()
 {
-    if(!ui->Dateframe->isTopLevel())
+    if(!ui->Dateframe->isTopLevel()){
         ui->Dateframe->raise();
+        ui->MenuFrame->raise();
+    }
 }
-
 void qualitymonitor::on_LVDT_Button_clicked()
 {
-    if(!ui->Dateframe->isTopLevel())
+    if(!ui->Dateframe->isTopLevel()){
         ui->Dateframe->raise();
+        ui->MenuFrame->raise();
+    }
 }
-
 void qualitymonitor::on_parameter_Button_clicked()
 {
-    if(!ui->Dateframe->isTopLevel())
+    if(!ui->Dateframe->isTopLevel()){
         ui->Dateframe->raise();
+        ui->MenuFrame->raise();
+    }
 }
-
 void qualitymonitor::on_test_Button_clicked()
 {
-    if(!ui->Dateframe->isTopLevel())
+    if(!ui->Dateframe->isTopLevel()){
         ui->Dateframe->raise();
+        ui->MenuFrame->raise();
+    }
 }
-
 void qualitymonitor::on_errorfram_Button_clicked()
 {
-    if(!ui->Dateframe->isTopLevel())
+    if(!ui->Dateframe->isTopLevel()){
         ui->Dateframe->raise();
+        ui->MenuFrame->raise();
+    }
 }
-
 void qualitymonitor::on_EEtestbutt_clicked()
 {  //add type password
     ui->EEprameter->raise();
-    if(!ui->Dateframe->isTopLevel())
+    if(!ui->Dateframe->isTopLevel()){
         ui->Dateframe->raise();
+        ui->MenuFrame->raise();
+    }
+
 }
 
-
-
-void qualitymonitor::on_pushButton_2_clicked()
-{
-    mThread->Stop = true;
-}

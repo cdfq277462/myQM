@@ -310,7 +310,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QPushButton" name="Index">
+   <widget class="QPushButton" name="IndexButton">
     <property name="geometry">
      <rect>
       <x>690</x>
@@ -392,6 +392,19 @@
        <string>LVDT 調整</string>
       </property>
      </widget>
+    </item>
+    <item>
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>40</height>
+       </size>
+      </property>
+     </spacer>
     </item>
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -638,7 +651,7 @@
     </property>
     <property name="font">
      <font>
-      <family>標楷體</family>
+      <family>微軟正黑體</family>
       <pointsize>36</pointsize>
      </font>
     </property>
@@ -1193,7 +1206,7 @@
      <item>
       <widget class="QPushButton" name="pushButton_10">
        <property name="text">
-        <string>PushButton</string>
+        <string>Setting</string>
        </property>
       </widget>
      </item>
@@ -1804,10 +1817,10 @@
   <widget class="QFrame" name="Dateframe">
    <property name="geometry">
     <rect>
-     <x>556</x>
+     <x>550</x>
      <y>0</y>
-     <width>241</width>
-     <height>92</height>
+     <width>138</width>
+     <height>78</height>
     </rect>
    </property>
    <property name="font">
@@ -1822,70 +1835,36 @@
    <property name="frameShadow">
     <enum>QFrame::Raised</enum>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_4">
+   <layout class="QVBoxLayout" name="verticalLayout_4">
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout_4">
-      <item>
-       <widget class="QLabel" name="Date">
-        <property name="font">
-         <font>
-          <pointsize>14</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>yyyy/MM/dd</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="Time">
-        <property name="font">
-         <font>
-          <pointsize>14</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>hh:mm:ss</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <widget class="QLabel" name="Date">
+      <property name="font">
+       <font>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>yyyy/MM/dd</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
     </item>
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout_5">
-      <item>
-       <widget class="QPushButton" name="Index_2">
-        <property name="font">
-         <font>
-          <family>Arial</family>
-          <pointsize>12</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Index</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="pushButton">
-        <property name="font">
-         <font>
-          <family>Arial</family>
-          <pointsize>12</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>HOME</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <widget class="QLabel" name="Time">
+      <property name="font">
+       <font>
+        <pointsize>14</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>hh:mm:ss</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -1902,20 +1881,118 @@
     <string>PushButton</string>
    </property>
   </widget>
-  <zorder>errorhistory</zorder>
+  <widget class="QFrame" name="MenuFrame">
+   <property name="geometry">
+    <rect>
+     <x>680</x>
+     <y>0</y>
+     <width>110</width>
+     <height>151</height>
+    </rect>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_5">
+    <item>
+     <widget class="QPushButton" name="Index_2_Button">
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>20</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Index</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pushButton">
+      <property name="font">
+       <font>
+        <family>Arial</family>
+        <pointsize>16</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>HOME</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QFrame" name="SettingFrame">
+   <property name="geometry">
+    <rect>
+     <x>860</x>
+     <y>340</y>
+     <width>281</width>
+     <height>161</height>
+    </rect>
+   </property>
+   <property name="autoFillBackground">
+    <bool>true</bool>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
+   </property>
+  </widget>
+  <widget class="QTableWidget" name="tableWidget">
+   <property name="geometry">
+    <rect>
+     <x>820</x>
+     <y>20</y>
+     <width>256</width>
+     <height>192</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QDateEdit" name="dateEdit">
+   <property name="geometry">
+    <rect>
+     <x>1030</x>
+     <y>240</y>
+     <width>110</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QDateEdit" name="dateEdit_2">
+   <property name="geometry">
+    <rect>
+     <x>1030</x>
+     <y>280</y>
+     <width>110</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
   <zorder>test</zorder>
-  <zorder>index</zorder>
-  <zorder>runframe</zorder>
-  <zorder>lvdt</zorder>
   <zorder>EEprameter</zorder>
   <zorder>prameter</zorder>
-  <zorder>Dateframe</zorder>
   <zorder>pushButton_2</zorder>
+  <zorder>runframe</zorder>
+  <zorder>MenuFrame</zorder>
+  <zorder>Dateframe</zorder>
+  <zorder>index</zorder>
+  <zorder>SettingFrame</zorder>
+  <zorder>lvdt</zorder>
+  <zorder>errorhistory</zorder>
+  <zorder>tableWidget</zorder>
+  <zorder>dateEdit</zorder>
+  <zorder>dateEdit_2</zorder>
  </widget>
  <resources/>
  <connections>
   <connection>
-   <sender>Index</sender>
+   <sender>IndexButton</sender>
    <signal>clicked()</signal>
    <receiver>index</receiver>
    <slot>raise()</slot>
@@ -2001,8 +2078,8 @@
    <slot>raise()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>929</x>
-     <y>62</y>
+     <x>792</x>
+     <y>79</y>
     </hint>
     <hint type="destinationlabel">
      <x>399</x>
@@ -2011,18 +2088,34 @@
    </hints>
   </connection>
   <connection>
-   <sender>Index_2</sender>
+   <sender>Index_2_Button</sender>
    <signal>clicked()</signal>
-   <receiver>Index</receiver>
+   <receiver>IndexButton</receiver>
    <slot>click()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>905</x>
-     <y>33</y>
+     <x>792</x>
+     <y>41</y>
     </hint>
     <hint type="destinationlabel">
      <x>779</x>
      <y>48</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>Dateframe</receiver>
+   <slot>raise()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>719</x>
+     <y>90</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>639</x>
+     <y>69</y>
     </hint>
    </hints>
   </connection>
