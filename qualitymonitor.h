@@ -4,6 +4,8 @@
 #include "mythread.h"
 #include <QWidget>
 
+#include <QtCharts>
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class qualitymonitor; }
@@ -38,11 +40,24 @@ private slots:
 
     void on_pushButton_2_clicked();
 
+    void SetErrorTable();
+
+    void on_pushButton_Search_clicked();
+
+    void on_pushButton_ErrorSig_clicked();
+
+    void on_pushButton_Settiing_clicked();
+
+    void Setup_GraphicsView();
+
+    //QLineSeries DataInput(int);
+
 public slots:
     void DateTimeSlot();
 
 private:
     Ui::qualitymonitor *ui;
     QTimer *timer;
+    QGraphicsScene *scene;
 };
 #endif // QUALITYMONITOR_H

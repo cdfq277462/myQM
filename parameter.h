@@ -32,7 +32,7 @@ public:
     int     Filter_2();
     int     BiasAdjust();
 
-    float   Read(QString Filename, int);
+    QString   Read(QString Filename, int);
     void    Write(QString Filename, QString);
 };
 

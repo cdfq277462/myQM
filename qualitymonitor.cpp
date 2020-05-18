@@ -10,12 +10,14 @@
 #include <QTimer>
 #include <QDateTime>
 
+#include <QtCharts>
+using namespace QtCharts;
+
 #include "mythread.h"
 #include "parameter.h"
 
 #define  normalParameter    1
 #define  EEParameter        2
-
 
 qualitymonitor::qualitymonitor(QWidget *parent)
     : QWidget(parent)
@@ -29,9 +31,11 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     timer->start(1000);
 //setup parameter
     setupParameter();
+    SetErrorTable();
 //set runframe on toplevel
     ui->runframe->raise();
     ui->Dateframe->raise();
+
 
 
 }
@@ -40,16 +44,18 @@ qualitymonitor::~qualitymonitor()
 {
     delete ui;
 }
-
 void qualitymonitor::DateTimeSlot()
 {   //label_14
     QDateTime DateTime = QDateTime::currentDateTime();
+    //int toUTC = QString(ui->lineEdit_UTC->text()).toInt();
+
     QString Date = DateTime.toString("yyyy/MM/dd");
     QString Time = DateTime.toString("hh:mm:ss");
     ui->Date -> setText(Date);
     ui->Time -> setText(Time);
-}
 
+    Setup_GraphicsView();
+}
 void qualitymonitor::setupParameter()
 {
     parameter initParameter;
@@ -97,9 +103,177 @@ void qualitymonitor::setupParameter()
     ui->Filter_1->setText(Filter_1);
     ui->Filter_2->setText(Filter_2);
     ui->BiasAdjust->setText(BiasAdjust);
+}
+/*
+QLineSeries qualitymonitor::DataInput(int i)
+{
+    QLineSeries *series = new QLineSeries();
+    series->append(0, 6);
+    series->append(2, 4);
+    series->append(3, 8);
+    series->append(7, 4);
+    series->append(10, 5);
+    series->append(1000, 5);
+    //*series << QPointF(11, 1) << QPointF(13, 3) << QPointF(17, 6) << QPointF(18, 3) << QPointF(20, 2);
+}*/
+void qualitymonitor::Setup_GraphicsView()
+{
+    //現在是綁時間
+    /***************************要修改**************************************************/
+    parameter fake_input;
+    srand(time(NULL));
+    QLineSeries *series = new QLineSeries();
 
+    QString fake_data_read = fake_input.Read("D:/pyqttest/myQM/myQM/fake_input", 0);
+    QString fake_data;
+    fake_data.append(fake_data_read).append(QString::number((rand()%30) + 1600)+"\n");
+    fake_input.Write("D:/pyqttest/myQM/myQM/fake_input", fake_data);
+    int datalenght = fake_data.count("\n");
+
+    qDebug()<< fake_data << datalenght;
+
+    for(int i = 0; i < datalenght; i++)
+        series->append(i, fake_data.section("\n",i,i).toInt());
+    //series->append(i,1);
+    //*series = DataInput();
+    /***********************************************************************************/
+
+    QChart *chart_L = new QChart();
+    chart_L->legend()->hide();
+    chart_L->addSeries(series);
+    chart_L->createDefaultAxes();
+    //chart->setTitle("Simple line chart example");
+
+    chart_L->setGeometry(0,10,380,280);
+    //QSize graphicsSize = ui->graphicsView->size();
+    //chart->resize(graphicsSize);
+
+    QChartView *chartView_L = new QChartView(chart_L);
+    chartView_L->setRenderHint(QPainter::Antialiasing);
+
+    scene = new QGraphicsScene(this);
+    //*scene.addItem(chart);
+    //QGraphicsView view(&scene);
+    scene->addItem(chart_L);
+    ui->graphicsView_L->setScene(scene);
 
 }
+
+void qualitymonitor::SetErrorTable()
+{
+    //ui->lineEdit->setPlaceholderText("search");
+    //date selected range
+    parameter SetErrorTable;
+    ui->dateEdit_StartDate  ->setDate(QDate::currentDate());
+    ui->dateEdit_EndDate    ->setDate(QDate::currentDate());
+    ui->dateEdit_StartDate  ->setCalendarPopup(true);
+    ui->dateEdit_EndDate    ->setCalendarPopup(true);
+    ui->dateEdit_StartDate  ->setMaximumDate(QDate::currentDate());
+    ui->dateEdit_StartDate  ->setMinimumDate(QDate::currentDate().addDays(-14));
+    ui->dateEdit_EndDate    ->setMaximumDate(QDate::currentDate());
+    ui->dateEdit_EndDate    ->setMinimumDate(QDate::currentDate().addDays(-14));
+
+    //cal how many data row number on last record
+    QString ErrorHistory =  SetErrorTable.Read("D:/pyqttest/myQM/myQM/errorhistory", 0);
+    int rowNumber = ErrorHistory.count("\n");
+
+    //creat table
+    ui->tableWidget->setColumnCount(3);
+    ui->tableWidget->setRowCount(ErrorHistory.count("\n"));
+    //load data
+    for (int i = 0; i < rowNumber; i++) {
+        QTableWidgetItem *item = new QTableWidgetItem();
+        item = new QTableWidgetItem(ErrorHistory.section(";", i*3+1, i*3+1));
+        item->setFlags(item->flags() ^ Qt::ItemIsEditable);                     //set item cannot edit
+        ui->tableWidget->setItem(i, 0, item);
+        item = new QTableWidgetItem(ErrorHistory.section(";", i*3+2, i*3+2));
+        item->setFlags(item->flags() ^ Qt::ItemIsEditable);                     //set item cannot edit
+        ui->tableWidget->setItem(i, 1, item);
+        item = new QTableWidgetItem(ErrorHistory.section(";", i*3+3, i*3+3));
+        item->setFlags(item->flags() ^ Qt::ItemIsEditable);                     //set item cannot edit
+        ui->tableWidget->setItem(i, 2, item);
+    }
+    ui->tableWidget->setAlternatingRowColors(true);
+    ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+    QStringList labels;
+    labels<<"Date"<<"Time"<<"Reason";
+    ui->tableWidget->setHorizontalHeaderLabels(labels);
+    ui->tableWidget->verticalHeader()->setVisible(false);
+}
+void qualitymonitor::on_pushButton_2_clicked()
+{   //thread stop
+    //mThread->start();
+    //mThread->Stop = true;
+
+}
+void qualitymonitor::on_pushButton_ErrorSig_clicked()
+{
+    parameter ErrorRecord;
+    //error happened do, and be slot
+    //name *item as add QtableWidget item
+
+    //insertRow in Row 0
+    ui->tableWidget->insertRow(0);
+    //add Date, Time and Reason
+    //Reason need modify as sig
+    QTableWidgetItem *item = new QTableWidgetItem();
+    item = new QTableWidgetItem(QString(QDate().currentDate().toString("yyyy/MM/dd")));
+    item->setFlags(item->flags() ^ Qt::ItemIsEditable);                     //set item cannot edit
+    ui->tableWidget->setItem(0, 0, item);
+    item = new QTableWidgetItem(QString(QTime().currentTime().toString()));
+    item->setFlags(item->flags() ^ Qt::ItemIsEditable);                     //set item cannot edit
+    ui->tableWidget->setItem(0, 1, item);
+    item = new QTableWidgetItem(QString("Hello World!").append(""));
+    item->setFlags(item->flags() ^ Qt::ItemIsEditable);                     //set item cannot edit
+    ui->tableWidget->setItem(0, 2, item);
+
+    QString beWrite;
+    beWrite = QString(";%1;%2;%3").arg(QString(QDate().currentDate().toString("yyyy/MM/dd")))   \
+              .arg(QString(QTime().currentTime().toString()))                                   \
+              .arg(QString("Hello World!\n"))                                                   \
+              .append(ErrorRecord.Read("D:/pyqttest/myQM/myQM/errorhistory", 0));
+
+    qDebug() << beWrite;
+
+    /*
+    QString result;
+    foreach(const QString &str, beWrite){
+        result.append(str);
+    }/
+    qDebug() << result;*/
+    ErrorRecord.Write("D:/pyqttest/myQM/myQM/errorhistory" , beWrite);
+
+}
+void qualitymonitor::on_pushButton_Search_clicked()
+{
+    //error history search button
+    QDate StartDate = ui->dateEdit_StartDate->date();
+    QDate EndDate   = ui->dateEdit_EndDate  ->date();
+    //qDebug() << StartDate <<"\n"<< EndDate <<"\n";
+    int RowCount = ui->tableWidget->rowCount();
+
+    //search
+    if(StartDate.operator>(EndDate))
+        qDebug () << "Search Logic ERROR!";
+    else
+        for(int row = 0; row < RowCount; row++)
+        {
+            QString rowData;
+            rowData = ui->tableWidget->item(row, 0)->text();
+            //search depend on Date
+            QDate HappendedDate = QDate::fromString(rowData, Qt::ISODate);
+        //show & hide row
+            if(HappendedDate.operator<=(EndDate) && HappendedDate.operator>=(StartDate))
+                ui->tableWidget->showRow(row);
+
+            else
+                ui->tableWidget->hideRow(row);
+        }
+}
+
+
 void qualitymonitor::toSaveDate(int indx){
     parameter writeParameter;
     switch (indx) {
@@ -152,10 +326,7 @@ void qualitymonitor::toSaveDate(int indx){
             saveData.append(BiasAdjust        );
             writeParameter.Write("D:/pyqttest/myQM/myQM/EEconfig", saveData);
         }
-
     }
-
-
 }
 void qualitymonitor::on_saveButton_clicked()
 {
@@ -165,19 +336,6 @@ void qualitymonitor::on_saveEEpraButton_clicked()
 {
     toSaveDate(EEParameter);
 }
-void qualitymonitor::on_pushButton_2_clicked()
-{   //thread stop
-    //mThread->start();
-    //mThread->Stop = true;
-}
-
-
-
-
-
-
-
-
 
 //frame switch
 void qualitymonitor::on_IndexButton_clicked()
@@ -224,4 +382,11 @@ void qualitymonitor::on_EEtestbutt_clicked()
     }
 
 }
-
+void qualitymonitor::on_pushButton_Settiing_clicked()
+{
+    ui->SettingFrame->raise();
+    if(!ui->Dateframe->isTopLevel()){
+        ui->Dateframe->raise();
+        ui->MenuFrame->raise();
+    }
+}

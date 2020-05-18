@@ -1,6 +1,8 @@
 #include "mythread.h"
 #include <QtCore>
 #include <QThread>
+
+#include "fft.h"
 MyThread::MyThread(QObject *parent) :
         QObject(parent)
 {
@@ -17,7 +19,7 @@ void MyThread::onDateTrigSig()
 {
    for(int i = 1; i < 1000; i++)
     {
-        qDebug() << i;
+        //qDebug() << i;
 
 /*
         QMutex mutex;
@@ -28,4 +30,18 @@ void MyThread::onDateTrigSig()
        //msleep(500);
     }
 
+}
+
+MyADC_ISR::MyADC_ISR(QObject *parent) :
+        QThread(parent)
+{
+
+}
+
+void MyADC_ISR::run()
+{
+    while(1)
+    {
+           //SPG();
+    }
 }
