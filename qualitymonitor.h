@@ -21,6 +21,7 @@ public:
     void toSaveDate(int);
     ~qualitymonitor();
 
+
 private slots:
     void on_saveButton_clicked();
 
@@ -49,9 +50,6 @@ private slots:
     void on_pushButton_Settiing_clicked();
 
     void Setup_GraphicsView();
-
-    //QLineSeries DataInput(int);
-
 public slots:
     void DateTimeSlot();
 

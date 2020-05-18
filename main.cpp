@@ -74,12 +74,6 @@ int main(int argc, char *argv[])
     start_t = clock();
 **************************************************/
     //isr.start();
-    QThread SigTrig;
-    MyThread cObject;
-
-    cObject.DoSetup(SigTrig);
-    cObject.moveToThread(&SigTrig);
-    SigTrig.start();
 
     w.show();
     return a.exec();

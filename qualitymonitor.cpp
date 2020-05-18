@@ -35,9 +35,7 @@ qualitymonitor::qualitymonitor(QWidget *parent)
 //set runframe on toplevel
     ui->runframe->raise();
     ui->Dateframe->raise();
-
-
-
+    //qDebug() << QThread::currentThread();
 }
 
 qualitymonitor::~qualitymonitor()
@@ -53,7 +51,7 @@ void qualitymonitor::DateTimeSlot()
     QString Time = DateTime.toString("hh:mm:ss");
     ui->Date -> setText(Date);
     ui->Time -> setText(Time);
-
+    //qDebug() << QThread::currentThread();
     Setup_GraphicsView();
 }
 void qualitymonitor::setupParameter()
@@ -130,7 +128,7 @@ void qualitymonitor::Setup_GraphicsView()
     fake_input.Write("D:/pyqttest/myQM/myQM/fake_input", fake_data);
     int datalenght = fake_data.count("\n");
 
-    qDebug()<< fake_data << datalenght;
+    //qDebug()<< fake_data << datalenght;
 
     for(int i = 0; i < datalenght; i++)
         series->append(i, fake_data.section("\n",i,i).toInt());
@@ -139,23 +137,36 @@ void qualitymonitor::Setup_GraphicsView()
     /***********************************************************************************/
 
     QChart *chart_L = new QChart();
+    QChart *chart_R = new QChart();
     chart_L->legend()->hide();
+    chart_R->legend()->hide();
+
     chart_L->addSeries(series);
+    //chart_R->addSeries(series);
+
     chart_L->createDefaultAxes();
+    //chart_R->createDefaultAxes();
+
     //chart->setTitle("Simple line chart example");
 
     chart_L->setGeometry(0,10,380,280);
-    //QSize graphicsSize = ui->graphicsView->size();
-    //chart->resize(graphicsSize);
+    //chart_R->setGeometry(0,10,380,280);
 
     QChartView *chartView_L = new QChartView(chart_L);
+    //QChartView *chartView_R = new QChartView(chart_R);
+
     chartView_L->setRenderHint(QPainter::Antialiasing);
+    //chartView_R->setRenderHint(QPainter::Antialiasing);
+
 
     scene = new QGraphicsScene(this);
+
     //*scene.addItem(chart);
     //QGraphicsView view(&scene);
     scene->addItem(chart_L);
     ui->graphicsView_L->setScene(scene);
+    //scene->addItem(chart_R);
+    //ui->graphicsView_R->setScene(scene);
 
 }
 
