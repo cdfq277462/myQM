@@ -50,6 +50,13 @@ private slots:
     void on_pushButton_Settiing_clicked();
 
     void Setup_GraphicsView();
+
+    void on_pushButton_3_clicked();
+
+    void Setup_History();
+
+    void on_pushButton_5_clicked();
+
 public slots:
     void DateTimeSlot();
 

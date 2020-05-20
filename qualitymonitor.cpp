@@ -36,6 +36,8 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     ui->runframe->raise();
     ui->Dateframe->raise();
     //qDebug() << QThread::currentThread();
+    Setup_History();
+
 }
 
 qualitymonitor::~qualitymonitor()
@@ -91,29 +93,18 @@ void qualitymonitor::setupParameter()
     ui->R_limit_CVper   ->setText(R_limit_CVper);
 
     QString CR_diameter = QString::number(initParameter.CR_diameter());
-    QString DetectGear = QString::number(initParameter.DetectGear());
-    QString Filter_1 = QString::number(initParameter.Filter_1());
-    QString Filter_2 = QString::number(initParameter.Filter_2());
-    QString BiasAdjust = QString::number(initParameter.BiasAdjust());
+    QString DetectGear  = QString::number(initParameter.DetectGear());
+    QString Filter_1    = QString::number(initParameter.Filter_1());
+    QString Filter_2    = QString::number(initParameter.Filter_2());
+    QString BiasAdjust  = QString::number(initParameter.BiasAdjust());
 
-    ui->CR_diameter->setText(CR_diameter);
-    ui->DetectGear->setText(DetectGear);
-    ui->Filter_1->setText(Filter_1);
-    ui->Filter_2->setText(Filter_2);
-    ui->BiasAdjust->setText(BiasAdjust);
+    ui->CR_diameter ->setText(CR_diameter);
+    ui->DetectGear  ->setText(DetectGear);
+    ui->Filter_1    ->setText(Filter_1);
+    ui->Filter_2    ->setText(Filter_2);
+    ui->BiasAdjust  ->setText(BiasAdjust);
 }
-/*
-QLineSeries qualitymonitor::DataInput(int i)
-{
-    QLineSeries *series = new QLineSeries();
-    series->append(0, 6);
-    series->append(2, 4);
-    series->append(3, 8);
-    series->append(7, 4);
-    series->append(10, 5);
-    series->append(1000, 5);
-    //*series << QPointF(11, 1) << QPointF(13, 3) << QPointF(17, 6) << QPointF(18, 3) << QPointF(20, 2);
-}*/
+
 void qualitymonitor::Setup_GraphicsView()
 {
     //現在是綁時間
@@ -125,13 +116,19 @@ void qualitymonitor::Setup_GraphicsView()
     QString fake_data_read = fake_input.Read("D:/pyqttest/myQM/myQM/fake_input", 0);
     QString fake_data;
     fake_data.append(fake_data_read).append(QString::number((rand()%30) + 1600)+"\n");
-    fake_input.Write("D:/pyqttest/myQM/myQM/fake_input", fake_data);
     int datalenght = fake_data.count("\n");
+    fake_input.Write("D:/pyqttest/myQM/myQM/fake_input", fake_data);
+
+    if(datalenght < 500)
+        for(int i = 0; i < datalenght - 1; i++)
+            series->append(i, fake_data.section("\n",i,i).toInt());
 
     //qDebug()<< fake_data << datalenght;
+    //if(datalenght <= )
+    else
+        for(int i = datalenght - 500; i < datalenght - 1; i++)
+            series->append(i, fake_data.section("\n",i,i).toInt());
 
-    for(int i = 0; i < datalenght; i++)
-        series->append(i, fake_data.section("\n",i,i).toInt());
     //series->append(i,1);
     //*series = DataInput();
     /***********************************************************************************/
@@ -147,14 +144,17 @@ void qualitymonitor::Setup_GraphicsView()
     chart_L->createDefaultAxes();
     //chart_R->createDefaultAxes();
 
+
+    //chart_L->axisX()->setRange(0,1000);
+
     //chart->setTitle("Simple line chart example");
 
-    chart_L->setGeometry(0,10,380,280);
+    chart_L->setGeometry(0,10,370,300);
     //chart_R->setGeometry(0,10,380,280);
 
     QChartView *chartView_L = new QChartView(chart_L);
     //QChartView *chartView_R = new QChartView(chart_R);
-
+    //chartView_L->resize(ui->graphicsView_L->size());
     chartView_L->setRenderHint(QPainter::Antialiasing);
     //chartView_R->setRenderHint(QPainter::Antialiasing);
 
@@ -166,7 +166,23 @@ void qualitymonitor::Setup_GraphicsView()
     scene->addItem(chart_L);
     ui->graphicsView_L->setScene(scene);
     //scene->addItem(chart_R);
-    //ui->graphicsView_R->setScene(scene);
+    ui->graphicsView_R->setScene(scene);
+
+}
+
+void qualitymonitor::Setup_History()
+{
+    //set DateTime range
+    ui->dateTimeEdit    ->setDateTime(QDateTime::currentDateTime());
+    ui->dateTimeEdit_2  ->setDateTime(QDateTime::currentDateTime());
+    ui->dateTimeEdit    ->setCalendarPopup(true);
+    ui->dateTimeEdit_2  ->setCalendarPopup(true);
+    ui->dateTimeEdit    ->setMaximumDate(QDate::currentDate());
+    ui->dateTimeEdit    ->setMinimumDate(QDate::currentDate().addDays(-14));
+    ui->dateTimeEdit_2  ->setMaximumDate(QDate::currentDate());
+    ui->dateTimeEdit_2  ->setMinimumDate(QDate::currentDate().addDays(-14));
+
+
 
 }
 
@@ -284,7 +300,6 @@ void qualitymonitor::on_pushButton_Search_clicked()
         }
 }
 
-
 void qualitymonitor::toSaveDate(int indx){
     parameter writeParameter;
     switch (indx) {
@@ -400,4 +415,21 @@ void qualitymonitor::on_pushButton_Settiing_clicked()
         ui->Dateframe->raise();
         ui->MenuFrame->raise();
     }
+}
+
+void qualitymonitor::on_pushButton_3_clicked()
+{
+    ui->frame_search->raise();
+    if(!ui->Dateframe->isTopLevel()){
+        ui->Dateframe->raise();
+        ui->MenuFrame->raise();
+    }
+}
+
+void qualitymonitor::on_pushButton_5_clicked()
+{
+    if(ui->pushButton_5->text().operator==("Number"))
+        ui->pushButton_5->setText("Graphics");
+    else
+        ui->pushButton_5->setText("Number");
 }
