@@ -1799,6 +1799,9 @@
      <pointsize>12</pointsize>
     </font>
    </property>
+   <property name="autoFillBackground">
+    <bool>true</bool>
+   </property>
    <property name="frameShape">
     <enum>QFrame::StyledPanel</enum>
    </property>
@@ -1865,6 +1868,9 @@
      <family>Arial</family>
      <pointsize>20</pointsize>
     </font>
+   </property>
+   <property name="autoFillBackground">
+    <bool>true</bool>
    </property>
    <property name="frameShape">
     <enum>QFrame::StyledPanel</enum>
