@@ -7,6 +7,7 @@
 #include <QString>
 #include <QFile>
 #include <QTextStream>
+#include <QDir>
 
 #define  feedoutcenter  1
 #define  outputoffset   2
@@ -24,8 +25,9 @@
 #define  BiasAdjust_EE      5
 
 
-QString mfilename  = "D:/pyqttest/myQM/myQM/config";
-QString EEfilename = "D:/pyqttest/myQM/myQM/EEconfig";
+QString mfilename  = QDir().currentPath() + "/config";
+QString EEfilename = QDir().currentPath() + "/EEconfig";
+
 parameter::parameter()
 {
     //qDebug() << "hello";

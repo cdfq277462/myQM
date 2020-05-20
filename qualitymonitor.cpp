@@ -113,11 +113,11 @@ void qualitymonitor::Setup_GraphicsView()
     srand(time(NULL));
     QLineSeries *series = new QLineSeries();
 
-    QString fake_data_read = fake_input.Read("D:/pyqttest/myQM/myQM/fake_input", 0);
+    QString fake_data_read = fake_input.Read(QDir().currentPath() + "/fake_input", 0);
     QString fake_data;
     fake_data.append(fake_data_read).append(QString::number((rand()%30) + 1600)+"\n");
     int datalenght = fake_data.count("\n");
-    fake_input.Write("D:/pyqttest/myQM/myQM/fake_input", fake_data);
+    fake_input.Write(QDir().currentPath() + "/fake_input", fake_data);
 
     if(datalenght < 500)
         for(int i = 0; i < datalenght - 1; i++)
@@ -201,7 +201,7 @@ void qualitymonitor::SetErrorTable()
     ui->dateEdit_EndDate    ->setMinimumDate(QDate::currentDate().addDays(-14));
 
     //cal how many data row number on last record
-    QString ErrorHistory =  SetErrorTable.Read("D:/pyqttest/myQM/myQM/errorhistory", 0);
+    QString ErrorHistory =  SetErrorTable.Read(QDir().currentPath() + "/errorhistory", 0);
     int rowNumber = ErrorHistory.count("\n");
 
     //creat table
@@ -260,7 +260,7 @@ void qualitymonitor::on_pushButton_ErrorSig_clicked()
     beWrite = QString(";%1;%2;%3").arg(QString(QDate().currentDate().toString("yyyy/MM/dd")))   \
               .arg(QString(QTime().currentTime().toString()))                                   \
               .arg(QString("Hello World!\n"))                                                   \
-              .append(ErrorRecord.Read("D:/pyqttest/myQM/myQM/errorhistory", 0));
+              .append(ErrorRecord.Read(QDir().currentPath() + "/errorhistory", 0));
 
     qDebug() << beWrite;
 
@@ -270,7 +270,7 @@ void qualitymonitor::on_pushButton_ErrorSig_clicked()
         result.append(str);
     }/
     qDebug() << result;*/
-    ErrorRecord.Write("D:/pyqttest/myQM/myQM/errorhistory" , beWrite);
+    ErrorRecord.Write(QDir().currentPath() + "/errorhistory" , beWrite);
 
 }
 void qualitymonitor::on_pushButton_Search_clicked()
@@ -335,7 +335,7 @@ void qualitymonitor::toSaveDate(int indx){
             saveData.append(R_limit_CVper         );
 
             //qDebug() << saveData;
-            writeParameter.Write("D:/pyqttest/myQM/myQM/config", saveData);
+            writeParameter.Write(QDir().currentPath() + "/config", saveData);
             break;
         }
         case EEParameter :{
@@ -350,7 +350,7 @@ void qualitymonitor::toSaveDate(int indx){
             saveData.append(Filter_1    + "\n");
             saveData.append(Filter_2    + "\n");
             saveData.append(BiasAdjust        );
-            writeParameter.Write("D:/pyqttest/myQM/myQM/EEconfig", saveData);
+            writeParameter.Write(QDir().currentPath() + "/EEconfig", saveData);
         }
     }
 }
