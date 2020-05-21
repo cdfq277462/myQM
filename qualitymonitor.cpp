@@ -115,19 +115,19 @@ void qualitymonitor::Setup_GraphicsView()
 
     QString fake_data_read = fake_input.Read(QDir().currentPath() + "/fake_input", 0);
     QString fake_data;
-    fake_data.append(fake_data_read).append(QString::number((rand()%30) + 1600)+"\n");
+    fake_data.append(fake_data_read).append(QString::number((rand()%30) + 1600) + "\n");
     int datalenght = fake_data.count("\n");
     fake_input.Write(QDir().currentPath() + "/fake_input", fake_data);
 
     if(datalenght < 500)
         for(int i = 0; i < datalenght - 1; i++)
-            series->append(i, fake_data.section("\n",i,i).toInt());
+            series->append(i, fake_data.section("\n",i ,i ).toInt());
 
     //qDebug()<< fake_data << datalenght;
     //if(datalenght <= )
     else
         for(int i = datalenght - 500; i < datalenght - 1; i++)
-            series->append(i, fake_data.section("\n",i,i).toInt());
+            series->append(i, fake_data.section("\n",i ,i ).toInt());
 
     //series->append(i,1);
     //*series = DataInput();
@@ -149,7 +149,7 @@ void qualitymonitor::Setup_GraphicsView()
 
     //chart->setTitle("Simple line chart example");
 
-    chart_L->setGeometry(0,10,370,300);
+    chart_L->setGeometry(0, 10, 370, 300 );
     //chart_R->setGeometry(0,10,380,280);
 
     QChartView *chartView_L = new QChartView(chart_L);

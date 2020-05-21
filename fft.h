@@ -19,6 +19,7 @@ void write(float* , float* );
 
 void SPG(int *);
 
+
 #ifdef __cplusplus
 }
 #endif

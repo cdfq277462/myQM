@@ -19,12 +19,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     fft.c \
     main.cpp \
+    mathtools.cpp \
     mythread.cpp \
     parameter.cpp \
     qualitymonitor.cpp
 
 HEADERS += \
     fft.h \
+    mathtools.h \
     mythread.h \
     parameter.h \
     qualitymonitor.h
