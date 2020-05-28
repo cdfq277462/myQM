@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1287</width>
+    <width>800</width>
     <height>480</height>
    </rect>
   </property>
@@ -169,6 +169,19 @@
     </property>
     <property name="text">
      <string>Number</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_8">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>70</y>
+      <width>89</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>PushButton</string>
     </property>
    </widget>
   </widget>
@@ -1803,10 +1816,10 @@
     <bool>false</bool>
    </property>
    <property name="frameShape">
-    <enum>QFrame::StyledPanel</enum>
+    <enum>QFrame::NoFrame</enum>
    </property>
    <property name="frameShadow">
-    <enum>QFrame::Raised</enum>
+    <enum>QFrame::Plain</enum>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_4">
     <item>
@@ -1873,10 +1886,10 @@
     <bool>false</bool>
    </property>
    <property name="frameShape">
-    <enum>QFrame::StyledPanel</enum>
+    <enum>QFrame::NoFrame</enum>
    </property>
    <property name="frameShadow">
-    <enum>QFrame::Raised</enum>
+    <enum>QFrame::Plain</enum>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_9">
     <item>
@@ -2140,7 +2153,6 @@
     </layout>
    </widget>
   </widget>
-  <zorder>EEprameter</zorder>
   <zorder>prameter</zorder>
   <zorder>pushButton_2</zorder>
   <zorder>lvdt</zorder>
@@ -2150,9 +2162,10 @@
   <zorder>frame_search</zorder>
   <zorder>index</zorder>
   <zorder>test</zorder>
-  <zorder>runframe</zorder>
   <zorder>Dateframe</zorder>
   <zorder>MenuFrame</zorder>
+  <zorder>EEprameter</zorder>
+  <zorder>runframe</zorder>
  </widget>
  <resources/>
  <connections>
@@ -2243,8 +2256,8 @@
    <slot>raise()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>786</x>
-     <y>109</y>
+     <x>787</x>
+     <y>104</y>
     </hint>
     <hint type="destinationlabel">
      <x>399</x>
@@ -2281,6 +2294,22 @@
     <hint type="destinationlabel">
      <x>639</x>
      <y>69</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_8</sender>
+   <signal>clicked()</signal>
+   <receiver>qualitymonitor</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>454</x>
+     <y>82</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>239</y>
     </hint>
    </hints>
   </connection>

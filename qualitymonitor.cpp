@@ -25,6 +25,7 @@ qualitymonitor::qualitymonitor(QWidget *parent)
 {
 
     ui->setupUi(this);
+    //QWidget::showFullScreen();
 //set timer
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(DateTimeSlot()));
@@ -37,7 +38,6 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     ui->Dateframe->raise();
     //qDebug() << QThread::currentThread();
     Setup_History();
-
 }
 
 qualitymonitor::~qualitymonitor()
@@ -119,14 +119,14 @@ void qualitymonitor::Setup_GraphicsView()
     int datalenght = fake_data.count("\n");
     fake_input.Write(QDir().currentPath() + "/fake_input", fake_data);
 
-    if(datalenght < 500)
+    if(datalenght < 300)
         for(int i = 0; i < datalenght - 1; i++)
             series->append(i, fake_data.section("\n",i ,i ).toInt());
 
     //qDebug()<< fake_data << datalenght;
     //if(datalenght <= )
     else
-        for(int i = datalenght - 500; i < datalenght - 1; i++)
+        for(int i = datalenght - 300; i < datalenght - 1; i++)
             series->append(i, fake_data.section("\n",i ,i ).toInt());
 
     //series->append(i,1);
@@ -149,8 +149,11 @@ void qualitymonitor::Setup_GraphicsView()
 
     //chart->setTitle("Simple line chart example");
 
-    chart_L->setGeometry(0, 10, 370, 300 );
+    chart_L->setGeometry(0, 10, 380, 310 );
     //chart_R->setGeometry(0,10,380,280);
+
+    //set display range
+    //chart_L->axisY()->setRange(1000, 1800);
 
     QChartView *chartView_L = new QChartView(chart_L);
     //QChartView *chartView_R = new QChartView(chart_R);

@@ -14,9 +14,9 @@ public:
 
     float A_per(QString, QString);
 
-    float CV_per(QString, QString);
+    float CV_per(int*, QString);
 
-    float CV_per1m(QString, QString);
+    float CV_per1m(int*, QString);
 };
 
 #endif // MATHTOOLS_H

@@ -23,16 +23,21 @@
 int flag = 0;
 int i = 0;
 time_t start_t, end_t;
-/*********************************************
+/*
 void ADinput_ISR(int gpio, int level, uint32_t tick){
-    flag = 1;
-//	printf("%u\n", tick);
+    flag ++;
+    printf("%u\n", flag);
+    if(flag == 5){
+        MyThread mthread;
+        mthread.start();
+        flag = 0;
+    }
 }
-**********************************************/
+*/
 
 /**********************************************************
 test input, delete when publish
-***********************************************************
+***********************************************************/
 int datain[4096] = {0};
 #ifndef FFT_N
 #define FFT_N   4096
@@ -40,30 +45,13 @@ int datain[4096] = {0};
 
 #define FILE_NAME "SPG_test.txt"
 
-void read()
-{
-    FILE *fpr;
-//open file
-    fpr=fopen(FILE_NAME,"r");
-    //fpr=fopen("d:\\SPG_test.txt","r");
-//read file
-    for (int i = 0; i < FFT_N; i++){
-        fscanf(fpr,"%d",&datain[i]);
-        //printf("%d\t" , in[i]);
-    }
-//close file
-    fclose(fpr);
-}
-**********************************************************/
-
-
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     qualitymonitor w;
     //mythread isr;
-/*************************************************
+/*
     gpioInitialise();
     gpioSetMode(LED, PI_OUTPUT);
     gpioSetMode(trig_pin, PI_INPUT);
@@ -72,7 +60,7 @@ int main(int argc, char *argv[])
     gpioSetISRFunc(trig_pin, FALLING_EDGE, 10000, ADinput_ISR); //ISR
     //end setup pin mode
     start_t = clock();
-**************************************************/
+*/
     //isr.start();
 
     w.show();
