@@ -51,4 +51,21 @@ chmod +x sysroot-relativelinks.py
 cd qt5build
 sudo ../qt-everywhere-src-5.15.0/configure -opengl es2 -device linux-rasp-pi4-v3d-g++ -device-option CROSS_COMPILE=/opt/qt5pi/gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabihf/bin/arm-linux-gnueabihf- -sysroot /opt/qt5pi/sysroot -prefix /usr/local/qt5pi -opensource -confirm-license -skip qtscript -nomake examples -make libs -pkg-config -no-use-gold-linker -v 
 
+sudo make -j4
+suod make install
+
+rsync -avz /sysroot/usr/local pi@192.168.1.67:/usr/local
+
+
+[on QTcreator]
+Tool->Setting->Devices
+Deploy rpi.
+
+Tool->Setting->Kits
+
+Set System Environment 
+export DISPLAY=:0.0
+export QT_QPA_PLATFORMTHEME=qt5ct
+export XAUTHORITY=/home/pi/.Xauthority
+export XDG_SESSION_TYPE=x11
 
