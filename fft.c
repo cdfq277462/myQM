@@ -116,7 +116,7 @@ for(int i = 0; i < FFT_N; i++)											//給結構體賦值
         s[i].real = sqrt(s[i].real * s[i].real + s[i].imag * s[i].imag) ;    //求變換後結果，存入復數的實部部分
 //x_axis degree
         float tp = (i + 1);
-        x_ticks[FFT_N/2 - i] = (FFT_N / tp);                                     // length(x_ticks[i]) = FFT_N/2 - 1 ; x_ticks[FFT_N/2 -1] = 0
+        x_ticks[FFT_N/2 - i] = (FFT_N / tp);                          // length(x_ticks[i]) = FFT_N/2 - 1 ; x_ticks[FFT_N/2 -1] = 0
 
 //inverse s[i] to sn[i]
         float tmp = s[i].real / FFT_N *2;
@@ -131,7 +131,7 @@ for(int i = 0; i < FFT_N; i++)											//給結構體賦值
 
 //set channel
     for(int i= 0; i <= chw; i++){                //set how many chs
-        interval[i] = pow(2 , 0.2*(i+5));       //pow() 函?用來求 x 的 y 次?（次方)
+        interval[i] = pow(2 , 0.2*(i+5));       //pow()用來求 x 的 y 次方
         //printf("%f\n", interval[i]);
     }
 
@@ -155,35 +155,3 @@ for(int i = 0; i < FFT_N; i++)											//給結構體賦值
         printf("%1f\n", y[i]);
     }
 }
-/*
-void read()
-{
-    FILE *fpr;
-//open file
-    fpr=fopen(FILE_NAME,"r");
-    //fpr=fopen("d:\\SPG_test.txt","r");
-//read file
-    for (int i = 0; i < FFT_N; i++){
-        fscanf(fpr,"%d",&datain[i]);
-        //printf("%d\t" , in[i]);
-    }
-//close file
-    fclose(fpr);
-}
-
-void write(float x[], float data[])
-{
-    FILE *fpr;
-//open file
-    fpr=fopen("data_output.txt","w");
-    //fpr=fopen("d:\\SPG_test.txt","r");
-//write file
-    fprintf(fpr,"x_ticks\t sn\n");
-    for (int i = 0; i < FFT_N/2; i++){
-        fprintf(fpr,"%f\t %f\n", x[i], data[i]);
-        //printf("%d\t" , in[i]);
-    }
-//close file
-    fclose(fpr);
-}
-*/

@@ -12,9 +12,11 @@
 #include "fft.h"
 #include "mythread.h"
 #include "parameter.h"
+#include "ad7606.h"
 
-//#include <pigpio.h>
+#include <pigpio.h>
 #include <time.h>
+
 
 #define LED		17  //test sig
 #define	trig_pin	27 // trigger
@@ -23,17 +25,18 @@
 int flag = 0;
 int i = 0;
 time_t start_t, end_t;
-/*
+
 void ADinput_ISR(int gpio, int level, uint32_t tick){
     flag ++;
     printf("%u\n", flag);
     if(flag == 5){
         MyThread mthread;
         mthread.start();
+        mthread.wait();
         flag = 0;
     }
 }
-*/
+
 
 /**********************************************************
 test input, delete when publish
@@ -51,16 +54,16 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     qualitymonitor w;
     //mythread isr;
-/*
+
     gpioInitialise();
     gpioSetMode(LED, PI_OUTPUT);
     gpioSetMode(trig_pin, PI_INPUT);
     gpioSetPullUpDown(trig_pin, PI_PUD_UP); //set trig_pin to edge trig
     time_sleep(0.001);
-    gpioSetISRFunc(trig_pin, FALLING_EDGE, 10000, ADinput_ISR); //ISR
+    gpioSetISRFunc(trig_pin, FALLING_EDGE, 0, ADinput_ISR); //ISR
     //end setup pin mode
     start_t = clock();
-*/
+    qDebug() << a.thread()->currentThreadId();
     //isr.start();
 
     w.show();
