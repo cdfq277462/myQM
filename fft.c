@@ -13,7 +13,7 @@
 #endif // PI
 
 //#define FILE_NAME "SPG_test.txt"
-struct compx {float real,imag;};                                        //©w¸q¤@­Ó´_¼Æµ²ºc
+struct compx {float real,imag;};                                        //å®šç¾©ä¸€å€‹å¾©æ•¸çµæ§‹
 struct compx s[FFT_N];
 //int datain[FFT_N] = {0};
 
@@ -35,50 +35,50 @@ void FFT(struct compx *xin)
     int f , m, nv2, nm1, i, k, l, j = 0;
     struct compx u,w,t;
 
-    nv2 = FFT_N / 2;                   //ÅÜ§}¹Bºâ¡A§Y§â¦ÛµM¶¶§ÇÅÜ¦¨­Ë¦ì§Ç¡Aªö¥Î¹p¼wºâªk
+    nv2 = FFT_N / 2;                   //è®Šå€é‹ç®—ï¼Œå³æŠŠè‡ªç„¶é †åºè®Šæˆå€’ä½åºï¼Œé‡‡ç”¨é›·å¾·ç®—æ³•
     nm1 = FFT_N - 1;
     for(i = 0; i < nm1; i++)
     {
-        if(i < j)                      //¦pªGi<j,§Y¶i¦æÅÜ§}
+        if(i < j)                      //å¦‚æœi<j,å³é€²è¡Œè®Šå€
         {
             t = xin[j];
             xin[j] = xin[i];
             xin[i] = t;
         }
-        k = nv2;                       //¨Djªº¤U¤@­Ó­Ë¦ì§Ç
-        while( k <= j)                 //¦pªGk<=j,ªí¥Üjªº³Ì°ª¦ì¬°1
+        k = nv2;                       //æ±‚jçš„ä¸‹ä¸€å€‹å€’ä½åº
+        while( k <= j)                 //å¦‚æœk<=j,è¡¨ç¤ºjçš„æœ€é«˜ä½ç‚º1
         {
-            j = j - k;                 //§â³Ì°ª¦ìÅÜ¦¨0
-            k = k / 2;                 //k/2¡A¤ñ¸û¦¸°ª¦ì¡A¨Ì¦¸Ãş±À¡A³v­Ó¤ñ¸û¡Aª½¨ì¬Y­Ó¦ì¬°0
+            j = j - k;                 //æŠŠæœ€é«˜ä½è®Šæˆ0
+            k = k / 2;                 //k/2ï¼Œæ¯”è¼ƒæ¬¡é«˜ä½ï¼Œä¾æ¬¡é¡æ¨ï¼Œé€å€‹æ¯”è¼ƒï¼Œç›´åˆ°æŸå€‹ä½ç‚º0
         }
-        j = j + k;                     //§â0§ï¬°1
+        j = j + k;                     //æŠŠ0æ”¹ç‚º1
     }
     {
-        int le , lei, ip;                            //FFT¹Bºâ®Ö¡A¨Ï¥Î½º§Î¹Bºâ§¹¦¨FFT¹Bºâ
+        int le , lei, ip;                            //FFTé‹ç®—æ ¸ï¼Œä½¿ç”¨è¶å½¢é‹ç®—å®ŒæˆFFTé‹ç®—
 
         f = FFT_N;
-        for(l = 1; (f=f/2)!=1; l++)                  //­pºâlªº­È¡A§Y­pºâ½º§Î¯Å¼Æ
+        for(l = 1; (f=f/2)!=1; l++)                  //è¨ˆç®—lçš„å€¼ï¼Œå³è¨ˆç®—è¶å½¢ç´šæ•¸
             ;
-        for( m = 1; m <= l; m++)                         // ±±¨î½º§Îµ²¯Å¼Æ
-        {                                        //mªí¥Ü²Äm¯Å½º§Î¡Al¬°½º§Î¯ÅÁ`¼Æl=log¡]2¡^N
-            le = 2 << (m - 1);                            //le½º§Îµ²¶ZÂ÷¡A§Y²Äm¯Å½º§Îªº½º§Îµ²¬Û¶ZleÂI
-            lei = le / 2;                               //¦P¤@½º§Îµ²¤¤°Ñ¥[¹Bºâªº¨âÂIªº¶ZÂ÷
-            u.real = 1.0;                             //u¬°½º§Îµ²¹Bºâ¨t¼Æ¡Aªì©l­È¬°1
+        for( m = 1; m <= l; m++)                         // æ§åˆ¶è¶å½¢çµç´šæ•¸
+        {                                        //mè¡¨ç¤ºç¬¬mç´šè¶å½¢ï¼Œlç‚ºè¶å½¢ç´šç¸½æ•¸l=logï¼ˆ2ï¼‰N
+            le = 2 << (m - 1);                            //leè¶å½¢çµè·é›¢ï¼Œå³ç¬¬mç´šè¶å½¢çš„è¶å½¢çµç›¸è·leé»
+            lei = le / 2;                               //åŒä¸€è¶å½¢çµä¸­åƒåŠ é‹ç®—çš„å…©é»çš„è·é›¢
+            u.real = 1.0;                             //uç‚ºè¶å½¢çµé‹ç®—ç³»æ•¸ï¼Œåˆå§‹å€¼ç‚º1
             u.imag = 0.0;
-            w.real = cos(PI / lei);                     //w¬°¨t¼Æ°Ó¡A§Y·í«e¨t¼Æ»P«e¤@­Ó¨t¼Æªº°Ó
+            w.real = cos(PI / lei);                     //wç‚ºç³»æ•¸å•†ï¼Œå³ç•¶å‰ç³»æ•¸èˆ‡å‰ä¸€å€‹ç³»æ•¸çš„å•†
             w.imag = -sin(PI / lei);
-            for(j = 0;j <= lei - 1; j++)                   //±±¨î­pºâ¤£¦PºØ½º§Îµ²¡A§Y­pºâ¨t¼Æ¤£¦Pªº½º§Îµ²
+            for(j = 0;j <= lei - 1; j++)                   //æ§åˆ¶è¨ˆç®—ä¸åŒç¨®è¶å½¢çµï¼Œå³è¨ˆç®—ç³»æ•¸ä¸åŒçš„è¶å½¢çµ
             {
-                for(i = j; i <= FFT_N - 1; i = i + le)            //±±¨î¦P¤@½º§Îµ²¹Bºâ¡A§Y­pºâ¨t¼Æ¬Û¦P½º§Îµ²
+                for(i = j; i <= FFT_N - 1; i = i + le)            //æ§åˆ¶åŒä¸€è¶å½¢çµé‹ç®—ï¼Œå³è¨ˆç®—ç³»æ•¸ç›¸åŒè¶å½¢çµ
                 {
-                    ip = i + lei;                           //i¡Aip¤À§Oªí¥Ü°Ñ¥[½º§Î¹Bºâªº¨â­Ó¸`ÂI
-                    t = EE(xin[ip], u);                    //½º§Î¹Bºâ¡A¸Ô¨£¤½¦¡
+                    ip = i + lei;                           //iï¼Œipåˆ†åˆ¥è¡¨ç¤ºåƒåŠ è¶å½¢é‹ç®—çš„å…©å€‹ç¯€é»
+                    t = EE(xin[ip], u);                    //è¶å½¢é‹ç®—ï¼Œè©³è¦‹å…¬å¼
                     xin[ip].real = xin[i].real - t.real;
                     xin[ip].imag = xin[i].imag - t.imag;
                     xin[i].real = xin[i].real + t.real;
                     xin[i].imag = xin[i].imag + t.imag;
                 }
-                u = EE(u, w);                           //§ïÅÜ¨t¼Æ¡A¶i¦æ¤U¤@­Ó½º§Î¹Bºâ
+                u = EE(u, w);                           //æ”¹è®Šç³»æ•¸ï¼Œé€²è¡Œä¸‹ä¸€å€‹è¶å½¢é‹ç®—
             }
         }
     }
@@ -93,12 +93,12 @@ void SPG(int *datainput)
     int chw = 5*log2(FFT_N/4)-4;
 //set channel
 
-for(int i = 0; i < FFT_N; i++)											//µ¹µ²ºcÅé½á­È
+for(int i = 0; i < FFT_N; i++)											//çµ¦çµæ§‹é«”è³¦å€¼
     {
     //data input
         float tmp = datainput[i];
         s[i].real = tmp;
-        s[i].imag = 0;//µê³¡¬°0
+        s[i].imag = 0;//è™›éƒ¨ç‚º0
         printf("%1f\t" , s[i].real);
     }
 //means
@@ -113,7 +113,7 @@ for(int i = 0; i < FFT_N; i++)											//µ¹µ²ºcÅé½á­È
 
     for(int i = 0; i < FFT_N/2; i++)
     {
-        s[i].real = sqrt(s[i].real * s[i].real + s[i].imag * s[i].imag) ;    //¨DÅÜ´««áµ²ªG¡A¦s¤J´_¼Æªº¹ê³¡³¡¤À
+        s[i].real = sqrt(s[i].real * s[i].real + s[i].imag * s[i].imag) ;    //æ±‚è®Šæ›å¾Œçµæœï¼Œå­˜å…¥å¾©æ•¸çš„å¯¦éƒ¨éƒ¨åˆ†
 //x_axis degree
         float tp = (i + 1);
         x_ticks[FFT_N/2 - i] = (FFT_N / tp);                          // length(x_ticks[i]) = FFT_N/2 - 1 ; x_ticks[FFT_N/2 -1] = 0
@@ -131,7 +131,7 @@ for(int i = 0; i < FFT_N; i++)											//µ¹µ²ºcÅé½á­È
 
 //set channel
     for(int i= 0; i <= chw; i++){                //set how many chs
-        interval[i] = pow(2 , 0.2*(i+5));       //pow()¥Î¨Ó¨D x ªº y ¦¸¤è
+        interval[i] = pow(2 , 0.2*(i+5));       //pow()ç”¨ä¾†æ±‚ x çš„ y æ¬¡æ–¹
         //printf("%f\n", interval[i]);
     }
 

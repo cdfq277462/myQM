@@ -171,17 +171,17 @@
      <string>Number</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_8">
+   <widget class="QPushButton" name="pushButton_6">
     <property name="geometry">
      <rect>
-      <x>410</x>
-      <y>70</y>
-      <width>89</width>
-      <height>25</height>
+      <x>590</x>
+      <y>60</y>
+      <width>91</width>
+      <height>41</height>
      </rect>
     </property>
     <property name="text">
-     <string>PushButton</string>
+     <string>EXIT</string>
     </property>
    </widget>
   </widget>
@@ -224,20 +224,20 @@
      </widget>
     </item>
     <item>
-     <spacer name="verticalSpacer">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>40</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item>
      <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <spacer name="verticalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
       <item>
        <widget class="QLabel" name="label_46">
         <property name="font">
@@ -275,7 +275,7 @@
          </widget>
         </item>
         <item row="0" column="4">
-         <widget class="QPushButton" name="pushButton_7">
+         <widget class="QPushButton" name="pushButton_out1offset">
           <property name="font">
            <font>
             <family>微軟正黑體</family>
@@ -296,7 +296,7 @@
          </widget>
         </item>
         <item row="1" column="4">
-         <widget class="QPushButton" name="pushButton_6">
+         <widget class="QPushButton" name="pushButton_out2offset">
           <property name="font">
            <font>
             <family>微軟正黑體</family>
@@ -364,7 +364,7 @@
          </widget>
         </item>
         <item row="0" column="3">
-         <widget class="QLabel" name="label_51">
+         <widget class="QLabel" name="out1_offset">
           <property name="text">
            <string>TextLabel</string>
           </property>
@@ -374,7 +374,7 @@
          </widget>
         </item>
         <item row="1" column="3">
-         <widget class="QLabel" name="label_52">
+         <widget class="QLabel" name="out2_offset">
           <property name="text">
            <string>TextLabel</string>
           </property>
@@ -384,15 +384,15 @@
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="QLabel" name="label_54">
+         <widget class="QLabel" name="out1_pos">
           <property name="font">
            <font>
             <family>Arial</family>
-            <pointsize>11</pointsize>
+            <pointsize>15</pointsize>
            </font>
           </property>
           <property name="text">
-           <string>TextLabel</string>
+           <string>5000</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
@@ -400,9 +400,9 @@
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QLabel" name="label_55">
+         <widget class="QLabel" name="out2_pos">
           <property name="text">
-           <string>TextLabel</string>
+           <string>5000</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
@@ -449,6 +449,19 @@
        </layout>
       </item>
      </layout>
+    </item>
+    <item>
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>40</height>
+       </size>
+      </property>
+     </spacer>
     </item>
    </layout>
   </widget>
@@ -2155,7 +2168,6 @@
   </widget>
   <zorder>prameter</zorder>
   <zorder>pushButton_2</zorder>
-  <zorder>lvdt</zorder>
   <zorder>pushButton_ErrorSig</zorder>
   <zorder>SettingFrame</zorder>
   <zorder>errorhistory</zorder>
@@ -2165,6 +2177,7 @@
   <zorder>Dateframe</zorder>
   <zorder>MenuFrame</zorder>
   <zorder>EEprameter</zorder>
+  <zorder>lvdt</zorder>
   <zorder>runframe</zorder>
  </widget>
  <resources/>
@@ -2298,18 +2311,18 @@
    </hints>
   </connection>
   <connection>
-   <sender>pushButton_8</sender>
+   <sender>pushButton_6</sender>
    <signal>clicked()</signal>
    <receiver>qualitymonitor</receiver>
    <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>454</x>
-     <y>82</y>
+     <x>525</x>
+     <y>78</y>
     </hint>
     <hint type="destinationlabel">
-     <x>399</x>
-     <y>239</y>
+     <x>980</x>
+     <y>178</y>
     </hint>
    </hints>
   </connection>

@@ -57,7 +57,9 @@ private slots:
 
     void on_pushButton_5_clicked();
 
-    void on_pushButton_8_clicked();
+    void on_pushButton_out1offset_clicked();
+
+    void on_pushButton_out2offset_clicked();
 
 public slots:
     void DateTimeSlot();

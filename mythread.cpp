@@ -5,18 +5,30 @@
 
 #include "fft.h"
 #include "ad7606.h"
-//#include <pigpio.h>
+#include <pigpio.h>
 #include "mathtools.h"
 
-MyThread::MyThread()
+MyThread::MyThread(QObject *parent) : QObject(parent)
 {
-    mathtools mymathtols;
-    ad7606();
+    //mathtools mymathtols;
 }
 
-void MyThread::run()
+void MyThread::Setup(QThread &cThread, int index)
 {
-        //qDebug() << "My Thread run\n" << thread()->currentThreadId();
+    switch (index) {
+    case 1:
+        connect(&cThread, SIGNAL(started()), this, SLOT(DoWork()));
+        break;
+    default:
+        qDebug() << "Hello World!\n";
 
+        break;
+    }
+}
+
+void MyThread::DoWork()
+{
+    qDebug() << ad7606();
+    //qDebug() << "Hello World!\n";
 
 }

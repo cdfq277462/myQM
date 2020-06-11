@@ -25,11 +25,12 @@ qualitymonitor::qualitymonitor(QWidget *parent)
 {
 
     ui->setupUi(this);
-    //QWidget::showFullScreen();
+    QWidget::showFullScreen();
 //set timer
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(DateTimeSlot()));
     timer->start(1000);
+
 //setup parameter
     setupParameter();
     SetErrorTable();
@@ -38,12 +39,14 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     ui->Dateframe->raise();
     //qDebug() << QThread::currentThread();
     Setup_History();
+
 }
 
 qualitymonitor::~qualitymonitor()
 {
     delete ui;
 }
+
 void qualitymonitor::DateTimeSlot()
 {   //label_14
     QDateTime DateTime = QDateTime::currentDateTime();
@@ -436,3 +439,17 @@ void qualitymonitor::on_pushButton_5_clicked()
     else
         ui->pushButton_5->setText("Number");
 }
+
+void qualitymonitor::on_pushButton_out1offset_clicked()
+{
+    QString Out1_offset = QString::number(QString(ui->out1_pos->text()).toInt() -1000);
+    ui->out1_offset->setText(Out1_offset);
+}
+
+void qualitymonitor::on_pushButton_out2offset_clicked()
+{
+    QString Out2_offset = QString::number(QString(ui->out2_pos->text()).toInt() -1000);
+    ui->out2_offset->setText(Out2_offset);
+}
+
+
