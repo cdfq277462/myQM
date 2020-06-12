@@ -2173,12 +2173,12 @@
   <zorder>errorhistory</zorder>
   <zorder>frame_search</zorder>
   <zorder>index</zorder>
-  <zorder>test</zorder>
   <zorder>Dateframe</zorder>
   <zorder>MenuFrame</zorder>
   <zorder>EEprameter</zorder>
-  <zorder>lvdt</zorder>
   <zorder>runframe</zorder>
+  <zorder>test</zorder>
+  <zorder>lvdt</zorder>
  </widget>
  <resources/>
  <connections>

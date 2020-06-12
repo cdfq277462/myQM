@@ -12,7 +12,6 @@
 #include "fft.h"
 #include "mythread.h"
 #include "parameter.h"
-//#include "ad7606.h"
 
 #include <pigpio.h>
 #include <time.h>

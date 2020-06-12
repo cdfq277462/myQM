@@ -4,7 +4,6 @@
 #include <QtDebug>
 
 #include "fft.h"
-//#include "ad7606.h"
 #include <pigpio.h>
 #include "mathtools.h"
 
@@ -28,7 +27,7 @@ void MyThread::Setup(QThread &cThread, int index)
 
 void MyThread::DoWork()
 {
-    //qDebug() << ad7606();
+
     //qDebug() << "Hello World!\n";
 
 }

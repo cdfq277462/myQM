@@ -64,6 +64,8 @@ private slots:
 public slots:
     void DateTimeSlot();
 
+    void on_Receive_ADval(int);
+
 private:
     Ui::qualitymonitor *ui;
     QTimer *timer;

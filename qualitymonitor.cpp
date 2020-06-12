@@ -15,6 +15,7 @@ using namespace QtCharts;
 
 #include "mythread.h"
 #include "parameter.h"
+#include "adread.h"
 
 #define  normalParameter    1
 #define  EEParameter        2
@@ -40,13 +41,20 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     //qDebug() << QThread::currentThread();
     Setup_History();
 
+    ADread *mAD = new ADread;
+    connect(mAD, SIGNAL(emit_AD_value(int)), this, SLOT(on_Receive_ADval(int)));
+    mAD->start();
+
 }
 
 qualitymonitor::~qualitymonitor()
 {
     delete ui;
 }
-
+void qualitymonitor::on_Receive_ADval(int AD_val)
+{
+    ui->out1_pos->setText(QString::number(AD_val));
+}
 void qualitymonitor::DateTimeSlot()
 {   //label_14
     QDateTime DateTime = QDateTime::currentDateTime();
