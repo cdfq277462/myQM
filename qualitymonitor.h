@@ -21,6 +21,7 @@ public:
     void toSaveDate(int);
     ~qualitymonitor();
 
+    void ADtrig_ISR(int gpio, int level, uint32_t tick);
 
 private slots:
     void on_saveButton_clicked();
@@ -65,6 +66,8 @@ public slots:
     void DateTimeSlot();
 
     void on_Receive_ADval(int);
+
+    void on_Receive_Trig();
 
 private:
     Ui::qualitymonitor *ui;

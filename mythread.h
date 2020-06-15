@@ -16,9 +16,23 @@ public:
 signals:
 
 
+
 public slots:
     void DoWork();
     //void onDateTrigSig();
 
 };
+
+class MyTrigger : public QThread
+{
+    Q_OBJECT
+
+public:
+    explicit MyTrigger();
+    void run() override;
+
+signals:
+    void emit_trig_sig();
+};
+
 #endif //MYTHREAD_H

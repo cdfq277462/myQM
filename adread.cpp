@@ -1,4 +1,5 @@
 #include "adread.h"
+#include "pigpio.h"
 
 #define CE0     8
 #define CE1     7
@@ -8,15 +9,16 @@
 
 ADread::ADread()
 {
-
+    gpioInitialise();
 }
 
 void ADread::run()
 {
-    int i, count, set_val, read_val;
+
+    int count, read_val;
     unsigned char inBuf[3];
-    char cmd1[] = {0, 0};
-    char cmd2[] = {12, 0};
+    //char cmd1[] = {0, 0};
+    //char cmd2[] = {12, 0};
     char cmd3[] = {1, 128, 0};
 
     if (gpioInitialise() < 0)
@@ -25,32 +27,20 @@ void ADread::run()
         //return 1;
     }
 
-    bbSPIOpen(CE0, MISO, MOSI, SCLK, 200000, 3); // MCP3008 ADC
+    bbSPIOpen(CE0, MISO, MOSI, SCLK, 20000, 3); // MCP3008 ADC
 
-    for (i=0; i<256; i++)
+    //for (i=0; i<25600; i++)
+    while(1)
     {
-        cmd1[1] = i;
+        count = bbSPIXfer(CE0, cmd3, (char *)inBuf, 3); // < ADC
 
-        count = bbSPIXfer(CE0, cmd1, (char *)inBuf, 2); // > DAC
-
-     if (count == 2)
-     {
-        count = bbSPIXfer(CE0, cmd2, (char *)inBuf, 2); // < DAC
-
-        if (count == 2)
+        if (count == 3)
         {
-           set_val = inBuf[1];
+          read_val = ((inBuf[1]&3)<<8) | inBuf[2];
 
-           count = bbSPIXfer(CE0, cmd3, (char *)inBuf, 3); // < ADC
-
-           if (count == 3)
-           {
-              read_val = ((inBuf[1]&3)<<8) | inBuf[2];
-              emit emit_AD_value(read_val);
-              printf("%d %d\n", i, read_val);
-           }
+          //printf("%d\n", read_val);
+          emit emit_AD_value(read_val);
         }
-     }
     }
 
     bbSPIClose(CE0);
@@ -59,5 +49,6 @@ void ADread::run()
     gpioTerminate();
 
     //return 0;
+
 }
 

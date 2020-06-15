@@ -1139,8 +1139,8 @@
      <rect>
       <x>210</x>
       <y>70</y>
-      <width>361</width>
-      <height>401</height>
+      <width>421</width>
+      <height>391</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -2172,13 +2172,13 @@
   <zorder>SettingFrame</zorder>
   <zorder>errorhistory</zorder>
   <zorder>frame_search</zorder>
-  <zorder>index</zorder>
   <zorder>Dateframe</zorder>
   <zorder>MenuFrame</zorder>
   <zorder>EEprameter</zorder>
   <zorder>runframe</zorder>
   <zorder>test</zorder>
   <zorder>lvdt</zorder>
+  <zorder>index</zorder>
  </widget>
  <resources/>
  <connections>

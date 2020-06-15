@@ -27,7 +27,17 @@ void MyThread::Setup(QThread &cThread, int index)
 
 void MyThread::DoWork()
 {
+    qDebug() << "Nothing to do!";
 
-    //qDebug() << "Hello World!\n";
+}
+
+MyTrigger::MyTrigger()
+{
+    gpioInitialise();
+}
+
+void MyTrigger::run()
+{
+    qDebug() << "RUN!";
 
 }

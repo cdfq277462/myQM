@@ -31,8 +31,13 @@ time_t start_t, end_t;
 void ADtrig_ISR(int gpio, int level, uint32_t tick){
     flag ++;
     //printf("%u\n", flag);
+    MyTrigger mTrigger;
     if(flag == 5){
         qDebug() << "AD read";
+        //AD start to read
+        mTrigger.start();
+        mTrigger.wait():
+
         flag = 0;
     }
 }
@@ -53,13 +58,13 @@ int main(int argc, char *argv[])
     start_t = clock();
     qDebug() << a.thread()->currentThreadId();
 
-
-    //AD start to read
     QThread cThread;
     MyThread AD7606;
     AD7606.Setup(cThread, 1);
     AD7606.moveToThread(&cThread);
     cThread.start();
+
+
 
     w.show();
     return a.exec();

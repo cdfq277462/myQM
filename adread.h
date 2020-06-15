@@ -18,7 +18,7 @@ public:
     void run() override;
 
 signals:
-    int emit_AD_value(int);
+    void emit_AD_value(int);
 
 public slots:
 };

@@ -16,9 +16,19 @@ using namespace QtCharts;
 #include "mythread.h"
 #include "parameter.h"
 #include "adread.h"
-
+#include "pigpio.h"
+/***************************************************************
 #define  normalParameter    1
 #define  EEParameter        2
+
+
+#define LED         17  //test sig
+#define	trig_pin	27 // trigger
+
+//interrupt flag
+int flag = 0;
+void ADtrig_ISR(int gpio, int level, uint32_t tick);
+****************************************************************/
 
 qualitymonitor::qualitymonitor(QWidget *parent)
     : QWidget(parent)
@@ -27,6 +37,9 @@ qualitymonitor::qualitymonitor(QWidget *parent)
 
     ui->setupUi(this);
     QWidget::showFullScreen();
+
+
+
 //set timer
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(DateTimeSlot()));
@@ -41,11 +54,32 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     //qDebug() << QThread::currentThread();
     Setup_History();
 
+    //gpioSetISRFunc(trig_pin, FALLING_EDGE, 0, ADtrig_ISR); //ISR
+/**************  ADC Read  ***************************************/
     ADread *mAD = new ADread;
     connect(mAD, SIGNAL(emit_AD_value(int)), this, SLOT(on_Receive_ADval(int)));
     mAD->start();
+/*****************************************************************/
+
 
 }
+/********************************************************************************
+void qualitymonitor::ADtrig_ISR(int gpio, int level, uint32_t tick)
+{
+    flag ++;
+    //printf("%u\n", flag);
+    MyTrigger mTrigger;
+    if(flag == 5){
+        qDebug() << "AD read";
+        //AD start to read
+        //QObject::connect(&mTrigger, SIGNAL(emit_trig_sig()), this, SLOT(on_Receive_Trig()));
+        mTrigger.start();
+        mTrigger.wait();
+
+        flag = 0;
+    }
+}
+*********************************************************************************/
 
 qualitymonitor::~qualitymonitor()
 {
@@ -54,7 +88,17 @@ qualitymonitor::~qualitymonitor()
 void qualitymonitor::on_Receive_ADval(int AD_val)
 {
     ui->out1_pos->setText(QString::number(AD_val));
+    ui->out2_pos->setText(QString::number(AD_val));
+
+    //qDebug() << "Hello World!";
 }
+
+void qualitymonitor::on_Receive_Trig()
+{   //AD trig
+    qDebug() << "TRIG!";
+    Setup_GraphicsView();
+}
+
 void qualitymonitor::DateTimeSlot()
 {   //label_14
     QDateTime DateTime = QDateTime::currentDateTime();
@@ -65,7 +109,7 @@ void qualitymonitor::DateTimeSlot()
     ui->Date -> setText(Date);
     ui->Time -> setText(Time);
     //qDebug() << QThread::currentThread();
-    Setup_GraphicsView();
+    //Setup_GraphicsView();
 }
 void qualitymonitor::setupParameter()
 {
