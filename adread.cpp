@@ -14,6 +14,7 @@ ADread::ADread()
 
 void ADread::run()
 {
+    //qDebug() << thread()->currentThreadId();
 
     int count, read_val;
     unsigned char inBuf[3];

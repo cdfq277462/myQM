@@ -21,7 +21,8 @@ public:
     void toSaveDate(int);
     ~qualitymonitor();
 
-    void ADtrig_ISR(int gpio, int level, uint32_t tick);
+    QFileSystemWatcher watcher;
+
 
 private slots:
     void on_saveButton_clicked();
@@ -68,6 +69,8 @@ public slots:
     void on_Receive_ADval(int);
 
     void on_Receive_Trig();
+
+    void ADC_ISR(QString);
 
 private:
     Ui::qualitymonitor *ui;

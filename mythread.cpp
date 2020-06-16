@@ -33,11 +33,12 @@ void MyThread::DoWork()
 
 MyTrigger::MyTrigger()
 {
-    gpioInitialise();
+
 }
 
 void MyTrigger::run()
 {
-    qDebug() << "RUN!";
+    qDebug() << "trig RUN!";
+    emit emit_trig_sig();
 
 }

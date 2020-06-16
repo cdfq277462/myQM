@@ -17,18 +17,20 @@ using namespace QtCharts;
 #include "parameter.h"
 #include "adread.h"
 #include "pigpio.h"
-/***************************************************************
+
 #define  normalParameter    1
 #define  EEParameter        2
 
+/***************************************************************
 
 #define LED         17  //test sig
 #define	trig_pin	27 // trigger
 
-//interrupt flag
-int flag = 0;
 void ADtrig_ISR(int gpio, int level, uint32_t tick);
 ****************************************************************/
+
+//interrupt flag
+int flag = 0;
 
 qualitymonitor::qualitymonitor(QWidget *parent)
     : QWidget(parent)
@@ -37,8 +39,10 @@ qualitymonitor::qualitymonitor(QWidget *parent)
 
     ui->setupUi(this);
     QWidget::showFullScreen();
-
-
+    //qDebug() << thread()->currentThreadId();
+//ADC interrupt
+    watcher.addPath ("/sys/class/gpio/gpio27/value");
+    QObject::connect(&watcher, SIGNAL(fileChanged(QString)), this, SLOT(ADC_ISR(QString)));
 
 //set timer
     timer = new QTimer(this);
@@ -53,6 +57,8 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     ui->Dateframe->raise();
     //qDebug() << QThread::currentThread();
     Setup_History();
+    Setup_GraphicsView();
+    on_pushButton_Search_clicked();
 
     //gpioSetISRFunc(trig_pin, FALLING_EDGE, 0, ADtrig_ISR); //ISR
 /**************  ADC Read  ***************************************/
@@ -93,10 +99,29 @@ void qualitymonitor::on_Receive_ADval(int AD_val)
     //qDebug() << "Hello World!";
 }
 
+void qualitymonitor::ADC_ISR(QString){
+
+    flag++;
+    //printf("%u\n", flag);
+    MyTrigger mTrigger;
+    if(flag == 5){
+        //qDebug() << "AD read";
+        //AD start to read
+        QObject::connect(&mTrigger, SIGNAL(emit_trig_sig()), this, SLOT(on_Receive_Trig()));
+        mTrigger.start();
+        mTrigger.wait();
+
+        Setup_GraphicsView();
+
+        flag = 0;
+    }
+}
+
 void qualitymonitor::on_Receive_Trig()
 {   //AD trig
-    qDebug() << "TRIG!";
-    Setup_GraphicsView();
+    //qDebug() << "TRIG!";
+    //Setup_GraphicsView();
+    //qDebug() << thread()->currentThreadId();
 }
 
 void qualitymonitor::DateTimeSlot()
@@ -162,31 +187,33 @@ void qualitymonitor::setupParameter()
 
 void qualitymonitor::Setup_GraphicsView()
 {
-    //現在是綁時間
-    /***************************要修改**************************************************/
-    parameter fake_input;
-    srand(time(NULL));
+    //cost a lot of time, need to modify
+
+    int dispalyrange = 300;
+    parameter real_input;
+    //srand(time(NULL));
     QLineSeries *series = new QLineSeries();
 
-    QString fake_data_read = fake_input.Read(QDir().currentPath() + "/fake_input", 0);
-    QString fake_data;
-    fake_data.append(fake_data_read).append(QString::number((rand()%30) + 1600) + "\n");
-    int datalenght = fake_data.count("\n");
-    fake_input.Write(QDir().currentPath() + "/fake_input", fake_data);
+    QString real_data_read = real_input.Read(QDir().currentPath() + "/real_input", 0);
+    QString real_data;
+    //fake_data.append(fake_data_read).append(QString::number((rand()%30) + 1600) + "\n");
+    real_data.append(real_data_read).append(ui->out1_pos->text() + "\n");
+    int datalenght = real_data.count("\n");
+    real_input.Write(QDir().currentPath() + "/real_input", real_data);
 
-    if(datalenght < 300)
+    if(datalenght < dispalyrange)
         for(int i = 0; i < datalenght - 1; i++)
-            series->append(i, fake_data.section("\n",i ,i ).toInt());
+            series->append(i, real_data.section("\n",i ,i ).toInt());
 
-    //qDebug()<< fake_data << datalenght;
-    //if(datalenght <= )
+    //qDebug()<< real_input << datalenght;
+
     else
-        for(int i = datalenght - 300; i < datalenght - 1; i++)
-            series->append(i, fake_data.section("\n",i ,i ).toInt());
+        for(int i = datalenght - dispalyrange; i < datalenght - 1; i++)
+            series->append(i, real_data.section("\n",i ,i ).toInt());
 
     //series->append(i,1);
     //*series = DataInput();
-    /***********************************************************************************/
+
 
     QChart *chart_L = new QChart();
     QChart *chart_R = new QChart();
@@ -239,9 +266,6 @@ void qualitymonitor::Setup_History()
     ui->dateTimeEdit    ->setMinimumDate(QDate::currentDate().addDays(-14));
     ui->dateTimeEdit_2  ->setMaximumDate(QDate::currentDate());
     ui->dateTimeEdit_2  ->setMinimumDate(QDate::currentDate().addDays(-14));
-
-
-
 }
 
 void qualitymonitor::SetErrorTable()
