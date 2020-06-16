@@ -6,7 +6,7 @@
 #define MISO    9
 #define MOSI    10
 #define SCLK    11
-
+bool enable = true;
 ADread::ADread()
 {
     gpioInitialise();
@@ -31,7 +31,8 @@ void ADread::run()
     bbSPIOpen(CE0, MISO, MOSI, SCLK, 20000, 3); // MCP3008 ADC
 
     //for (i=0; i<25600; i++)
-    while(1)
+
+    while(enable)
     {
         count = bbSPIXfer(CE0, cmd3, (char *)inBuf, 3); // < ADC
 
@@ -53,3 +54,7 @@ void ADread::run()
 
 }
 
+void ADread::ADC_enable()
+{
+    enable = false;
+}

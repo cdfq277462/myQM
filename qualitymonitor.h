@@ -63,6 +63,8 @@ private slots:
 
     void on_pushButton_out2offset_clicked();
 
+    void on_pushButton_6_clicked();
+
 public slots:
     void DateTimeSlot();
 
@@ -71,6 +73,10 @@ public slots:
     void on_Receive_Trig();
 
     void ADC_ISR(QString);
+
+
+signals:
+    void emit_adc_enable();
 
 private:
     Ui::qualitymonitor *ui;

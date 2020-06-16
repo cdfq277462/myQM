@@ -41,8 +41,7 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     QWidget::showFullScreen();
     //qDebug() << thread()->currentThreadId();
 //ADC interrupt
-    watcher.addPath ("/sys/class/gpio/gpio27/value");
-    QObject::connect(&watcher, SIGNAL(fileChanged(QString)), this, SLOT(ADC_ISR(QString)));
+
 
 //set timer
     timer = new QTimer(this);
@@ -57,16 +56,20 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     ui->Dateframe->raise();
     //qDebug() << QThread::currentThread();
     Setup_History();
-    Setup_GraphicsView();
+
     on_pushButton_Search_clicked();
 
     //gpioSetISRFunc(trig_pin, FALLING_EDGE, 0, ADtrig_ISR); //ISR
 /**************  ADC Read  ***************************************/
     ADread *mAD = new ADread;
     connect(mAD, SIGNAL(emit_AD_value(int)), this, SLOT(on_Receive_ADval(int)));
+    connect(this, SIGNAL(emit_adc_enable()), mAD, SLOT(ADC_enable()));
     mAD->start();
 /*****************************************************************/
-
+    time_sleep(0.1);
+    Setup_GraphicsView();
+    watcher.addPath ("/sys/class/gpio/gpio27/value");
+    QObject::connect(&watcher, SIGNAL(fileChanged(QString)), this, SLOT(ADC_ISR(QString)));
 
 }
 /********************************************************************************
@@ -89,12 +92,17 @@ void qualitymonitor::ADtrig_ISR(int gpio, int level, uint32_t tick)
 
 qualitymonitor::~qualitymonitor()
 {
+    gpioTerminate();
     delete ui;
 }
 void qualitymonitor::on_Receive_ADval(int AD_val)
 {
     ui->out1_pos->setText(QString::number(AD_val));
     ui->out2_pos->setText(QString::number(AD_val));
+
+    ui->test_inputL->setText(QString::number(AD_val));
+    ui->test_inputR->setText(QString::number(AD_val));
+
 
     //qDebug() << "Hello World!";
 }
@@ -108,6 +116,8 @@ void qualitymonitor::ADC_ISR(QString){
         //qDebug() << "AD read";
         //AD start to read
         QObject::connect(&mTrigger, SIGNAL(emit_trig_sig()), this, SLOT(on_Receive_Trig()));
+        //QObject::connect(&mTrigger, SIGNAL(emit_trig_sig()), this, SLOT(on_Receive_Trig()));
+
         mTrigger.start();
         mTrigger.wait();
 
@@ -196,7 +206,7 @@ void qualitymonitor::Setup_GraphicsView()
 
     QString real_data_read = real_input.Read(QDir().currentPath() + "/real_input", 0);
     QString real_data;
-    //fake_data.append(fake_data_read).append(QString::number((rand()%30) + 1600) + "\n");
+    //real_data.append(real_data_read).append(QString::number((rand()%30) + 1600) + "\n");
     real_data.append(real_data_read).append(ui->out1_pos->text() + "\n");
     int datalenght = real_data.count("\n");
     real_input.Write(QDir().currentPath() + "/real_input", real_data);
@@ -258,7 +268,7 @@ void qualitymonitor::Setup_GraphicsView()
 void qualitymonitor::Setup_History()
 {
     //set DateTime range
-    ui->dateTimeEdit    ->setDateTime(QDateTime::currentDateTime());
+    ui->dateTimeEdit    ->setDateTime(QDateTime::currentDateTime().addDays(-14));
     ui->dateTimeEdit_2  ->setDateTime(QDateTime::currentDateTime());
     ui->dateTimeEdit    ->setCalendarPopup(true);
     ui->dateTimeEdit_2  ->setCalendarPopup(true);
@@ -273,7 +283,7 @@ void qualitymonitor::SetErrorTable()
     //ui->lineEdit->setPlaceholderText("search");
     //date selected range
     parameter SetErrorTable;
-    ui->dateEdit_StartDate  ->setDate(QDate::currentDate());
+    ui->dateEdit_StartDate  ->setDate(QDate::currentDate().addDays(-14));
     ui->dateEdit_EndDate    ->setDate(QDate::currentDate());
     ui->dateEdit_StartDate  ->setCalendarPopup(true);
     ui->dateEdit_EndDate    ->setCalendarPopup(true);
@@ -529,3 +539,10 @@ void qualitymonitor::on_pushButton_out2offset_clicked()
 }
 
 
+
+void qualitymonitor::on_pushButton_6_clicked()
+{
+    emit emit_adc_enable();
+    //exit(EXIT_FAILURE);
+    //QApplication::closeAllWindows();
+}

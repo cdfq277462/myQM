@@ -917,7 +917,7 @@
     </property>
     <layout class="QGridLayout" name="gridLayout">
      <item row="2" column="1">
-      <widget class="QLabel" name="label_18">
+      <widget class="QLabel" name="test_inputL">
        <property name="text">
         <string>ADC</string>
        </property>
@@ -939,7 +939,7 @@
       </widget>
      </item>
      <item row="3" column="1">
-      <widget class="QLabel" name="label_20">
+      <widget class="QLabel" name="test_inputR">
        <property name="text">
         <string>ADC</string>
        </property>
@@ -2170,15 +2170,15 @@
   <zorder>pushButton_2</zorder>
   <zorder>pushButton_ErrorSig</zorder>
   <zorder>SettingFrame</zorder>
-  <zorder>errorhistory</zorder>
-  <zorder>frame_search</zorder>
   <zorder>Dateframe</zorder>
   <zorder>MenuFrame</zorder>
   <zorder>EEprameter</zorder>
-  <zorder>runframe</zorder>
-  <zorder>test</zorder>
   <zorder>lvdt</zorder>
   <zorder>index</zorder>
+  <zorder>test</zorder>
+  <zorder>errorhistory</zorder>
+  <zorder>frame_search</zorder>
+  <zorder>runframe</zorder>
  </widget>
  <resources/>
  <connections>
@@ -2205,8 +2205,8 @@
    <slot>raise()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>371</x>
-     <y>229</y>
+     <x>372</x>
+     <y>226</y>
     </hint>
     <hint type="destinationlabel">
      <x>399</x>
@@ -2221,8 +2221,8 @@
    <slot>raise()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>371</x>
-     <y>119</y>
+     <x>372</x>
+     <y>118</y>
     </hint>
     <hint type="destinationlabel">
      <x>399</x>
@@ -2237,8 +2237,8 @@
    <slot>raise()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>371</x>
-     <y>394</y>
+     <x>372</x>
+     <y>388</y>
     </hint>
     <hint type="destinationlabel">
      <x>399</x>
@@ -2253,8 +2253,8 @@
    <slot>raise()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>371</x>
-     <y>174</y>
+     <x>372</x>
+     <y>172</y>
     </hint>
     <hint type="destinationlabel">
      <x>399</x>
@@ -2317,12 +2317,12 @@
    <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>525</x>
-     <y>78</y>
+     <x>658</x>
+     <y>92</y>
     </hint>
     <hint type="destinationlabel">
-     <x>980</x>
-     <y>178</y>
+     <x>936</x>
+     <y>207</y>
     </hint>
    </hints>
   </connection>

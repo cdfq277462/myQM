@@ -21,6 +21,10 @@ signals:
     void emit_AD_value(int);
 
 public slots:
+    void ADC_enable();
+
+
+
 };
 
 #endif // ADREAD_H
