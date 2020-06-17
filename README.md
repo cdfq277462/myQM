@@ -1,6 +1,6 @@
 # QM
 
-##Open RPi GPIO
+## Open RPi GPIO
 
     sudo echo 27 > /sys/class/gpio/export
     sudo echo in > /sys/class/gpio/gpio27/direction
