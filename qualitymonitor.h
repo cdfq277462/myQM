@@ -51,7 +51,9 @@ private slots:
 
     void on_pushButton_Settiing_clicked();
 
-    void Setup_GraphicsView();
+    //QLineSeries load_preData();
+
+    void Set_GraphicsView();
 
     void on_pushButton_3_clicked();
 
@@ -65,10 +67,12 @@ private slots:
 
     void on_pushButton_6_clicked();
 
+    void on_pushButton_OutputCenter_clicked();
+
 public slots:
     void DateTimeSlot();
 
-    void on_Receive_ADval(int);
+    void on_Receive_ADval(float);
 
     void on_Receive_Trig();
 
@@ -81,6 +85,8 @@ signals:
 private:
     Ui::qualitymonitor *ui;
     QTimer *timer;
-    QGraphicsScene *scene;
+    QGraphicsScene *scene_L;
+    QGraphicsScene *scene_R;
+
 };
 #endif // QUALITYMONITOR_H

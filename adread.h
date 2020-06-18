@@ -18,7 +18,7 @@ public:
     void run() override;
 
 signals:
-    void emit_AD_value(int);
+    void emit_AD_value(float);
 
 public slots:
     void ADC_enable();

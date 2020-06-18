@@ -26,7 +26,6 @@ using namespace QtCharts;
 #define LED         17  //test sig
 #define	trig_pin	27 // trigger
 
-void ADtrig_ISR(int gpio, int level, uint32_t tick);
 ****************************************************************/
 
 //interrupt flag
@@ -39,8 +38,9 @@ qualitymonitor::qualitymonitor(QWidget *parent)
 
     ui->setupUi(this);
     QWidget::showFullScreen();
+    this->setCursor(Qt::BlankCursor); //hide mouse
+
     //qDebug() << thread()->currentThreadId();
-//ADC interrupt
 
 
 //set timer
@@ -62,12 +62,15 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     //gpioSetISRFunc(trig_pin, FALLING_EDGE, 0, ADtrig_ISR); //ISR
 /**************  ADC Read  ***************************************/
     ADread *mAD = new ADread;
-    connect(mAD, SIGNAL(emit_AD_value(int)), this, SLOT(on_Receive_ADval(int)));
+    connect(mAD, SIGNAL(emit_AD_value(float)), this, SLOT(on_Receive_ADval(float)));
     connect(this, SIGNAL(emit_adc_enable()), mAD, SLOT(ADC_enable()));
     mAD->start();
 /*****************************************************************/
     time_sleep(0.1);
-    Setup_GraphicsView();
+
+    //Setup_GraphicsView();
+
+//ADC interrupt
     watcher.addPath ("/sys/class/gpio/gpio27/value");
     QObject::connect(&watcher, SIGNAL(fileChanged(QString)), this, SLOT(ADC_ISR(QString)));
 
@@ -95,13 +98,36 @@ qualitymonitor::~qualitymonitor()
     gpioTerminate();
     delete ui;
 }
-void qualitymonitor::on_Receive_ADval(int AD_val)
+void qualitymonitor::on_Receive_ADval(float AD_val)
 {
     ui->out1_pos->setText(QString::number(AD_val));
     ui->out2_pos->setText(QString::number(AD_val));
 
-    ui->test_inputL->setText(QString::number(AD_val));
-    ui->test_inputR->setText(QString::number(AD_val));
+    if(ui->out1_pos->text().toInt() > 1200 && ui->out1_pos->text().toInt() < 2000)
+    {
+        ui->pushButton_out1offset->setStyleSheet("color : green");
+        ui->pushButton_out1offset->setEnabled(true);
+    }
+    else
+    {
+        ui->pushButton_out1offset->setStyleSheet("color : red");
+        ui->pushButton_out1offset->setEnabled(false);
+    }
+
+    if(ui->out2_pos->text().toInt() > 1200 && ui->out2_pos->text().toInt() < 2000)
+    {
+        ui->pushButton_out2offset->setStyleSheet("color : green");
+        ui->pushButton_out2offset->setEnabled(true);
+    }
+    else
+    {
+        ui->pushButton_out2offset->setStyleSheet("color : red");
+        ui->pushButton_out2offset->setEnabled(false);
+    }
+
+
+    ui->test_inputL->setText(QString::number(AD_val* 3.11* 2/ 4096));
+    ui->test_inputR->setText(QString::number(AD_val* 3.11* 2/ 4096));
 
 
     //qDebug() << "Hello World!";
@@ -121,7 +147,7 @@ void qualitymonitor::ADC_ISR(QString){
         mTrigger.start();
         mTrigger.wait();
 
-        Setup_GraphicsView();
+        Set_GraphicsView();
 
         flag = 0;
     }
@@ -194,15 +220,42 @@ void qualitymonitor::setupParameter()
     ui->Filter_2    ->setText(Filter_2);
     ui->BiasAdjust  ->setText(BiasAdjust);
 }
+/*
+QLineSeries qualitymonitor::load_preData()
+{
+    int dispalyrange = 100;
+    parameter real_input;
+    QLineSeries *series = new QLineSeries();
 
-void qualitymonitor::Setup_GraphicsView()
+    QString real_data_read = real_input.Read(QDir().currentPath() + "/real_input", 0);
+    QString real_data;
+
+    real_data.append(real_data_read).append(ui->out1_pos->text() + "\n");
+    int datalenght = real_data.count("\n");
+    real_input.Write(QDir().currentPath() + "/real_input", real_data);
+
+    if(datalenght < dispalyrange)
+        for(int i = 0; i < datalenght - 1; i++)
+            series->append(i, real_data.section("\n",i ,i ).toFloat());
+
+    //qDebug()<< real_input << datalenght;
+
+    else
+        for(int i = datalenght - dispalyrange; i < datalenght - 1; i++)
+            series->append(i, real_data.section("\n",i ,i ).toFloat());
+
+    return series;
+}
+*/
+void qualitymonitor::Set_GraphicsView()
 {
     //cost a lot of time, need to modify
 
-    int dispalyrange = 300;
+    int dispalyrange = 100;
     parameter real_input;
     //srand(time(NULL));
-    QLineSeries *series = new QLineSeries();
+    QLineSeries *series_L = new QLineSeries();
+    QLineSeries *series_R = new QLineSeries();
 
     QString real_data_read = real_input.Read(QDir().currentPath() + "/real_input", 0);
     QString real_data;
@@ -210,58 +263,88 @@ void qualitymonitor::Setup_GraphicsView()
     real_data.append(real_data_read).append(ui->out1_pos->text() + "\n");
     int datalenght = real_data.count("\n");
     real_input.Write(QDir().currentPath() + "/real_input", real_data);
-
+/*
     if(datalenght < dispalyrange)
-        for(int i = 0; i < datalenght - 1; i++)
-            series->append(i, real_data.section("\n",i ,i ).toInt());
+        for(int i = 0; i < datalenght - 1; i++){
+            series_L->append(i, real_data.section("\n",i ,i ).toFloat());
+            series_R->append(i, real_data.section("\n",i ,i ).toFloat()+100);
 
+        }
     //qDebug()<< real_input << datalenght;
 
     else
-        for(int i = datalenght - dispalyrange; i < datalenght - 1; i++)
-            series->append(i, real_data.section("\n",i ,i ).toInt());
-
+        for(int i = datalenght - dispalyrange; i < datalenght - 1; i++){
+            series_L->append(i, real_data.section("\n",i ,i ).toFloat());
+            series_R->append(i, real_data.section("\n",i ,i ).toFloat()+100);
+        }
     //series->append(i,1);
     //*series = DataInput();
-
-
+*/
+    static int i = 0;
+    series_L->append(i++,ui->out1_pos->text().toInt());
     QChart *chart_L = new QChart();
     QChart *chart_R = new QChart();
     chart_L->legend()->hide();
     chart_R->legend()->hide();
 
-    chart_L->addSeries(series);
-    //chart_R->addSeries(series);
+    QPen pen = series_L->pen();
+    pen.setWidth(5);
+    QLinearGradient linearGradient(0, 0, 0, 200);
+
+    linearGradient.setColorAt(0,    Qt::red);
+    linearGradient.setColorAt(0.12, Qt::red);
+    linearGradient.setColorAt(0.20, Qt::yellow);
+    linearGradient.setColorAt(0.39, Qt::yellow);
+    linearGradient.setColorAt(0.40, Qt::green);
+    linearGradient.setColorAt(0.74, Qt::green);
+    linearGradient.setColorAt(0.75, Qt::yellow);
+    linearGradient.setColorAt(0.95, Qt::yellow);
+    linearGradient.setColorAt(1.0,  Qt::red);
+
+    pen.setBrush(QBrush(linearGradient)); // or just pen.setColor("red");
+    series_L->setPen(pen);
+
+    chart_L->addSeries(series_L);
+
+
+    //chart_L->setBackgroundBrush(QBrush("gray"));
+
+
+    //*series_R << QPointF(1, 0.5) << QPointF(1.5, 4.5) << QPointF(2.4, 2.5) << QPointF(4.3, 12.5) \
+            //<< QPointF(5.2, 3.5) << QPointF(7.4, 16.5) << QPointF(8.3, 7.5) << QPointF(10, 17);
+    series_R->setPen(pen);
+    chart_R->addSeries(series_R);
+
 
     chart_L->createDefaultAxes();
-    //chart_R->createDefaultAxes();
-
-
-    //chart_L->axisX()->setRange(0,1000);
-
-    //chart->setTitle("Simple line chart example");
-
-    chart_L->setGeometry(0, 10, 380, 310 );
-    //chart_R->setGeometry(0,10,380,280);
+    chart_R->createDefaultAxes();
 
     //set display range
-    //chart_L->axisY()->setRange(1000, 1800);
+    chart_L->axisY()->setRange(0, 1000);
+    chart_R->axisY()->setRange(0, 1000);
+    //chart->setTitle("Simple line chart example");
+
+    chart_L->setGeometry(0, 10, 380, 330);
+    chart_R->setGeometry(0, 10, 380, 330);
+
+
 
     QChartView *chartView_L = new QChartView(chart_L);
-    //QChartView *chartView_R = new QChartView(chart_R);
+    QChartView *chartView_R = new QChartView(chart_R);
     //chartView_L->resize(ui->graphicsView_L->size());
     chartView_L->setRenderHint(QPainter::Antialiasing);
-    //chartView_R->setRenderHint(QPainter::Antialiasing);
+    chartView_R->setRenderHint(QPainter::Antialiasing);
 
 
-    scene = new QGraphicsScene(this);
+    scene_L = new QGraphicsScene(this);
+    scene_R = new QGraphicsScene(this);
 
     //*scene.addItem(chart);
     //QGraphicsView view(&scene);
-    scene->addItem(chart_L);
-    ui->graphicsView_L->setScene(scene);
-    //scene->addItem(chart_R);
-    ui->graphicsView_R->setScene(scene);
+    scene_L->addItem(chart_L);
+    ui->graphicsView_L->setScene(scene_L);
+    scene_R->addItem(chart_R);
+    ui->graphicsView_R->setScene(scene_R);
 
 }
 
@@ -542,7 +625,17 @@ void qualitymonitor::on_pushButton_out2offset_clicked()
 
 void qualitymonitor::on_pushButton_6_clicked()
 {
+    //exit button
     emit emit_adc_enable();
     //exit(EXIT_FAILURE);
     //QApplication::closeAllWindows();
+}
+
+void qualitymonitor::on_pushButton_OutputCenter_clicked()
+{
+    ui->frameOutputCenter->raise();
+    if(!ui->Dateframe->isTopLevel()){
+        ui->Dateframe->raise();
+        ui->MenuFrame->raise();
+    }
 }

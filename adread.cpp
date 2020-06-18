@@ -1,12 +1,29 @@
 #include "adread.h"
 #include "pigpio.h"
 
+//SPI config
 #define CE0     8
 #define CE1     7
 #define MISO    9
 #define MOSI    10
 #define SCLK    11
 bool enable = true;
+
+//i2c config
+#define i2cBus      1
+#define i2cAddres   0x50
+#define i2cFlag     0
+
+#define REG_ADDR_RESULT         0x00
+#define REG_ADDR_ALERT          0x01
+#define REG_ADDR_CONFIG         0x02
+#define REG_ADDR_LIMITL         0x03
+#define REG_ADDR_LIMITH         0x04
+#define REG_ADDR_HYST           0x05
+#define REG_ADDR_CONVL          0x06
+#define REG_ADDR_CONVH          0x07
+
+
 ADread::ADread()
 {
     gpioInitialise();
@@ -14,6 +31,36 @@ ADread::ADread()
 
 void ADread::run()
 {
+    /************************i2c**********************************/
+    if (gpioInitialise() < 0)
+    {
+        fprintf(stderr, "pigpio initialisation failed.\n");
+        //return 1;
+    }
+
+    int sigHandle = i2cOpen(i2cBus, i2cAddres, i2cFlag);
+    i2cWriteByte(REG_ADDR_CONFIG, 0x20);
+
+    while(enable)
+    {
+
+        int adcData = ((i2cReadWordData(sigHandle, 0x00) & 0xff00) >> 8) \
+                               | ((i2cReadWordData(sigHandle, 0x00) & 0xf)  << 8);
+            //in address 0x50 result reg 0x00
+            //on recevie SDA
+            //
+            // D7 D6 D5 D4 D3 D2 D1 D0  | D15 D14 D13 D12 D11 D10  D9 D8
+            // _  _  _  _  _  _  _   _  |  _  _   _   _   _   _   _   _
+            //
+            //
+        //printf("ADC: %d\n", adcData);
+
+        emit emit_AD_value(adcData);
+    }
+    /************************i2c**********************************/
+
+
+    /************************SPI**********************************
     //qDebug() << thread()->currentThreadId();
 
     int count, read_val;
@@ -47,6 +94,7 @@ void ADread::run()
 
     bbSPIClose(CE0);
     bbSPIClose(CE1);
+    *******************************************************************/
 
     gpioTerminate();
 

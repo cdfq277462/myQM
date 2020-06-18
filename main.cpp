@@ -45,6 +45,7 @@ void ADtrig_ISR(int gpio, int level, uint32_t tick){
 */
 int main(int argc, char *argv[])
 {
+
     QApplication a(argc, argv);
     qualitymonitor w;
 

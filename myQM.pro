@@ -41,6 +41,7 @@ FORMS += \
 
 LIBS += -lpigpio -lrt -lpthread
 
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /home/pi/$${TARGET}

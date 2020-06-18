@@ -38,7 +38,7 @@ MyTrigger::MyTrigger()
 
 void MyTrigger::run()
 {
-    qDebug() << "trig RUN!";
+    //qDebug() << "trig RUN!";
     emit emit_trig_sig();
 
 }
