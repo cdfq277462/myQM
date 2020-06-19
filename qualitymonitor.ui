@@ -190,7 +190,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>11</x>
@@ -208,7 +208,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -1198,7 +1198,7 @@
      <string>目錄</string>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>120</x>
@@ -2465,7 +2465,6 @@
     </property>
    </widget>
   </widget>
-  <zorder>prameter</zorder>
   <zorder>pushButton_2</zorder>
   <zorder>pushButton_ErrorSig</zorder>
   <zorder>MenuFrame</zorder>
@@ -2479,6 +2478,7 @@
   <zorder>SettingFrame</zorder>
   <zorder>frameOutputCenter</zorder>
   <zorder>Dateframe</zorder>
+  <zorder>prameter</zorder>
  </widget>
  <resources/>
  <connections>

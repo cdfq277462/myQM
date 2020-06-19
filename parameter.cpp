@@ -60,6 +60,8 @@ QString parameter::Read(QString Filename, int index){
     }
     config.close();
 }
+
+
 void parameter::Write(QString Filename, QString Datain){
     QFile config(Filename);
 

@@ -6,6 +6,10 @@
 
 #include <QtCharts>
 
+#include "mathtools.h"
+using namespace QtCharts;
+
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class qualitymonitor; }
@@ -22,6 +26,7 @@ public:
     ~qualitymonitor();
 
     QFileSystemWatcher watcher;
+    mathtools Mymathtool;
 
 
 private slots:
@@ -69,6 +74,8 @@ private slots:
 
     void on_pushButton_OutputCenter_clicked();
 
+    void Read_oldData();
+
 public slots:
     void DateTimeSlot();
 
@@ -87,6 +94,10 @@ private:
     QTimer *timer;
     QGraphicsScene *scene_L;
     QGraphicsScene *scene_R;
+
+    QSplineSeries *series_L;
+    QSplineSeries *series_R;
+    QList<QSplineSeries *> m_serieslist;
 
 };
 #endif // QUALITYMONITOR_H

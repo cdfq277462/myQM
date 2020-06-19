@@ -17,6 +17,7 @@ using namespace QtCharts;
 #include "parameter.h"
 #include "adread.h"
 #include "pigpio.h"
+#include <time.h>
 
 #define  normalParameter    1
 #define  EEParameter        2
@@ -69,6 +70,7 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     time_sleep(0.1);
 
     //Setup_GraphicsView();
+    Read_oldData();
 
 //ADC interrupt
     watcher.addPath ("/sys/class/gpio/gpio27/value");
@@ -247,22 +249,78 @@ QLineSeries qualitymonitor::load_preData()
     return series;
 }
 */
+/*
+void qualitymonitor::Set_GraphicsView()
+{
+
+}
+*/
+void qualitymonitor::Read_oldData()
+{
+    QString Filename_L = QDir().currentPath() + "/real_input_L";
+    QString Filename_R = QDir().currentPath() + "/real_input_R";
+
+    series_L = new QSplineSeries();
+    series_R = new QSplineSeries();
+    m_serieslist.append(series_L);
+    m_serieslist.append(series_R);
+
+    QList<QPointF> mData_L, mData_R;
+    QFile real_input_L(Filename_L);
+    QFile real_input_R(Filename_R);
+
+    //series = new QSplineSeries();
+
+    if(!real_input_L.open(QFile::ReadOnly | QFile::Text) \
+      |!real_input_R.open(QFile::ReadOnly | QFile::Text))
+    {
+        qDebug() << "Cannot initialize parameter!";
+    }
+    QTextStream Readin_L(&real_input_L);
+
+    QString read_data_L = Readin_L.readAll();
+    //qDebug() << read_data;
+
+    for(int i =0; i < read_data_L.count("\n"); i++){
+        int read_data_tras = read_data_L.section("\n",i,i).toInt();
+        //qDebug() << read_data_tras;
+        mData_L.append(QPointF(i, read_data_tras));
+    }
+    series_L->append(mData_L);
+    //series->append(in.readAll());
+    real_input_L.close();
+
+    QTextStream Readin_R(&real_input_R);
+    QString read_data_R = Readin_R.readAll();
+
+    for(int i =0; i < read_data_R.count("\n"); i++){
+        int read_data_tras = read_data_R.section("\n",i,i).toInt();
+        //qDebug() << read_data_tras;
+        mData_R.append(QPointF(i, read_data_tras));
+    }
+    series_R->append(mData_R);
+
+    real_input_R.close();
+}
+
+
 void qualitymonitor::Set_GraphicsView()
 {
     //cost a lot of time, need to modify
+    clock_t start, end;
+    start = clock();
+    int dispalyrange = 500;
+    //parameter real_input;
+    //srand(time(NULL));    
 
-    int dispalyrange = 100;
-    parameter real_input;
-    //srand(time(NULL));
-    QLineSeries *series_L = new QLineSeries();
-    QLineSeries *series_R = new QLineSeries();
-
+/*
     QString real_data_read = real_input.Read(QDir().currentPath() + "/real_input", 0);
     QString real_data;
     //real_data.append(real_data_read).append(QString::number((rand()%30) + 1600) + "\n");
     real_data.append(real_data_read).append(ui->out1_pos->text() + "\n");
     int datalenght = real_data.count("\n");
     real_input.Write(QDir().currentPath() + "/real_input", real_data);
+*/
 /*
     if(datalenght < dispalyrange)
         for(int i = 0; i < datalenght - 1; i++){
@@ -281,7 +339,10 @@ void qualitymonitor::Set_GraphicsView()
     //*series = DataInput();
 */
     static int i = 0;
-    series_L->append(i++,ui->out1_pos->text().toInt());
+
+    float A_per = Mymathtool.A_per(ui->L_feedoutcenter->text(), ui->out1_pos->text());
+    series_L->append(i++, A_per);
+    qDebug() << A_per;
     QChart *chart_L = new QChart();
     QChart *chart_R = new QChart();
     chart_L->legend()->hide();
@@ -302,6 +363,8 @@ void qualitymonitor::Set_GraphicsView()
     linearGradient.setColorAt(1.0,  Qt::red);
 
     pen.setBrush(QBrush(linearGradient)); // or just pen.setColor("red");
+    pen.setStyle(Qt::DotLine);
+
     series_L->setPen(pen);
 
     chart_L->addSeries(series_L);
@@ -310,7 +373,7 @@ void qualitymonitor::Set_GraphicsView()
     //chart_L->setBackgroundBrush(QBrush("gray"));
 
 
-    //*series_R << QPointF(1, 0.5) << QPointF(1.5, 4.5) << QPointF(2.4, 2.5) << QPointF(4.3, 12.5) \
+    //series_R << QPointF(1, 0.5) << QPointF(1.5, 4.5) << QPointF(2.4, 2.5) << QPointF(4.3, 12.5) \
             //<< QPointF(5.2, 3.5) << QPointF(7.4, 16.5) << QPointF(8.3, 7.5) << QPointF(10, 17);
     series_R->setPen(pen);
     chart_R->addSeries(series_R);
@@ -320,8 +383,9 @@ void qualitymonitor::Set_GraphicsView()
     chart_R->createDefaultAxes();
 
     //set display range
-    chart_L->axisY()->setRange(0, 1000);
+    chart_L->axisY()->setRange(-10, 10);
     chart_R->axisY()->setRange(0, 1000);
+    chart_L->axisX()->setRange(series_L->count() - dispalyrange, series_L->count());
     //chart->setTitle("Simple line chart example");
 
     chart_L->setGeometry(0, 10, 380, 330);
@@ -346,6 +410,8 @@ void qualitymonitor::Set_GraphicsView()
     scene_R->addItem(chart_R);
     ui->graphicsView_R->setScene(scene_R);
 
+    end = clock();
+    //qDebug() << difftime(end, start);
 }
 
 void qualitymonitor::Setup_History()
