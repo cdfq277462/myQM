@@ -23,6 +23,8 @@
 #define  Filter_1_EE        3
 #define  Filter_2_EE        4
 #define  BiasAdjust_EE      5
+#define  Out1_Offset_pos    6
+#define  Out2_Offset_pos    7
 
 
 QString mfilename  = QDir().currentPath() + "/config";
@@ -161,3 +163,16 @@ int parameter::BiasAdjust(){
     return getdata;
 }
 //end EE Parameter
+
+
+//LVDT Offset
+int parameter::Out1_Offset()
+{
+    int getdata = Read(EEfilename, Out1_Offset_pos).toInt();
+    return getdata;
+}
+int parameter::Out2_Offset()
+{
+    int getdata = Read(EEfilename, Out2_Offset_pos).toInt();
+    return getdata;
+}

@@ -34,9 +34,15 @@
      <height>480</height>
     </rect>
    </property>
+   <property name="minimumSize">
+    <size>
+     <width>800</width>
+     <height>480</height>
+    </size>
+   </property>
    <property name="maximumSize">
     <size>
-     <width>88888</width>
+     <width>120</width>
      <height>888888</height>
     </size>
    </property>
@@ -86,7 +92,7 @@
       <x>700</x>
       <y>10</y>
       <width>88</width>
-      <height>102</height>
+      <height>116</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -156,35 +162,28 @@
       <x>400</x>
       <y>60</y>
       <width>191</width>
-      <height>56</height>
+      <height>76</height>
      </rect>
     </property>
     <layout class="QFormLayout" name="formLayout_4">
      <item row="0" column="0">
-      <widget class="QLabel" name="label_18">
+      <widget class="QLabel" name="label_R_speed">
        <property name="text">
         <string>Speed :</string>
        </property>
       </widget>
      </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="label_20">
+      <widget class="QLabel" name="label_R_CV1m">
        <property name="text">
-        <string>TextLabel</string>
+        <string>R_CV1m</string>
        </property>
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QLabel" name="label_51">
+      <widget class="QLabel" name="label_R_A_per">
        <property name="text">
-        <string>TextLabel</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QLabel" name="label_52">
-       <property name="text">
-        <string>TextLabel</string>
+        <string>R_A%</string>
        </property>
       </widget>
      </item>
@@ -212,37 +211,42 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>60</y>
-      <width>191</width>
-      <height>56</height>
+      <y>90</y>
+      <width>347</width>
+      <height>26</height>
      </rect>
     </property>
-    <layout class="QFormLayout" name="formLayout_3">
-     <item row="0" column="0">
-      <widget class="QLabel" name="label">
+    <layout class="QHBoxLayout" name="horizontalLayout_14">
+     <item>
+      <widget class="QLabel" name="label_L_speed">
        <property name="text">
         <string>Speed :</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_2">
+     <item>
+      <widget class="QLabel" name="label_L_A_per">
+       <property name="minimumSize">
+        <size>
+         <width>120</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>120</width>
+         <height>16777215</height>
+        </size>
+       </property>
        <property name="text">
-        <string>TextLabel</string>
+        <string>L_A%</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
-      <widget class="QLabel" name="label_13">
+     <item>
+      <widget class="QLabel" name="label_L_CV1m">
        <property name="text">
-        <string>TextLabel</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QLabel" name="label_16">
-       <property name="text">
-        <string>TextLabel</string>
+        <string>L_CV1m</string>
        </property>
       </widget>
      </item>
@@ -264,6 +268,12 @@
      <height>480</height>
     </size>
    </property>
+   <property name="font">
+    <font>
+     <family>Sans</family>
+     <pointsize>15</pointsize>
+    </font>
+   </property>
    <property name="autoFillBackground">
     <bool>true</bool>
    </property>
@@ -278,12 +288,12 @@
      <widget class="QLabel" name="label_11">
       <property name="font">
        <font>
-        <family>標楷體</family>
+        <family>Sans</family>
         <pointsize>36</pointsize>
        </font>
       </property>
       <property name="text">
-       <string>LVDT 調整</string>
+       <string>LVDT 校正</string>
       </property>
      </widget>
     </item>
@@ -569,7 +579,7 @@
       <x>10</x>
       <y>10</y>
       <width>585</width>
-      <height>84</height>
+      <height>96</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -2013,6 +2023,7 @@
     </property>
     <property name="font">
      <font>
+      <family>Arial</family>
       <pointsize>14</pointsize>
      </font>
     </property>
@@ -2034,6 +2045,7 @@
     </property>
     <property name="font">
      <font>
+      <family>Arial</family>
       <pointsize>14</pointsize>
      </font>
     </property>
@@ -2212,6 +2224,7 @@
    </property>
    <property name="font">
     <font>
+     <family>Arial</family>
      <pointsize>12</pointsize>
     </font>
    </property>
@@ -2258,6 +2271,7 @@
           <widget class="QDateTimeEdit" name="dateTimeEdit_2">
            <property name="font">
             <font>
+             <family>Arial</family>
              <pointsize>12</pointsize>
             </font>
            </property>
@@ -2298,6 +2312,7 @@
           <widget class="QCheckBox" name="checkBox">
            <property name="font">
             <font>
+             <family>Arial</family>
              <pointsize>15</pointsize>
             </font>
            </property>
@@ -2370,6 +2385,7 @@
    </property>
    <property name="font">
     <font>
+     <family>Arial</family>
      <pointsize>36</pointsize>
     </font>
    </property>
@@ -2393,6 +2409,7 @@
     </property>
     <property name="font">
      <font>
+      <family>Arial</family>
       <pointsize>36</pointsize>
      </font>
     </property>
@@ -2417,6 +2434,7 @@
     </property>
     <property name="font">
      <font>
+      <family>Arial</family>
       <pointsize>16</pointsize>
      </font>
     </property>
@@ -2457,6 +2475,7 @@
     </property>
     <property name="font">
      <font>
+      <family>Arial</family>
       <pointsize>16</pointsize>
      </font>
     </property>
@@ -2472,13 +2491,13 @@
   <zorder>test</zorder>
   <zorder>errorhistory</zorder>
   <zorder>frame_search</zorder>
-  <zorder>lvdt</zorder>
-  <zorder>runframe</zorder>
   <zorder>index</zorder>
   <zorder>SettingFrame</zorder>
   <zorder>frameOutputCenter</zorder>
   <zorder>Dateframe</zorder>
   <zorder>prameter</zorder>
+  <zorder>lvdt</zorder>
+  <zorder>runframe</zorder>
  </widget>
  <resources/>
  <connections>

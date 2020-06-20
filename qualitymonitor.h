@@ -58,7 +58,6 @@ private slots:
 
     //QLineSeries load_preData();
 
-    void Set_GraphicsView();
 
     void on_pushButton_3_clicked();
 
@@ -76,6 +75,8 @@ private slots:
 
     void Read_oldData();
 
+    void count_ISR_times();
+
 public slots:
     void DateTimeSlot();
 
@@ -85,6 +86,7 @@ public slots:
 
     void ADC_ISR(QString);
 
+    void Set_GraphicsView();
 
 signals:
     void emit_adc_enable();
@@ -100,4 +102,17 @@ private:
     QList<QSplineSeries *> m_serieslist;
 
 };
+/************************************************
+class MyTrigger : public QThread
+{
+    Q_OBJECT
+
+public:
+    explicit MyTrigger();
+    void run() override;
+
+signals:
+    void emit_trig_sig();
+};
+**************************************************/
 #endif // QUALITYMONITOR_H

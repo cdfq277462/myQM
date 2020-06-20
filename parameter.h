@@ -32,6 +32,9 @@ public:
     int     Filter_2();
     int     BiasAdjust();
 
+    int     Out1_Offset();
+    int     Out2_Offset();
+
     QString   Read(QString Filename, int);
     void    Write(QString Filename, QString);
 };

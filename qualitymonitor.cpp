@@ -28,9 +28,13 @@ using namespace QtCharts;
 #define	trig_pin	27 // trigger
 
 ****************************************************************/
-
+/*
 //interrupt flag
 int flag = 0;
+int count = 0;
+clock_t start, end;
+
+*/
 
 qualitymonitor::qualitymonitor(QWidget *parent)
     : QWidget(parent)
@@ -39,10 +43,7 @@ qualitymonitor::qualitymonitor(QWidget *parent)
 
     ui->setupUi(this);
     QWidget::showFullScreen();
-    this->setCursor(Qt::BlankCursor); //hide mouse
-
-    //qDebug() << thread()->currentThreadId();
-
+    this->setCursor(Qt::BlankCursor); //hide mouse   
 
 //set timer
     timer = new QTimer(this);
@@ -55,7 +56,7 @@ qualitymonitor::qualitymonitor(QWidget *parent)
 //set runframe on toplevel
     ui->runframe->raise();
     ui->Dateframe->raise();
-    //qDebug() << QThread::currentThread();
+    //qDebug() << "main: " << QThread::currentThread();
     Setup_History();
 
     on_pushButton_Search_clicked();
@@ -75,8 +76,18 @@ qualitymonitor::qualitymonitor(QWidget *parent)
 //ADC interrupt
     watcher.addPath ("/sys/class/gpio/gpio27/value");
     QObject::connect(&watcher, SIGNAL(fileChanged(QString)), this, SLOT(ADC_ISR(QString)));
+    timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(count_ISR_times()));
+    timer->start(10);
 
 }
+void qualitymonitor::count_ISR_times()
+{
+    //ui->label_L_speed->setText(QString::number(count));
+    //qDebug() << count;
+    //count = 0;
+}
+
 /********************************************************************************
 void qualitymonitor::ADtrig_ISR(int gpio, int level, uint32_t tick)
 {
@@ -105,6 +116,7 @@ void qualitymonitor::on_Receive_ADval(float AD_val)
     ui->out1_pos->setText(QString::number(AD_val));
     ui->out2_pos->setText(QString::number(AD_val));
 
+    //set LVDT button color & enable
     if(ui->out1_pos->text().toInt() > 1200 && ui->out1_pos->text().toInt() < 2000)
     {
         ui->pushButton_out1offset->setStyleSheet("color : green");
@@ -126,40 +138,48 @@ void qualitymonitor::on_Receive_ADval(float AD_val)
         ui->pushButton_out2offset->setStyleSheet("color : red");
         ui->pushButton_out2offset->setEnabled(false);
     }
+    //set runframe A%
+    ui->label_L_A_per->setText("A%: "+QString::number(Mymathtool.A_per(ui->L_feedoutcenter->text(), ui->out1_pos->text()), 'f', 2)+" %");
+    ui->label_R_A_per->setText("A%: "+QString::number(Mymathtool.A_per(ui->R_feedoutcenter->text(), ui->out2_pos->text()), 'f', 2)+" %");
 
-
-    ui->test_inputL->setText(QString::number(AD_val* 3.11* 2/ 4096));
-    ui->test_inputR->setText(QString::number(AD_val* 3.11* 2/ 4096));
+    //set testframe ADC value
+    ui->test_inputL->setText(QString::number(AD_val* 3.111* 2/ 4096));
+    ui->test_inputR->setText(QString::number(AD_val* 3.111* 2/ 4096));
 
 
     //qDebug() << "Hello World!";
 }
 
-void qualitymonitor::ADC_ISR(QString){
-
+void qualitymonitor::ADC_ISR(QString)
+{/*
     flag++;
+    count++;
+
     //printf("%u\n", flag);
-    MyTrigger mTrigger;
+    //MyTrigger mTrigger;
     if(flag == 5){
-        //qDebug() << "AD read";
+        //qDebug() << "ISR: " << thread()->currentThreadId();
         //AD start to read
-        QObject::connect(&mTrigger, SIGNAL(emit_trig_sig()), this, SLOT(on_Receive_Trig()));
+        //QObject::connect(&mTrigger, SIGNAL(emit_trig_sig()), this, SLOT(on_Receive_Trig()));
         //QObject::connect(&mTrigger, SIGNAL(emit_trig_sig()), this, SLOT(on_Receive_Trig()));
 
-        mTrigger.start();
-        mTrigger.wait();
-
-        Set_GraphicsView();
-
+        //mTrigger.start();
+        //mTrigger.wait();
+        //Set_GraphicsView();
         flag = 0;
-    }
+        end = clock();
+        qDebug() << difftime(end, start);
+        start = clock();
+    }*/
 }
 
 void qualitymonitor::on_Receive_Trig()
 {   //AD trig
     //qDebug() << "TRIG!";
-    //Setup_GraphicsView();
-    //qDebug() << thread()->currentThreadId();
+    //Set_GraphicsView();
+
+    //qDebug() << "on_Receive_Trig :" << thread()->currentThreadId();
+
 }
 
 void qualitymonitor::DateTimeSlot()
@@ -221,40 +241,15 @@ void qualitymonitor::setupParameter()
     ui->Filter_1    ->setText(Filter_1);
     ui->Filter_2    ->setText(Filter_2);
     ui->BiasAdjust  ->setText(BiasAdjust);
+
+    //set LVDT offset
+    QString outputL_offset = QString::number(initParameter.Out1_Offset());
+    QString outputR_offset = QString::number(initParameter.Out2_Offset());
+
+    ui->out1_offset->setText(outputL_offset);
+    ui->out2_offset->setText(outputR_offset);
 }
-/*
-QLineSeries qualitymonitor::load_preData()
-{
-    int dispalyrange = 100;
-    parameter real_input;
-    QLineSeries *series = new QLineSeries();
 
-    QString real_data_read = real_input.Read(QDir().currentPath() + "/real_input", 0);
-    QString real_data;
-
-    real_data.append(real_data_read).append(ui->out1_pos->text() + "\n");
-    int datalenght = real_data.count("\n");
-    real_input.Write(QDir().currentPath() + "/real_input", real_data);
-
-    if(datalenght < dispalyrange)
-        for(int i = 0; i < datalenght - 1; i++)
-            series->append(i, real_data.section("\n",i ,i ).toFloat());
-
-    //qDebug()<< real_input << datalenght;
-
-    else
-        for(int i = datalenght - dispalyrange; i < datalenght - 1; i++)
-            series->append(i, real_data.section("\n",i ,i ).toFloat());
-
-    return series;
-}
-*/
-/*
-void qualitymonitor::Set_GraphicsView()
-{
-
-}
-*/
 void qualitymonitor::Read_oldData()
 {
     QString Filename_L = QDir().currentPath() + "/real_input_L";
@@ -301,6 +296,7 @@ void qualitymonitor::Read_oldData()
     series_R->append(mData_R);
 
     real_input_R.close();
+
 }
 
 
@@ -320,8 +316,8 @@ void qualitymonitor::Set_GraphicsView()
     real_data.append(real_data_read).append(ui->out1_pos->text() + "\n");
     int datalenght = real_data.count("\n");
     real_input.Write(QDir().currentPath() + "/real_input", real_data);
-*/
-/*
+
+
     if(datalenght < dispalyrange)
         for(int i = 0; i < datalenght - 1; i++){
             series_L->append(i, real_data.section("\n",i ,i ).toFloat());
@@ -336,13 +332,15 @@ void qualitymonitor::Set_GraphicsView()
             series_R->append(i, real_data.section("\n",i ,i ).toFloat()+100);
         }
     //series->append(i,1);
-    //*series = DataInput();
+    *series = DataInput();
 */
     static int i = 0;
 
     float A_per = Mymathtool.A_per(ui->L_feedoutcenter->text(), ui->out1_pos->text());
-    series_L->append(i++, A_per);
-    qDebug() << A_per;
+    //series_L->append(i++, A_per);
+    //qDebug() << A_per;
+
+
     QChart *chart_L = new QChart();
     QChart *chart_R = new QChart();
     chart_L->legend()->hide();
@@ -409,6 +407,7 @@ void qualitymonitor::Set_GraphicsView()
     ui->graphicsView_L->setScene(scene_L);
     scene_R->addItem(chart_R);
     ui->graphicsView_R->setScene(scene_R);
+    //ui->graphicsView_L->repaint();
 
     end = clock();
     //qDebug() << difftime(end, start);
@@ -586,11 +585,16 @@ void qualitymonitor::toSaveDate(int indx){
             QString Filter_1    = writeParameter.TrantoNumberType(ui->Filter_1->text());
             QString Filter_2    = writeParameter.TrantoNumberType(ui->Filter_2->text());
             QString BiasAdjust  = writeParameter.TrantoNumberType(ui->BiasAdjust->text());
-            saveData = (CR_diameter     + "\n");
-            saveData.append(DetectGear  + "\n");
-            saveData.append(Filter_1    + "\n");
-            saveData.append(Filter_2    + "\n");
-            saveData.append(BiasAdjust        );
+            QString outputL_offset = writeParameter.TrantoNumberType(ui->out1_offset->text());
+            QString outputR_offset = writeParameter.TrantoNumberType(ui->out2_offset->text());
+
+            saveData = (CR_diameter         + "\n");
+            saveData.append(DetectGear      + "\n");
+            saveData.append(Filter_1        + "\n");
+            saveData.append(Filter_2        + "\n");
+            saveData.append(BiasAdjust      + "\n");
+            saveData.append(outputL_offset  + "\n");
+            saveData.append(outputR_offset        );
             writeParameter.Write(QDir().currentPath() + "/EEconfig", saveData);
         }
     }
@@ -666,37 +670,6 @@ void qualitymonitor::on_pushButton_3_clicked()
         ui->MenuFrame->raise();
     }
 }
-
-void qualitymonitor::on_pushButton_5_clicked()
-{
-    if(ui->pushButton_5->text().operator==("Number"))
-        ui->pushButton_5->setText("Graphics");
-    else
-        ui->pushButton_5->setText("Number");
-}
-
-void qualitymonitor::on_pushButton_out1offset_clicked()
-{
-    QString Out1_offset = QString::number(QString(ui->out1_pos->text()).toInt() -1000);
-    ui->out1_offset->setText(Out1_offset);
-}
-
-void qualitymonitor::on_pushButton_out2offset_clicked()
-{
-    QString Out2_offset = QString::number(QString(ui->out2_pos->text()).toInt() -1000);
-    ui->out2_offset->setText(Out2_offset);
-}
-
-
-
-void qualitymonitor::on_pushButton_6_clicked()
-{
-    //exit button
-    emit emit_adc_enable();
-    //exit(EXIT_FAILURE);
-    //QApplication::closeAllWindows();
-}
-
 void qualitymonitor::on_pushButton_OutputCenter_clicked()
 {
     ui->frameOutputCenter->raise();
@@ -705,3 +678,52 @@ void qualitymonitor::on_pushButton_OutputCenter_clicked()
         ui->MenuFrame->raise();
     }
 }
+
+//display mode
+void qualitymonitor::on_pushButton_5_clicked()
+{
+    if(ui->pushButton_5->text().operator==("Number"))
+        ui->pushButton_5->setText("Graphics");
+    else
+        ui->pushButton_5->setText("Number");
+}//end display mode
+
+void qualitymonitor::on_pushButton_6_clicked()
+{
+    //exit button
+    emit emit_adc_enable();
+    //exit(EXIT_FAILURE);
+    //QApplication::closeAllWindows();
+}
+//set lvdt offset
+void qualitymonitor::on_pushButton_out1offset_clicked()
+{
+    QString Out1_offset = QString::number(QString(ui->out1_pos->text()).toInt() -1000);
+    ui->out1_offset->setText(Out1_offset);
+    toSaveDate(EEParameter);
+}
+void qualitymonitor::on_pushButton_out2offset_clicked()
+{
+    QString Out2_offset = QString::number(QString(ui->out2_pos->text()).toInt() -1000);
+    ui->out2_offset->setText(Out2_offset);
+    toSaveDate(EEParameter);
+}//end set lvdt offset
+
+
+
+
+
+
+/***********************************************************************************
+MyTrigger::MyTrigger()
+{
+    gpioInitialise();
+}
+void MyTrigger::run()
+{
+    qualitymonitor Set_GraphicsView;
+    qDebug() << "mtrig: " << thread()->currentThreadId();
+    //Set_GraphicsView.Set_GraphicsView();
+    emit emit_trig_sig();
+}
+*************************************************************************************/
