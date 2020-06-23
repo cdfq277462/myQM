@@ -218,13 +218,6 @@
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_14">
      <item>
-      <widget class="QLabel" name="label_L_speed">
-       <property name="text">
-        <string>Speed :</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QLabel" name="label_L_A_per">
        <property name="minimumSize">
         <size>
@@ -251,6 +244,19 @@
       </widget>
      </item>
     </layout>
+   </widget>
+   <widget class="QLabel" name="label_L_speed">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>60</y>
+      <width>191</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Speed :</string>
+    </property>
    </widget>
   </widget>
   <widget class="QFrame" name="lvdt">

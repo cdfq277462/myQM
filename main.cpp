@@ -23,12 +23,14 @@
 #define ADC_Setup   1
 
 
-
+/*
 //interrupt flag
 int flag = 0;
 int i = 0;
 time_t start_t, end_t;
+*/
 
+/*
 void ADtrig_ISR(int gpio, int level, uint32_t tick){
 
     flag ++;
@@ -44,19 +46,15 @@ void ADtrig_ISR(int gpio, int level, uint32_t tick){
         flag = 0;
     }
 }
-
+*/
 int main(int argc, char *argv[])
 {
 
     QApplication a(argc, argv);
     qualitymonitor w;
 
-    gpioInitialise();
-    gpioSetMode(LED, PI_OUTPUT);
-    gpioSetMode(trig_pin, PI_INPUT);
-    gpioSetPullUpDown(trig_pin, PI_PUD_UP); //set trig_pin to edge trig
-    time_sleep(0.001);
-    gpioSetISRFunc(trig_pin, FALLING_EDGE, 0, ADtrig_ISR); //ISR
+
+    //gpioSetISRFunc(trig_pin, FALLING_EDGE, 0, ADtrig_ISR); //ISR
     //end setup pin mode
 
     //qDebug() << a.thread()->currentThreadId();
@@ -67,7 +65,7 @@ int main(int argc, char *argv[])
     AD7606.moveToThread(&cThread);
     cThread.start();
 
-    start_t = clock();
+    //start_t = clock();
 
 
     w.show();

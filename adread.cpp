@@ -40,10 +40,10 @@ void ADread::run()
 
     int sigHandle = i2cOpen(i2cBus, i2cAddres, i2cFlag);
     i2cWriteByte(REG_ADDR_CONFIG, 0x20);
-
+    time_t start_t, end_t;
     while(enable)
     {
-
+        start_t = clock();
         int adcData = ((i2cReadWordData(sigHandle, 0x00) & 0xff00) >> 8) \
                                | ((i2cReadWordData(sigHandle, 0x00) & 0xf)  << 8);
             //in address 0x50 result reg 0x00
@@ -54,7 +54,8 @@ void ADread::run()
             //
             //
         //printf("ADC: %d\n", adcData);
-
+        end_t = clock();
+        //qDebug() << difftime(end_t, start_t);
         emit emit_AD_value(adcData);
     }
     /************************i2c**********************************/

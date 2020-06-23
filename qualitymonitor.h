@@ -15,19 +15,22 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class qualitymonitor; }
 QT_END_NAMESPACE
 
+
+
 class qualitymonitor : public QWidget
 {
     Q_OBJECT
 
 public:
     qualitymonitor(QWidget *parent = nullptr);
+
+    static qualitymonitor *ISR_excute_ptr; //qualitymonitor::qualitymonitor ptr
     void setupParameter();
     void toSaveDate(int);
     ~qualitymonitor();
 
     QFileSystemWatcher watcher;
     mathtools Mymathtool;
-
 
 private slots:
     void on_saveButton_clicked();
@@ -75,7 +78,6 @@ private slots:
 
     void Read_oldData();
 
-    void count_ISR_times();
 
 public slots:
     void DateTimeSlot();
@@ -84,12 +86,39 @@ public slots:
 
     void on_Receive_Trig();
 
-    void ADC_ISR(QString);
-
     void Set_GraphicsView();
+
+    //void slot();
+    void count_ISR_times();
+
+    //void ADC_ISR(QString);
+
+    static void  ADtrig_ISR(int gpio, int level, uint32_t tick);
+    /*{
+        //qualitymonitor qualitymonitor_ptr;
+        qDebug() << "isr";
+
+
+        flag++;
+        //printf("%u\n", flag);
+
+        if(flag == 5){
+            qDebug() << "AD read";
+
+            //AD start to read
+            //QObject::connect(&mTrigger, SIGNAL(emit_trig_sig()), this, SLOT(on_Receive_Trig()));
+            //emit on_trig(isr_count_tick);
+            flag = 0;
+        }
+    };*/
+
+
 
 signals:
     void emit_adc_enable();
+
+    //void sig();
+
 
 private:
     Ui::qualitymonitor *ui;
@@ -97,22 +126,11 @@ private:
     QGraphicsScene *scene_L;
     QGraphicsScene *scene_R;
 
+
     QSplineSeries *series_L;
     QSplineSeries *series_R;
     QList<QSplineSeries *> m_serieslist;
 
 };
-/************************************************
-class MyTrigger : public QThread
-{
-    Q_OBJECT
 
-public:
-    explicit MyTrigger();
-    void run() override;
-
-signals:
-    void emit_trig_sig();
-};
-**************************************************/
 #endif // QUALITYMONITOR_H

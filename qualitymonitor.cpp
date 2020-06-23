@@ -22,19 +22,18 @@ using namespace QtCharts;
 #define  normalParameter    1
 #define  EEParameter        2
 
-/***************************************************************
 
 #define LED         17  //test sig
 #define	trig_pin	27 // trigger
 
-****************************************************************/
-/*
 //interrupt flag
 int flag = 0;
-int count = 0;
-clock_t start, end;
+//count interrupt excute times
+int isr_count_tick = 0;
 
-*/
+time_t start_t, end_t;
+
+qualitymonitor* qualitymonitor::ISR_excute_ptr = nullptr; //initialize ptr
 
 qualitymonitor::qualitymonitor(QWidget *parent)
     : QWidget(parent)
@@ -43,7 +42,8 @@ qualitymonitor::qualitymonitor(QWidget *parent)
 
     ui->setupUi(this);
     QWidget::showFullScreen();
-    this->setCursor(Qt::BlankCursor); //hide mouse   
+    this->setCursor(Qt::BlankCursor);   //hide mouse
+    ISR_excute_ptr = this;              //qualitymonitor::qualitymonitor ptr
 
 //set timer
     timer = new QTimer(this);
@@ -61,7 +61,17 @@ qualitymonitor::qualitymonitor(QWidget *parent)
 
     on_pushButton_Search_clicked();
 
-    //gpioSetISRFunc(trig_pin, FALLING_EDGE, 0, ADtrig_ISR); //ISR
+//ADC interrupt
+    gpioInitialise();
+    gpioSetMode(LED, PI_OUTPUT);
+    gpioSetMode(trig_pin, PI_INPUT);
+    gpioSetPullUpDown(trig_pin, PI_PUD_DOWN); //set trig_pin to edge trig
+    time_sleep(0.001);
+    gpioSetISRFunc(trig_pin, FALLING_EDGE, 0, ADtrig_ISR); //ISR
+
+
+    //connect(this, SIGNAL(on_trig(int)), this, SLOT(speed_cal(int)));
+
 /**************  ADC Read  ***************************************/
     ADread *mAD = new ADread;
     connect(mAD, SIGNAL(emit_AD_value(float)), this, SLOT(on_Receive_ADval(float)));
@@ -74,37 +84,38 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     Read_oldData();
 
 //ADC interrupt
+
+    /*
     watcher.addPath ("/sys/class/gpio/gpio27/value");
     QObject::connect(&watcher, SIGNAL(fileChanged(QString)), this, SLOT(ADC_ISR(QString)));
+    */
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(count_ISR_times()));
-    timer->start(10);
+    timer->start(1000);
+
 
 }
 void qualitymonitor::count_ISR_times()
 {
-    //ui->label_L_speed->setText(QString::number(count));
-    //qDebug() << count;
-    //count = 0;
-}
+    ui->label_L_speed->setText("Speed: " + QString::number(isr_count_tick *2.221554 *60 /1000));
+    isr_count_tick = 0; //
 
-/********************************************************************************
+}
 void qualitymonitor::ADtrig_ISR(int gpio, int level, uint32_t tick)
-{
+{//7983 Hz
     flag ++;
     //printf("%u\n", flag);
-    MyTrigger mTrigger;
+    //MyTrigger mTrigger;    
+    isr_count_tick++;
     if(flag == 5){
-        qDebug() << "AD read";
+        end_t = clock();
+        qDebug() << "AD read" << difftime(end_t, start_t) ;
+        ISR_excute_ptr->on_Receive_Trig();
         //AD start to read
-        //QObject::connect(&mTrigger, SIGNAL(emit_trig_sig()), this, SLOT(on_Receive_Trig()));
-        mTrigger.start();
-        mTrigger.wait();
-
+        start_t = clock();
         flag = 0;
     }
 }
-*********************************************************************************/
 
 qualitymonitor::~qualitymonitor()
 {
@@ -146,32 +157,11 @@ void qualitymonitor::on_Receive_ADval(float AD_val)
     ui->test_inputL->setText(QString::number(AD_val* 3.111* 2/ 4096));
     ui->test_inputR->setText(QString::number(AD_val* 3.111* 2/ 4096));
 
+    //if(AD_val > 3)
+        //on_pushButton_ErrorSig_clicked();
 
-    //qDebug() << "Hello World!";
 }
 
-void qualitymonitor::ADC_ISR(QString)
-{/*
-    flag++;
-    count++;
-
-    //printf("%u\n", flag);
-    //MyTrigger mTrigger;
-    if(flag == 5){
-        //qDebug() << "ISR: " << thread()->currentThreadId();
-        //AD start to read
-        //QObject::connect(&mTrigger, SIGNAL(emit_trig_sig()), this, SLOT(on_Receive_Trig()));
-        //QObject::connect(&mTrigger, SIGNAL(emit_trig_sig()), this, SLOT(on_Receive_Trig()));
-
-        //mTrigger.start();
-        //mTrigger.wait();
-        //Set_GraphicsView();
-        flag = 0;
-        end = clock();
-        qDebug() << difftime(end, start);
-        start = clock();
-    }*/
-}
 
 void qualitymonitor::on_Receive_Trig()
 {   //AD trig
@@ -179,7 +169,6 @@ void qualitymonitor::on_Receive_Trig()
     //Set_GraphicsView();
 
     //qDebug() << "on_Receive_Trig :" << thread()->currentThreadId();
-
 }
 
 void qualitymonitor::DateTimeSlot()
