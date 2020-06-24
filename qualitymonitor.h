@@ -32,6 +32,8 @@ public:
     QFileSystemWatcher watcher;
     mathtools Mymathtool;
 
+    MyTrigger mTrigger;
+
 private slots:
     void on_saveButton_clicked();
 
@@ -88,36 +90,17 @@ public slots:
 
     void Set_GraphicsView();
 
-    //void slot();
+    void slot();
     void count_ISR_times();
 
     //void ADC_ISR(QString);
 
     static void  ADtrig_ISR(int gpio, int level, uint32_t tick);
-    /*{
-        //qualitymonitor qualitymonitor_ptr;
-        qDebug() << "isr";
-
-
-        flag++;
-        //printf("%u\n", flag);
-
-        if(flag == 5){
-            qDebug() << "AD read";
-
-            //AD start to read
-            //QObject::connect(&mTrigger, SIGNAL(emit_trig_sig()), this, SLOT(on_Receive_Trig()));
-            //emit on_trig(isr_count_tick);
-            flag = 0;
-        }
-    };*/
-
-
 
 signals:
     void emit_adc_enable();
 
-    //void sig();
+    void sig();
 
 
 private:

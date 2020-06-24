@@ -69,6 +69,8 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     time_sleep(0.001);
     gpioSetISRFunc(trig_pin, FALLING_EDGE, 0, ADtrig_ISR); //ISR
 
+    connect(&mTrigger, SIGNAL(emit_trig_sig()), this, SLOT(slot()));
+    connect(this, SIGNAL(sig()), this, SLOT(slot()));
 
     //connect(this, SIGNAL(on_trig(int)), this, SLOT(speed_cal(int)));
 
@@ -110,7 +112,8 @@ void qualitymonitor::ADtrig_ISR(int gpio, int level, uint32_t tick)
     if(flag == 5){
         end_t = clock();
         qDebug() << "AD read" << difftime(end_t, start_t) ;
-        ISR_excute_ptr->on_Receive_Trig();
+        //ISR_excute_ptr->on_Receive_Trig();
+        emit ISR_excute_ptr->sig();
         //AD start to read
         start_t = clock();
         flag = 0;
@@ -167,8 +170,17 @@ void qualitymonitor::on_Receive_Trig()
 {   //AD trig
     //qDebug() << "TRIG!";
     //Set_GraphicsView();
-
-    //qDebug() << "on_Receive_Trig :" << thread()->currentThreadId();
+    //mTrigger.start();
+    //mTrigger.wait();
+    qDebug() << "on_Receive_Trig :" << thread()->currentThreadId();
+}
+void qualitymonitor::slot()
+{
+    //mTrigger.start();
+    //mTrigger.wait();
+    //float A_per = Mymathtool.A_per(ui->L_feedoutcenter->text(), ui->out1_pos->text());
+    ui->label->setText(QString::number(Mymathtool.A_per(ui->L_feedoutcenter->text(), ui->out1_pos->text()), 'f', 2)+" %");
+    qDebug() << "on_slot :" << thread()->currentThreadId();
 }
 
 void qualitymonitor::DateTimeSlot()
