@@ -192,24 +192,6 @@
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>11</x>
-      <y>123</y>
-      <width>781</width>
-      <height>351</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <item>
-      <widget class="QGraphicsView" name="graphicsView_L"/>
-     </item>
-     <item>
-      <widget class="QGraphicsView" name="graphicsView_R"/>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
       <x>10</x>
       <y>90</y>
       <width>371</width>
@@ -245,7 +227,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -268,6 +250,24 @@
         <string>TextLabel</string>
        </property>
       </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>130</y>
+      <width>781</width>
+      <height>341</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QCustomPlot" name="Chart_L" native="true"/>
+     </item>
+     <item>
+      <widget class="QCustomPlot" name="Chart_R" native="true"/>
      </item>
     </layout>
    </widget>
@@ -2514,10 +2514,18 @@
   <zorder>SettingFrame</zorder>
   <zorder>frameOutputCenter</zorder>
   <zorder>Dateframe</zorder>
-  <zorder>prameter</zorder>
   <zorder>lvdt</zorder>
+  <zorder>prameter</zorder>
   <zorder>runframe</zorder>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QCustomPlot</class>
+   <extends>QWidget</extends>
+   <header>qcustomplot.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>

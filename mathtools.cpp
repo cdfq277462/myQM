@@ -12,7 +12,7 @@ float mathtools:: A_per(QString current_feedOut_Center, QString DataIn)
     float current_feedOut_Center_Num  = QString(current_feedOut_Center).toFloat();
     float DataIn_Num                  = QString(DataIn).toFloat();
 
-    return (current_feedOut_Center_Num - DataIn_Num) / DataIn_Num * 100;
+    return (DataIn_Num - current_feedOut_Center_Num) / current_feedOut_Center_Num * 100;
 }
 
 float mathtools::CV_per(int *DataIn, QString)

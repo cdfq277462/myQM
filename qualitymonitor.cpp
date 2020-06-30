@@ -48,7 +48,7 @@ qualitymonitor::qualitymonitor(QWidget *parent)
 //set timer
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(DateTimeSlot()));
-    timer->start(1000);
+    timer->start(100);
 
 //setup parameter
     setupParameter();
@@ -84,7 +84,9 @@ qualitymonitor::qualitymonitor(QWidget *parent)
 
     //Setup_GraphicsView();
     Read_oldData();
-
+    Set_Graphics_L();
+    Set_Graphics_R();
+    //connect(ui->Chart_L->xAxis, SIGNAL(rangeChanged(QCPRange)), this, SLOT(Write_newData()));
 //ADC interrupt
 
     /*
@@ -94,8 +96,6 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(count_ISR_times()));
     timer->start(1000);
-
-
 }
 void qualitymonitor::count_ISR_times()
 {
@@ -111,9 +111,10 @@ void qualitymonitor::ADtrig_ISR(int gpio, int level, uint32_t tick)
     isr_count_tick++;
     if(flag == 5){
         end_t = clock();
-        qDebug() << "AD read" << difftime(end_t, start_t) ;
+        //qDebug() << "AD read" << difftime(end_t, start_t) ;
         //ISR_excute_ptr->on_Receive_Trig();
         emit ISR_excute_ptr->sig();
+
         //AD start to read
         start_t = clock();
         flag = 0;
@@ -168,19 +169,26 @@ void qualitymonitor::on_Receive_ADval(float AD_val)
 
 void qualitymonitor::on_Receive_Trig()
 {   //AD trig
-    //qDebug() << "TRIG!";
     //Set_GraphicsView();
-    //mTrigger.start();
-    //mTrigger.wait();
-    qDebug() << "on_Receive_Trig :" << thread()->currentThreadId();
+    //qDebug() << "on_Receive_Trig :" << thread()->currentThreadId();
 }
 void qualitymonitor::slot()
 {
-    //mTrigger.start();
-    //mTrigger.wait();
-    //float A_per = Mymathtool.A_per(ui->L_feedoutcenter->text(), ui->out1_pos->text());
     ui->label->setText(QString::number(Mymathtool.A_per(ui->L_feedoutcenter->text(), ui->out1_pos->text()), 'f', 2)+" %");
-    qDebug() << "on_slot :" << thread()->currentThreadId();
+    //qDebug() << "on_slot :" << thread()->currentThreadId();
+
+    //get AD_val
+    static double datalenght_L = mData_L.count();
+    //qDebug() << datalenght;
+    mData_L.append(ui->label->text().toInt());
+    ui->Chart_L->graph(0)->addData(datalenght_L, Mymathtool.A_per(ui->L_feedoutcenter->text(), ui->out1_pos->text()));
+    ui->Chart_L->xAxis->setRange(datalenght_L-50000, datalenght_L);
+    datalenght_L++;
+    //Write_newData();
+    /*
+    timer = new QTimer(this);
+    timer->singleShot(1000, this, SLOT(Write_newData()));
+    */
 }
 
 void qualitymonitor::DateTimeSlot()
@@ -193,7 +201,9 @@ void qualitymonitor::DateTimeSlot()
     ui->Date -> setText(Date);
     ui->Time -> setText(Time);
     //qDebug() << QThread::currentThread();
-    //Setup_GraphicsView();
+
+    ui->Chart_L->replot();
+    ui->Chart_R->replot();
 }
 void qualitymonitor::setupParameter()
 {
@@ -256,12 +266,6 @@ void qualitymonitor::Read_oldData()
     QString Filename_L = QDir().currentPath() + "/real_input_L";
     QString Filename_R = QDir().currentPath() + "/real_input_R";
 
-    series_L = new QSplineSeries();
-    series_R = new QSplineSeries();
-    m_serieslist.append(series_L);
-    m_serieslist.append(series_R);
-
-    QList<QPointF> mData_L, mData_R;
     QFile real_input_L(Filename_L);
     QFile real_input_R(Filename_R);
 
@@ -270,87 +274,107 @@ void qualitymonitor::Read_oldData()
     if(!real_input_L.open(QFile::ReadOnly | QFile::Text) \
       |!real_input_R.open(QFile::ReadOnly | QFile::Text))
     {
-        qDebug() << "Cannot initialize parameter!";
+        qDebug() << "Cannot read old data!";
     }
     QTextStream Readin_L(&real_input_L);
-
     QString read_data_L = Readin_L.readAll();
     //qDebug() << read_data;
-
+    DataWrite_L.append(read_data_L);
+    //qDebug() << DataWrite_L;
     for(int i =0; i < read_data_L.count("\n"); i++){
         int read_data_tras = read_data_L.section("\n",i,i).toInt();
-        //qDebug() << read_data_tras;
-        mData_L.append(QPointF(i, read_data_tras));
+        qDebug() << read_data_tras;
+        mData_L.append((read_data_tras - ui->L_feedoutcenter->text().toInt()) / ui->L_feedoutcenter->text().toInt()*100);
+
+        //mData_L.append(QPointF(i, read_data_tras));
+
     }
-    series_L->append(mData_L);
-    //series->append(in.readAll());
-    real_input_L.close();
+    real_input_L.close();    
 
     QTextStream Readin_R(&real_input_R);
     QString read_data_R = Readin_R.readAll();
-
+    DataWrite_R.append(read_data_R);
     for(int i =0; i < read_data_R.count("\n"); i++){
         int read_data_tras = read_data_R.section("\n",i,i).toInt();
         //qDebug() << read_data_tras;
-        mData_R.append(QPointF(i, read_data_tras));
+        mData_R.append((read_data_tras - ui->R_feedoutcenter->text().toInt()) / ui->R_feedoutcenter->text().toInt()*100);
+        //mData_R.append(QPointF(i, read_data_tras));
     }
-    series_R->append(mData_R);
-
     real_input_R.close();
+}
+void qualitymonitor::Write_newData()
+{
+    QString Filename_L = QDir().currentPath() + "/real_input_L";
+    QString Filename_R = QDir().currentPath() + "/real_input_R";
 
+    QFile real_input_L(Filename_L);
+    QFile real_input_R(Filename_R);
+
+
+    if(!real_input_L.open(QFile::WriteOnly | QFile::Text) \
+      |!real_input_R.open(QFile::WriteOnly | QFile::Text))
+    {
+        qDebug() << "Cannot write new data";
+    }
+    QTextStream Writeout_L(&real_input_L);
+    DataWrite_L.append(QString::number( ui->out1_pos->text().toFloat()) + "\n");
+    Writeout_L << DataWrite_L;
+    real_input_L.flush();
+    real_input_L.close();
+
+    QTextStream Writeout_R(&real_input_L);
+    DataWrite_R.append(QString::number( ui->out2_pos->text().toFloat()) + "\n");
+    Writeout_R << DataWrite_L;
+    real_input_R.flush();
+    real_input_R.close();
 }
 
-
-void qualitymonitor::Set_GraphicsView()
+void qualitymonitor::Set_Graphics_L()
 {
-    //cost a lot of time, need to modify
-    clock_t start, end;
-    start = clock();
-    int dispalyrange = 500;
-    //parameter real_input;
-    //srand(time(NULL));    
+    static double datalenght = 0;
+    datalenght = mData_L.count() + 1;
 
-/*
-    QString real_data_read = real_input.Read(QDir().currentPath() + "/real_input", 0);
-    QString real_data;
-    //real_data.append(real_data_read).append(QString::number((rand()%30) + 1600) + "\n");
-    real_data.append(real_data_read).append(ui->out1_pos->text() + "\n");
-    int datalenght = real_data.count("\n");
-    real_input.Write(QDir().currentPath() + "/real_input", real_data);
+    ui->Chart_L->addGraph();
+    ui->Chart_L->addGraph();
 
+    ui->Chart_L->graph(0)->addData(x, mData_L);
 
-    if(datalenght < dispalyrange)
-        for(int i = 0; i < datalenght - 1; i++){
-            series_L->append(i, real_data.section("\n",i ,i ).toFloat());
-            series_R->append(i, real_data.section("\n",i ,i ).toFloat()+100);
+    QPen pen = ui->Chart_L->graph(0)->pen();
+    //pen.setWidth(5);
+    QLinearGradient linearGradient(0, 0, 0, 320);
+    linearGradient.setColorAt(0,    Qt::red);
+    linearGradient.setColorAt(0.19, Qt::red);
+    linearGradient.setColorAt(0.20, Qt::yellow);
+    linearGradient.setColorAt(0.34, Qt::yellow);
+    linearGradient.setColorAt(0.35, Qt::green);
+    linearGradient.setColorAt(0.65, Qt::green);
+    linearGradient.setColorAt(0.66, Qt::yellow);
+    linearGradient.setColorAt(0.80, Qt::yellow);
+    linearGradient.setColorAt(0.81, Qt::red);
+    linearGradient.setColorAt(1.0,  Qt::red);
 
-        }
-    //qDebug()<< real_input << datalenght;
+    pen.setBrush(QBrush(linearGradient));
 
-    else
-        for(int i = datalenght - dispalyrange; i < datalenght - 1; i++){
-            series_L->append(i, real_data.section("\n",i ,i ).toFloat());
-            series_R->append(i, real_data.section("\n",i ,i ).toFloat()+100);
-        }
-    //series->append(i,1);
-    *series = DataInput();
-*/
-    static int i = 0;
+    ui->Chart_L->graph(0)->setPen(pen);
 
-    float A_per = Mymathtool.A_per(ui->L_feedoutcenter->text(), ui->out1_pos->text());
-    //series_L->append(i++, A_per);
-    //qDebug() << A_per;
+    // set axes ranges, so we see all data:
+    ui->Chart_L->xAxis->setRange(datalenght-50000, datalenght);
+    ui->Chart_L->yAxis->setRange(-5, 5);
+}
 
+void qualitymonitor::Set_Graphics_R()
+{
+    static double datalenght = 0;
+    datalenght = mData_R.count() + 1;
 
-    QChart *chart_L = new QChart();
-    QChart *chart_R = new QChart();
-    chart_L->legend()->hide();
-    chart_R->legend()->hide();
+    ui->Chart_R->addGraph();
+    ui->Chart_R->addGraph();
 
-    QPen pen = series_L->pen();
-    pen.setWidth(5);
+    ui->Chart_R->graph(0)->addData(x, mData_R);
+
+    QPen pen = ui->Chart_R->graph(0)->pen();
+    //pen.setWidth(5);
     QLinearGradient linearGradient(0, 0, 0, 200);
-
     linearGradient.setColorAt(0,    Qt::red);
     linearGradient.setColorAt(0.12, Qt::red);
     linearGradient.setColorAt(0.20, Qt::yellow);
@@ -361,58 +385,15 @@ void qualitymonitor::Set_GraphicsView()
     linearGradient.setColorAt(0.95, Qt::yellow);
     linearGradient.setColorAt(1.0,  Qt::red);
 
-    pen.setBrush(QBrush(linearGradient)); // or just pen.setColor("red");
-    pen.setStyle(Qt::DotLine);
+    pen.setBrush(QBrush(linearGradient));
 
-    series_L->setPen(pen);
+    ui->Chart_R->graph(0)->setPen(pen);
 
-    chart_L->addSeries(series_L);
-
-
-    //chart_L->setBackgroundBrush(QBrush("gray"));
-
-
-    //series_R << QPointF(1, 0.5) << QPointF(1.5, 4.5) << QPointF(2.4, 2.5) << QPointF(4.3, 12.5) \
-            //<< QPointF(5.2, 3.5) << QPointF(7.4, 16.5) << QPointF(8.3, 7.5) << QPointF(10, 17);
-    series_R->setPen(pen);
-    chart_R->addSeries(series_R);
-
-
-    chart_L->createDefaultAxes();
-    chart_R->createDefaultAxes();
-
-    //set display range
-    chart_L->axisY()->setRange(-10, 10);
-    chart_R->axisY()->setRange(0, 1000);
-    chart_L->axisX()->setRange(series_L->count() - dispalyrange, series_L->count());
-    //chart->setTitle("Simple line chart example");
-
-    chart_L->setGeometry(0, 10, 380, 330);
-    chart_R->setGeometry(0, 10, 380, 330);
-
-
-
-    QChartView *chartView_L = new QChartView(chart_L);
-    QChartView *chartView_R = new QChartView(chart_R);
-    //chartView_L->resize(ui->graphicsView_L->size());
-    chartView_L->setRenderHint(QPainter::Antialiasing);
-    chartView_R->setRenderHint(QPainter::Antialiasing);
-
-
-    scene_L = new QGraphicsScene(this);
-    scene_R = new QGraphicsScene(this);
-
-    //*scene.addItem(chart);
-    //QGraphicsView view(&scene);
-    scene_L->addItem(chart_L);
-    ui->graphicsView_L->setScene(scene_L);
-    scene_R->addItem(chart_R);
-    ui->graphicsView_R->setScene(scene_R);
-    //ui->graphicsView_L->repaint();
-
-    end = clock();
-    //qDebug() << difftime(end, start);
+    // set axes ranges, so we see all data:
+    ui->Chart_R->xAxis->setRange(datalenght-50000, datalenght);
+    ui->Chart_R->yAxis->setRange(-5, 5);
 }
+
 
 void qualitymonitor::Setup_History()
 {

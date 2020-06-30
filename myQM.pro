@@ -1,6 +1,6 @@
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 CONFIG += c++11
 QT += charts
@@ -25,6 +25,7 @@ SOURCES += \
     mathtools.cpp \
     mythread.cpp \
     parameter.cpp \
+    qcustomplot.cpp \
     qualitymonitor.cpp
 
 HEADERS += \
@@ -33,6 +34,7 @@ HEADERS += \
     mathtools.h \
     mythread.h \
     parameter.h \
+    qcustomplot.h \
     qualitymonitor.h
 
 FORMS += \

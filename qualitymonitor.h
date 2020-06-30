@@ -34,6 +34,9 @@ public:
 
     MyTrigger mTrigger;
 
+    QVector<double> mData_L, mData_R, x;
+    QString DataWrite_L, DataWrite_R;
+
 private slots:
     void on_saveButton_clicked();
 
@@ -80,6 +83,8 @@ private slots:
 
     void Read_oldData();
 
+    void Write_newData();
+
 
 public slots:
     void DateTimeSlot();
@@ -88,7 +93,8 @@ public slots:
 
     void on_Receive_Trig();
 
-    void Set_GraphicsView();
+    void Set_Graphics_L();
+    void Set_Graphics_R();
 
     void slot();
     void count_ISR_times();
@@ -108,11 +114,6 @@ private:
     QTimer *timer;
     QGraphicsScene *scene_L;
     QGraphicsScene *scene_R;
-
-
-    QSplineSeries *series_L;
-    QSplineSeries *series_R;
-    QList<QSplineSeries *> m_serieslist;
 
 };
 
