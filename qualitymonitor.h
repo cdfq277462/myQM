@@ -34,7 +34,7 @@ public:
 
     MyTrigger mTrigger;
 
-    QVector<double> mData_L, mData_R, x;
+    QVector<double> mData_L, mData_R, axixX_L, axixX_R;
     QString DataWrite_L, DataWrite_R;
 
 private slots:

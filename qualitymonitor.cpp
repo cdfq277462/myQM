@@ -1,3 +1,28 @@
+/***************************************************************************
+**                                                                        **
+**  QCustomPlot, an easy to use, modern plotting widget for Qt            **
+**  Copyright (C) 2011-2018 Emanuel Eichhammer                            **
+**                                                                        **
+**  This program is free software: you can redistribute it and/or modify  **
+**  it under the terms of the GNU General Public License as published by  **
+**  the Free Software Foundation, either version 3 of the License, or     **
+**  (at your option) any later version.                                   **
+**                                                                        **
+**  This program is distributed in the hope that it will be useful,       **
+**  but WITHOUT ANY WARRANTY; without even the implied warranty of        **
+**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         **
+**  GNU General Public License for more details.                          **
+**                                                                        **
+**  You should have received a copy of the GNU General Public License     **
+**  along with this program.  If not, see http://www.gnu.org/licenses/.   **
+**                                                                        **
+****************************************************************************
+**           Author:                                    **
+**  Website/Contact:                         **
+**             Date:                                              **
+**          Version:                                                **
+****************************************************************************/
+
 #include "qualitymonitor.h"
 #include "ui_qualitymonitor.h"
 
@@ -60,6 +85,10 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     Setup_History();
 
     on_pushButton_Search_clicked();
+    //Setup_GraphicsView();
+    Read_oldData();
+    Set_Graphics_L();
+    Set_Graphics_R();
 
 //ADC interrupt
     gpioInitialise();
@@ -82,10 +111,7 @@ qualitymonitor::qualitymonitor(QWidget *parent)
 /*****************************************************************/
     time_sleep(0.1);
 
-    //Setup_GraphicsView();
-    Read_oldData();
-    Set_Graphics_L();
-    Set_Graphics_R();
+
     //connect(ui->Chart_L->xAxis, SIGNAL(rangeChanged(QCPRange)), this, SLOT(Write_newData()));
 //ADC interrupt
 
@@ -95,6 +121,7 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     */
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(count_ISR_times()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(Write_newData()));
     timer->start(1000);
 }
 void qualitymonitor::count_ISR_times()
@@ -165,8 +192,6 @@ void qualitymonitor::on_Receive_ADval(float AD_val)
         //on_pushButton_ErrorSig_clicked();
 
 }
-
-
 void qualitymonitor::on_Receive_Trig()
 {   //AD trig
     //Set_GraphicsView();
@@ -181,14 +206,16 @@ void qualitymonitor::slot()
     static double datalenght_L = mData_L.count();
     //qDebug() << datalenght;
     mData_L.append(ui->label->text().toInt());
+    DataWrite_L.append(QString::number( ui->out1_pos->text().toFloat()) + "\n");
     ui->Chart_L->graph(0)->addData(datalenght_L, Mymathtool.A_per(ui->L_feedoutcenter->text(), ui->out1_pos->text()));
-    ui->Chart_L->xAxis->setRange(datalenght_L-50000, datalenght_L);
+    if(datalenght_L >= 50000)
+        ui->Chart_L->xAxis->setRange(datalenght_L-50000, datalenght_L);
+    else
+        ui->Chart_L->xAxis->setRange(0, 50000);
     datalenght_L++;
-    //Write_newData();
-    /*
-    timer = new QTimer(this);
-    timer->singleShot(1000, this, SLOT(Write_newData()));
-    */
+
+
+
 }
 
 void qualitymonitor::DateTimeSlot()
@@ -204,6 +231,8 @@ void qualitymonitor::DateTimeSlot()
 
     ui->Chart_L->replot();
     ui->Chart_R->replot();
+
+    //Write_newData();
 }
 void qualitymonitor::setupParameter()
 {
@@ -278,34 +307,42 @@ void qualitymonitor::Read_oldData()
     }
     QTextStream Readin_L(&real_input_L);
     QString read_data_L = Readin_L.readAll();
+    //QByteArray data;
     //qDebug() << read_data;
     DataWrite_L.append(read_data_L);
     //qDebug() << DataWrite_L;
+    //qDebug() << read_data_L.count("\n");
     for(int i =0; i < read_data_L.count("\n"); i++){
-        int read_data_tras = read_data_L.section("\n",i,i).toInt();
-        qDebug() << read_data_tras;
-        mData_L.append((read_data_tras - ui->L_feedoutcenter->text().toInt()) / ui->L_feedoutcenter->text().toInt()*100);
-
-        //mData_L.append(QPointF(i, read_data_tras));
-
+        float read_data_tras = read_data_L.section("\n",i,i).toFloat();
+        //qDebug() << read_data_tras;
+        mData_L.append((read_data_tras - ui->L_feedoutcenter->text().toFloat()) / ui->L_feedoutcenter->text().toFloat()*100);
+        axixX_L.append(i + 1);
     }
+
     real_input_L.close();    
 
     QTextStream Readin_R(&real_input_R);
     QString read_data_R = Readin_R.readAll();
     DataWrite_R.append(read_data_R);
     for(int i =0; i < read_data_R.count("\n"); i++){
-        int read_data_tras = read_data_R.section("\n",i,i).toInt();
+        float read_data_tras = read_data_R.section("\n",i,i).toFloat();
         //qDebug() << read_data_tras;
         mData_R.append((read_data_tras - ui->R_feedoutcenter->text().toInt()) / ui->R_feedoutcenter->text().toInt()*100);
+        axixX_R.append(i + 1);
         //mData_R.append(QPointF(i, read_data_tras));
     }
     real_input_R.close();
+
 }
 void qualitymonitor::Write_newData()
 {
+    /*******************************************************
+     * Right side need to modify
+     *
+     * ****************************************************/
+
     QString Filename_L = QDir().currentPath() + "/real_input_L";
-    QString Filename_R = QDir().currentPath() + "/real_input_R";
+    QString Filename_R = QDir().currentPath() + "/real_input_R";DataWrite_L.append(QString::number( ui->out1_pos->text().toFloat()) + "\n");
 
     QFile real_input_L(Filename_L);
     QFile real_input_R(Filename_R);
@@ -317,16 +354,17 @@ void qualitymonitor::Write_newData()
         qDebug() << "Cannot write new data";
     }
     QTextStream Writeout_L(&real_input_L);
-    DataWrite_L.append(QString::number( ui->out1_pos->text().toFloat()) + "\n");
+    //DataWrite_L.append(QString::number( ui->out1_pos->text().toFloat()) + "\n");
     Writeout_L << DataWrite_L;
     real_input_L.flush();
     real_input_L.close();
-
+/*
     QTextStream Writeout_R(&real_input_L);
     DataWrite_R.append(QString::number( ui->out2_pos->text().toFloat()) + "\n");
     Writeout_R << DataWrite_L;
     real_input_R.flush();
     real_input_R.close();
+*/
 }
 
 void qualitymonitor::Set_Graphics_L()
@@ -337,7 +375,7 @@ void qualitymonitor::Set_Graphics_L()
     ui->Chart_L->addGraph();
     ui->Chart_L->addGraph();
 
-    ui->Chart_L->graph(0)->addData(x, mData_L);
+    ui->Chart_L->graph(0)->addData(axixX_L, mData_L);
 
     QPen pen = ui->Chart_L->graph(0)->pen();
     //pen.setWidth(5);
@@ -358,7 +396,10 @@ void qualitymonitor::Set_Graphics_L()
     ui->Chart_L->graph(0)->setPen(pen);
 
     // set axes ranges, so we see all data:
-    ui->Chart_L->xAxis->setRange(datalenght-50000, datalenght);
+    if(datalenght >= 50000)
+        ui->Chart_L->xAxis->setRange(datalenght-50000, datalenght);
+    else
+        ui->Chart_L->xAxis->setRange(0, 50000);
     ui->Chart_L->yAxis->setRange(-5, 5);
 }
 
@@ -370,7 +411,7 @@ void qualitymonitor::Set_Graphics_R()
     ui->Chart_R->addGraph();
     ui->Chart_R->addGraph();
 
-    ui->Chart_R->graph(0)->addData(x, mData_R);
+    ui->Chart_R->graph(0)->addData(axixX_R, mData_R);
 
     QPen pen = ui->Chart_R->graph(0)->pen();
     //pen.setWidth(5);
@@ -390,7 +431,10 @@ void qualitymonitor::Set_Graphics_R()
     ui->Chart_R->graph(0)->setPen(pen);
 
     // set axes ranges, so we see all data:
-    ui->Chart_R->xAxis->setRange(datalenght-50000, datalenght);
+    if(datalenght >= 50000)
+        ui->Chart_R->xAxis->setRange(datalenght-50000, datalenght);
+    else
+        ui->Chart_R->xAxis->setRange(0, 50000);
     ui->Chart_R->yAxis->setRange(-5, 5);
 }
 

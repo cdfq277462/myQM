@@ -253,7 +253,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -485,7 +485,7 @@
            </font>
           </property>
           <property name="text">
-           <string>5000</string>
+           <string>2000</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
@@ -495,7 +495,7 @@
         <item row="1" column="1">
          <widget class="QLabel" name="out2_pos">
           <property name="text">
-           <string>5000</string>
+           <string>2000</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
@@ -2514,9 +2514,9 @@
   <zorder>SettingFrame</zorder>
   <zorder>frameOutputCenter</zorder>
   <zorder>Dateframe</zorder>
-  <zorder>lvdt</zorder>
   <zorder>prameter</zorder>
   <zorder>runframe</zorder>
+  <zorder>lvdt</zorder>
  </widget>
  <customwidgets>
   <customwidget>
