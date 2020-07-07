@@ -45,7 +45,7 @@ void ADread::run()
     {
         start_t = clock();
         int adcData = ((i2cReadWordData(sigHandle, 0x00) & 0xff00) >> 8) \
-                               | ((i2cReadWordData(sigHandle, 0x00) & 0xf)  << 8);
+                               | ((i2cReadWordData(sigHandle, 0x00) & 0x000f)  << 8);
             //in address 0x50 result reg 0x00
             //on recevie SDA
             //

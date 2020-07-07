@@ -12,11 +12,12 @@ class mathtools  : public QObject
 public:
     mathtools();
 
-    float A_per(QString, QString);
-
-    float CV_per(int*, QString);
+    float A_per(QString, float);
+/*
+    float CV_per(int*, float);
 
     float CV_per1m(int*, QString);
+*/
 };
 
 #endif // MATHTOOLS_H

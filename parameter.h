@@ -26,8 +26,7 @@ public:
 
     QString TrantoNumberType(QString);
 
-    int     CR_diameter();
-    int     DetectGear();
+    float   PulseLength();
     int     Filter_1();
     int     Filter_2();
     int     BiasAdjust();

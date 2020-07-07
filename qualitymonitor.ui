@@ -60,7 +60,7 @@
      <rect>
       <x>10</x>
       <y>0</y>
-      <width>441</width>
+      <width>361</width>
       <height>71</height>
      </rect>
     </property>
@@ -110,7 +110,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="QMenble">
+      <widget class="QPushButton" name="pushbutton_QMenble">
        <property name="font">
         <font>
          <family>Arial</family>
@@ -146,54 +146,21 @@
    <widget class="QPushButton" name="pushButton_6">
     <property name="geometry">
      <rect>
-      <x>590</x>
-      <y>60</y>
-      <width>91</width>
-      <height>41</height>
+      <x>390</x>
+      <y>0</y>
+      <width>51</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
      <string>EXIT</string>
     </property>
    </widget>
-   <widget class="QWidget" name="layoutWidget_2">
-    <property name="geometry">
-     <rect>
-      <x>400</x>
-      <y>60</y>
-      <width>191</width>
-      <height>76</height>
-     </rect>
-    </property>
-    <layout class="QFormLayout" name="formLayout_4">
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_R_speed">
-       <property name="text">
-        <string>Speed :</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_R_CV1m">
-       <property name="text">
-        <string>R_CV1m</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QLabel" name="label_R_A_per">
-       <property name="text">
-        <string>R_A%</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>90</y>
+      <y>100</y>
       <width>371</width>
       <height>26</height>
      </rect>
@@ -231,7 +198,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>60</y>
+      <y>70</y>
       <width>371</width>
       <height>26</height>
      </rect>
@@ -268,6 +235,71 @@
      </item>
      <item>
       <widget class="QCustomPlot" name="Chart_R" native="true"/>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QPushButton" name="reset">
+    <property name="geometry">
+     <rect>
+      <x>390</x>
+      <y>34</y>
+      <width>51</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>RST</string>
+    </property>
+   </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>100</y>
+      <width>291</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_16">
+     <item>
+      <widget class="QLabel" name="label_R_A_per">
+       <property name="text">
+        <string>R_A%</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_R_CV1m">
+       <property name="text">
+        <string>R_CV1m</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>70</y>
+      <width>291</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_17">
+     <item>
+      <widget class="QLabel" name="label_R_speed">
+       <property name="text">
+        <string>Speed :</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </widget>
@@ -756,40 +788,7 @@
       </item>
       <item>
        <layout class="QGridLayout" name="gridLayout_4">
-        <item row="2" column="2">
-         <widget class="QLineEdit" name="Filter_1">
-          <property name="font">
-           <font>
-            <family>Arial</family>
-            <pointsize>20</pointsize>
-           </font>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="0">
-         <widget class="QLabel" name="label_45">
-          <property name="font">
-           <font>
-            <family>標楷體</family>
-            <pointsize>20</pointsize>
-           </font>
-          </property>
-          <property name="toolTipDuration">
-           <number>1</number>
-          </property>
-          <property name="lineWidth">
-           <number>4</number>
-          </property>
-          <property name="text">
-           <string>偏移調整
-(0-99)</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="2">
+        <item row="3" column="2">
          <widget class="QLineEdit" name="BiasAdjust">
           <property name="font">
            <font>
@@ -802,33 +801,7 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="2">
-         <widget class="QLineEdit" name="DetectGear">
-          <property name="font">
-           <font>
-            <family>Arial</family>
-            <pointsize>20</pointsize>
-           </font>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QLineEdit" name="CR_diameter">
-          <property name="font">
-           <font>
-            <family>Arial</family>
-            <pointsize>20</pointsize>
-           </font>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
+        <item row="0" column="0">
          <widget class="QLabel" name="label_42">
           <property name="font">
            <font>
@@ -843,24 +816,11 @@
            <number>4</number>
           </property>
           <property name="text">
-           <string>偵測齒</string>
+           <string>脈波長度</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="2">
-         <widget class="QLineEdit" name="Filter_2">
-          <property name="font">
-           <font>
-            <family>Arial</family>
-            <pointsize>20</pointsize>
-           </font>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
+        <item row="2" column="0">
          <widget class="QLabel" name="label_41">
           <property name="font">
            <font>
@@ -880,8 +840,21 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_44">
+        <item row="0" column="2">
+         <widget class="QLineEdit" name="PulseLength">
+          <property name="font">
+           <font>
+            <family>Arial</family>
+            <pointsize>20</pointsize>
+           </font>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_45">
           <property name="font">
            <font>
             <family>標楷體</family>
@@ -895,11 +868,25 @@
            <number>4</number>
           </property>
           <property name="text">
-           <string>壓輥直徑</string>
+           <string>偏移調整
+(0-99)</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="0">
+        <item row="2" column="2">
+         <widget class="QLineEdit" name="Filter_2">
+          <property name="font">
+           <font>
+            <family>Arial</family>
+            <pointsize>20</pointsize>
+           </font>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
          <widget class="QLabel" name="label_43">
           <property name="font">
            <font>
@@ -916,6 +903,19 @@
           <property name="text">
            <string>濾波1
 (0-99)</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QLineEdit" name="Filter_1">
+          <property name="font">
+           <font>
+            <family>Arial</family>
+            <pointsize>20</pointsize>
+           </font>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
           </property>
          </widget>
         </item>
@@ -1145,7 +1145,7 @@
       </widget>
      </item>
      <item row="4" column="1">
-      <widget class="QLabel" name="label_19">
+      <widget class="QLabel" name="trig_count">
        <property name="text">
         <string>GPIO / ISR</string>
        </property>
@@ -1159,7 +1159,7 @@
       </widget>
      </item>
      <item row="6" column="2">
-      <widget class="QLabel" name="label_56">
+      <widget class="QLabel" name="label_stopFlag">
        <property name="text">
         <string>GPIO</string>
        </property>
@@ -1173,6 +1173,18 @@
       </widget>
      </item>
     </layout>
+    <zorder>test_inputL</zorder>
+    <zorder>label_9</zorder>
+    <zorder>test_inputR</zorder>
+    <zorder>label_6</zorder>
+    <zorder>label_8</zorder>
+    <zorder>label_24</zorder>
+    <zorder>label_5</zorder>
+    <zorder>label_7</zorder>
+    <zorder>trig_count</zorder>
+    <zorder>label_25</zorder>
+    <zorder>label_57</zorder>
+    <zorder>label_stopFlag</zorder>
    </widget>
   </widget>
   <widget class="QFrame" name="index">
@@ -1325,25 +1337,6 @@
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_13">
-       <item>
-        <widget class="QPushButton" name="pushButton_4">
-         <property name="minimumSize">
-          <size>
-           <width>100</width>
-           <height>100</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>100</width>
-           <height>100</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>SPG</string>
-         </property>
-        </widget>
-       </item>
        <item>
         <widget class="QPushButton" name="pushButton_3">
          <property name="minimumSize">
@@ -2192,32 +2185,43 @@
      <string>設定</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label_23">
+   <widget class="QWidget" name="">
     <property name="geometry">
      <rect>
-      <x>170</x>
-      <y>160</y>
-      <width>39</width>
-      <height>31</height>
+      <x>165</x>
+      <y>170</y>
+      <width>291</width>
+      <height>271</height>
      </rect>
     </property>
-    <property name="text">
-     <string>UTC</string>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="lineEdit_UTC">
-    <property name="geometry">
-     <rect>
-      <x>220</x>
-      <y>160</y>
-      <width>198</width>
-      <height>31</height>
-     </rect>
-    </property>
+    <layout class="QFormLayout" name="formLayout_3">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_23">
+       <property name="text">
+        <string>UTC</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_13">
+       <property name="text">
+        <string>Password</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="lineEdit_UTC"/>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="lineEdit_password"/>
+     </item>
+    </layout>
    </widget>
    <zorder>label_23</zorder>
    <zorder>lineEdit_UTC</zorder>
    <zorder>label_22</zorder>
+   <zorder>label_13</zorder>
+   <zorder>lineEdit_password</zorder>
   </widget>
   <widget class="QPushButton" name="pushButton_ErrorSig">
    <property name="geometry">
@@ -2256,57 +2260,95 @@
    <property name="frameShadow">
     <enum>QFrame::Raised</enum>
    </property>
-   <widget class="QWidget" name="layoutWidget">
+   <widget class="QWidget" name="">
     <property name="geometry">
      <rect>
-      <x>4</x>
-      <y>34</y>
+      <x>5</x>
+      <y>10</y>
       <width>791</width>
-      <height>441</height>
+      <height>71</height>
      </rect>
     </property>
-    <layout class="QVBoxLayout" name="verticalLayout_12">
+    <layout class="QHBoxLayout" name="horizontalLayout_11">
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_11">
+      <widget class="QLabel" name="label_17">
+       <property name="font">
+        <font>
+         <family>微軟正黑體</family>
+         <pointsize>35</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>歷史紀錄</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_10">
        <item>
-        <widget class="QLabel" name="label_17">
+        <widget class="QDateTimeEdit" name="dateTimeEdit"/>
+       </item>
+       <item>
+        <widget class="QDateTimeEdit" name="dateTimeEdit_2">
          <property name="font">
           <font>
-           <family>微軟正黑體</family>
-           <pointsize>35</pointsize>
+           <family>Arial</family>
+           <pointsize>12</pointsize>
           </font>
          </property>
-         <property name="text">
-          <string>歷史紀錄</string>
-         </property>
         </widget>
        </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_historysearch">
+       <property name="text">
+        <string>Search</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_15">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="widget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>268</x>
+      <y>113</y>
+      <width>16</width>
+      <height>192</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>11</x>
+      <y>81</y>
+      <width>781</width>
+      <height>391</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_10">
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_10">
-         <item>
-          <widget class="QDateTimeEdit" name="dateTimeEdit"/>
-         </item>
-         <item>
-          <widget class="QDateTimeEdit" name="dateTimeEdit_2">
-           <property name="font">
-            <font>
-             <family>Arial</family>
-             <pointsize>12</pointsize>
-            </font>
-           </property>
-          </widget>
-         </item>
-        </layout>
+        <widget class="QCustomPlot" name="HistoryChart" native="true"/>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_historysearch">
-         <property name="text">
-          <string>Search</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_15">
+        <spacer name="horizontalSpacer_16">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -2321,60 +2363,53 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_10">
+      <layout class="QVBoxLayout" name="verticalLayout_11">
        <item>
-        <widget class="QGraphicsView" name="graphicsView"/>
+        <widget class="QCheckBox" name="checkBox">
+         <property name="font">
+          <font>
+           <family>Arial</family>
+           <pointsize>15</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>A%</string>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+        </widget>
        </item>
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_11">
-         <item>
-          <widget class="QCheckBox" name="checkBox">
-           <property name="font">
-            <font>
-             <family>Arial</family>
-             <pointsize>15</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>A%</string>
-           </property>
-           <property name="iconSize">
-            <size>
-             <width>20</width>
-             <height>20</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="checkBox_2">
-           <property name="text">
-            <string>CV%</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="checkBox_3">
-           <property name="text">
-            <string>CV1m</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="checkBox_4">
-           <property name="text">
-            <string>U%</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="checkBox_5">
-           <property name="text">
-            <string>CheckBox</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+        <widget class="QCheckBox" name="checkBox_2">
+         <property name="text">
+          <string>CV%</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkBox_3">
+         <property name="text">
+          <string>CV1m</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkBox_4">
+         <property name="text">
+          <string>SPG</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkBox_5">
+         <property name="text">
+          <string>CheckBox</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
@@ -2506,17 +2541,17 @@
   <zorder>pushButton_2</zorder>
   <zorder>pushButton_ErrorSig</zorder>
   <zorder>MenuFrame</zorder>
-  <zorder>EEprameter</zorder>
-  <zorder>test</zorder>
   <zorder>errorhistory</zorder>
-  <zorder>frame_search</zorder>
-  <zorder>index</zorder>
-  <zorder>SettingFrame</zorder>
   <zorder>frameOutputCenter</zorder>
   <zorder>Dateframe</zorder>
   <zorder>prameter</zorder>
-  <zorder>runframe</zorder>
   <zorder>lvdt</zorder>
+  <zorder>EEprameter</zorder>
+  <zorder>runframe</zorder>
+  <zorder>test</zorder>
+  <zorder>SettingFrame</zorder>
+  <zorder>index</zorder>
+  <zorder>frame_search</zorder>
  </widget>
  <customwidgets>
   <customwidget>

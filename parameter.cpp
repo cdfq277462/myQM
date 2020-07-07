@@ -18,13 +18,13 @@
 
 #define  R_side         6
 
-#define  CR_diameter_EE     1
-#define  DetectGear_EE      2
-#define  Filter_1_EE        3
-#define  Filter_2_EE        4
-#define  BiasAdjust_EE      5
-#define  Out1_Offset_pos    6
-#define  Out2_Offset_pos    7
+
+#define  PulseLength_EE     1
+#define  Filter_1_EE        2
+#define  Filter_2_EE        3
+#define  BiasAdjust_EE      4
+#define  Out1_Offset_pos    5
+#define  Out2_Offset_pos    6
 
 
 QString mfilename  = QDir().currentPath() + "/config";
@@ -142,12 +142,8 @@ float parameter::R_limit_CVper(){
 //end Normal Parameter
 
 //EE Parameter
-int parameter::CR_diameter(){
-    int getdata = Read(EEfilename, CR_diameter_EE).toInt();
-    return getdata;
-}
-int parameter::DetectGear(){
-    int getdata = Read(EEfilename, DetectGear_EE).toInt();
+float parameter::PulseLength(){
+    float getdata = Read(EEfilename, PulseLength_EE).toFloat();
     return getdata;
 }
 int parameter::Filter_1(){

@@ -29,13 +29,16 @@ public:
     void toSaveDate(int);
     ~qualitymonitor();
 
-    QFileSystemWatcher watcher;
     mathtools Mymathtool;
 
     MyTrigger mTrigger;
 
     QVector<double> mData_L, mData_R, axixX_L, axixX_R;
+    QVector<double> SPG_Data, CV_Data;
+    QVector<double> CV_1m, CV_path;
     QString DataWrite_L, DataWrite_R;
+    QStringList DataWrite_SPG;
+    //QByteArray DataWrite_SPG;
 
 private slots:
     void on_saveButton_clicked();
@@ -60,12 +63,9 @@ private slots:
 
     void on_pushButton_Search_clicked();
 
-    void on_pushButton_ErrorSig_clicked();
+    void on_pushButton_ErrorSig_clicked(QString);
 
     void on_pushButton_Settiing_clicked();
-
-    //QLineSeries load_preData();
-
 
     void on_pushButton_3_clicked();
 
@@ -83,10 +83,16 @@ private slots:
 
     void Read_oldData();
 
-    void Write_newData();
+    void Write_newData(int);
 
+    void Setup_HistoryChart();
+
+
+    void on_reset_clicked();
 
 public slots:
+    void timerEvent(QTimerEvent *event);
+
     void DateTimeSlot();
 
     void on_Receive_ADval(float);
@@ -99,8 +105,6 @@ public slots:
     void slot();
     void count_ISR_times();
 
-    //void ADC_ISR(QString);
-
     static void  ADtrig_ISR(int gpio, int level, uint32_t tick);
 
 signals:
@@ -111,9 +115,16 @@ signals:
 
 private:
     Ui::qualitymonitor *ui;
+
+    float AD_value;
+
+    int timeid_DateTime, timeid_Alarm, timeid_TrigCount, timeid_AlarmofCV;
+    int AlarmFlag, AlarmFlagofCV;
+
+    bool overAper_L, overAper_R;
+    bool overCV_per_L, overCV_per_R;
+
     QTimer *timer;
-    QGraphicsScene *scene_L;
-    QGraphicsScene *scene_R;
 
 };
 

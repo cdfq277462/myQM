@@ -47,9 +47,18 @@ using namespace QtCharts;
 #define  normalParameter    1
 #define  EEParameter        2
 
+#define Write_L     1
+#define Write_R     2
+#define Write_SPG   3
 
-#define LED         17  //test sig
 #define	trig_pin	27 // trigger
+//#define Run_signal  17 // run signal
+#define Stop_signal 17
+#define AL_enable   18
+
+//unit = cm
+#define SPG_SampleLength    10000
+#define SampleLength        50
 
 //interrupt flag
 int flag = 0;
@@ -71,9 +80,12 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     ISR_excute_ptr = this;              //qualitymonitor::qualitymonitor ptr
 
 //set timer
+    /* old timer
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(DateTimeSlot()));
     timer->start(100);
+    */
+    timeid_DateTime = startTimer(100);
 
 //setup parameter
     setupParameter();
@@ -84,19 +96,30 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     //qDebug() << "main: " << QThread::currentThread();
     Setup_History();
 
+    AlarmFlag = 0;
+    AlarmFlagofCV = 0;
+
     on_pushButton_Search_clicked();
-    //Setup_GraphicsView();
-    Read_oldData();
+
+//Setup_Graphics;
+    //Read_oldData();
+
     Set_Graphics_L();
     Set_Graphics_R();
+    Setup_HistoryChart();
 
-//ADC interrupt
+//GPIO setup
     gpioInitialise();
-    gpioSetMode(LED, PI_OUTPUT);
-    gpioSetMode(trig_pin, PI_INPUT);
-    gpioSetPullUpDown(trig_pin, PI_PUD_DOWN); //set trig_pin to edge trig
+    gpioSetMode(trig_pin, PI_INPUT);            //ISR pin
+    gpioSetPullUpDown(trig_pin, PI_PUD_DOWN);
+    gpioSetMode(Stop_signal, PI_OUTPUT);        //stop signal
+    gpioSetMode(AL_enable, PI_OUTPUT);          //AL enable
+
     time_sleep(0.001);
+
     gpioSetISRFunc(trig_pin, FALLING_EDGE, 0, ADtrig_ISR); //ISR
+    gpioWrite(Stop_signal, PI_LOW);
+    ui->label_stopFlag->setText(QString::number(0));
 
     connect(&mTrigger, SIGNAL(emit_trig_sig()), this, SLOT(slot()));
     connect(this, SIGNAL(sig()), this, SLOT(slot()));
@@ -111,39 +134,20 @@ qualitymonitor::qualitymonitor(QWidget *parent)
 /*****************************************************************/
     time_sleep(0.1);
 
+    timeid_TrigCount = startTimer(1000);
 
-    //connect(ui->Chart_L->xAxis, SIGNAL(rangeChanged(QCPRange)), this, SLOT(Write_newData()));
-//ADC interrupt
-
-    /*
-    watcher.addPath ("/sys/class/gpio/gpio27/value");
-    QObject::connect(&watcher, SIGNAL(fileChanged(QString)), this, SLOT(ADC_ISR(QString)));
-    */
-    timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(count_ISR_times()));
-    connect(timer, SIGNAL(timeout()), this, SLOT(Write_newData()));
-    timer->start(1000);
-}
-void qualitymonitor::count_ISR_times()
-{
-    ui->label_L_speed->setText("Speed: " + QString::number(isr_count_tick *2.221554 *60 /1000));
-    isr_count_tick = 0; //
+    ui->lineEdit_password->setEchoMode(QLineEdit::Password);
 
 }
+
 void qualitymonitor::ADtrig_ISR(int gpio, int level, uint32_t tick)
 {//7983 Hz
-    flag ++;
-    //printf("%u\n", flag);
-    //MyTrigger mTrigger;    
+    flag ++; 
     isr_count_tick++;
-    if(flag == 5){
-        end_t = clock();
-        //qDebug() << "AD read" << difftime(end_t, start_t) ;
-        //ISR_excute_ptr->on_Receive_Trig();
-        emit ISR_excute_ptr->sig();
 
+    if(flag == 5){
+        emit ISR_excute_ptr->sig();
         //AD start to read
-        start_t = clock();
         flag = 0;
     }
 }
@@ -153,10 +157,11 @@ qualitymonitor::~qualitymonitor()
     gpioTerminate();
     delete ui;
 }
-void qualitymonitor::on_Receive_ADval(float AD_val)
+void qualitymonitor::on_Receive_ADval(float getAD_val)
 {
-    ui->out1_pos->setText(QString::number(AD_val));
-    ui->out2_pos->setText(QString::number(AD_val));
+    AD_value = getAD_val;
+    ui->out1_pos->setText(QString::number(AD_value));
+    ui->out2_pos->setText(QString::number(AD_value));
 
     //set LVDT button color & enable
     if(ui->out1_pos->text().toInt() > 1200 && ui->out1_pos->text().toInt() < 2000)
@@ -181,12 +186,35 @@ void qualitymonitor::on_Receive_ADval(float AD_val)
         ui->pushButton_out2offset->setEnabled(false);
     }
     //set runframe A%
-    ui->label_L_A_per->setText("A%: "+QString::number(Mymathtool.A_per(ui->L_feedoutcenter->text(), ui->out1_pos->text()), 'f', 2)+" %");
-    ui->label_R_A_per->setText("A%: "+QString::number(Mymathtool.A_per(ui->R_feedoutcenter->text(), ui->out2_pos->text()), 'f', 2)+" %");
+    ui->label_L_A_per->setText("A%: "+QString::number(Mymathtool.A_per(ui->L_feedoutcenter->text(), AD_value), 'f', 2)+" %");
+    ui->label_R_A_per->setText("A%: "+QString::number(Mymathtool.A_per(ui->R_feedoutcenter->text(), AD_value), 'f', 2)+" %");
+
+    // need to test
+    //change runframe A% text color
+    if(qAbs(Mymathtool.A_per(ui->L_feedoutcenter->text(), AD_value)) > ui->L_limit_Aper->text().toFloat()*0.65)
+    {
+        if(qAbs(Mymathtool.A_per(ui->L_feedoutcenter->text(), AD_value)) > ui->L_limit_Aper->text().toFloat())
+            ui->label_L_A_per->setStyleSheet("color : red");
+        else
+            ui->label_L_A_per->setStyleSheet("color : yellow");
+    }
+    else
+        ui->label_L_A_per->setStyleSheet("color : green");
+
+    if(qAbs(Mymathtool.A_per(ui->R_feedoutcenter->text(), AD_value)) > ui->R_limit_Aper->text().toFloat()*0.65)
+    {
+        if(qAbs(Mymathtool.A_per(ui->R_feedoutcenter->text(), AD_value)) > ui->R_limit_Aper->text().toFloat())
+            ui->label_R_A_per->setStyleSheet("color : red");
+        else
+            ui->label_R_A_per->setStyleSheet("color : yellow");
+    }
+    else
+        ui->label_R_A_per->setStyleSheet("color : green");
+
 
     //set testframe ADC value
-    ui->test_inputL->setText(QString::number(AD_val* 3.111* 2/ 4096));
-    ui->test_inputR->setText(QString::number(AD_val* 3.111* 2/ 4096));
+    ui->test_inputL->setText(QString::number(AD_value* 3.111* 2/ 4096));
+    ui->test_inputR->setText(QString::number(AD_value* 3.111* 2/ 4096));
 
     //if(AD_val > 3)
         //on_pushButton_ErrorSig_clicked();
@@ -199,24 +227,432 @@ void qualitymonitor::on_Receive_Trig()
 }
 void qualitymonitor::slot()
 {
-    ui->label->setText(QString::number(Mymathtool.A_per(ui->L_feedoutcenter->text(), ui->out1_pos->text()), 'f', 2)+" %");
-    //qDebug() << "on_slot :" << thread()->currentThreadId();
-
-    //get AD_val
+    /************************************************************
+     *
+     * R side still NOT added
+     *
+     * ***********************************************************/
+    static float avg_AD_value = 0;
+    static int sampleTimes = 0;
     static double datalenght_L = mData_L.count();
-    //qDebug() << datalenght;
-    mData_L.append(ui->label->text().toInt());
-    DataWrite_L.append(QString::number( ui->out1_pos->text().toFloat()) + "\n");
-    ui->Chart_L->graph(0)->addData(datalenght_L, Mymathtool.A_per(ui->L_feedoutcenter->text(), ui->out1_pos->text()));
-    if(datalenght_L >= 50000)
-        ui->Chart_L->xAxis->setRange(datalenght_L-50000, datalenght_L);
-    else
-        ui->Chart_L->xAxis->setRange(0, 50000);
-    datalenght_L++;
+    static double datalenght_R = mData_L.count();
+
+    static int CV_times = 0;
+
+    //keep SPG_Data length always be SPG_SampleLength
+    if(datalenght_L >= SPG_SampleLength){
+        SPG_Data.removeFirst();
+        DataWrite_SPG.removeFirst();
+    }
+
+    SPG_Data.append(AD_value);
+    DataWrite_SPG.append(QString::number(AD_value));
+
+    CV_Data.append(AD_value);
+
+    //avg_AD_value is used to calculating average of A% & CV% per SampleLength
+    avg_AD_value += AD_value / SampleLength;
+
+    sampleTimes++;
+
+    //every 50cm, do onece
+    if(sampleTimes == SampleLength)
+    {
+        datalenght_L += SampleLength;
+        float A_per = (avg_AD_value - ui->L_feedoutcenter->text().toFloat()) / ui->L_feedoutcenter->text().toFloat() *100;
+
+        ui->label->setText(QString::number(A_per, 'f', 2)+" %");                //remove later
+        //qDebug() << "on_slot :" << thread()->currentThreadId();
 
 
+        //too ugly
+        //cal CV%
+        float SD = 0;
+        float avg = 0;
+        for (int i = 0; i < SampleLength; i++)
+            SD += pow(SPG_Data.at(SampleLength - i) - avg_AD_value, 2);
+        SD = sqrt(SD / (SampleLength - 1)) / avg_AD_value *100;
+        //ui->label_L_CV1m->setText("CV%: " +QString::number(SD) + "%");
+        CV_1m.append(SD / 2);
+        CV_times++;
+
+        if(CV_1m.length() == 20){
+            for(int i = 0; i < CV_1m.length(); i+=2)
+                avg += (CV_1m.at(CV_1m.length() -i)/2 + CV_1m.at(CV_1m.length() -i-1)/2)/10;
+            //SD = (CV_1m.at(0) + CV_1m.at(1));
+            ui->label_L_CV1m->setText("1mCV%: " +QString::number(avg, 'f', 2) + "%");
+            CV_path.append(avg);
+            ui->Chart_L->graph(1)->addData(datalenght_L, avg);
+
+            overCV_per_L = avg >= ui->L_limit_CVper->text().toFloat();
+            if(overCV_per_L)
+                if(AlarmFlagofCV == 0)
+                {
+                    timeid_AlarmofCV = startTimer(5000);
+                    AlarmFlagofCV = 1;
+                }
+            CV_times = 0;
+            CV_1m.clear();
+        }
+
+
+
+        //Over A% limit more than 3s, emit STOP sig.
+        overAper_L = qAbs(A_per) >= ui->L_limit_Aper->text().toFloat();
+        //qDebug() << overAper;
+        if(overAper_L)
+            if(AlarmFlag == 0)
+            {
+                timeid_Alarm = startTimer(3000);
+                AlarmFlag = 1;
+                //qDebug() << "alarm";
+            }
+
+        //get AD_val
+        //qDebug() << datalenght;
+
+        mData_L.append(A_per);
+        DataWrite_L.append(QString::number(AD_value) + "\n");
+        ui->Chart_L->graph(0)->addData(datalenght_L, A_per);
+        if(datalenght_L >= 50000){
+            ui->Chart_L->xAxis->setRange(datalenght_L-50000, datalenght_L);
+            ui->Chart_L->xAxis2->setRange(datalenght_L-50000, datalenght_L);
+        }
+        else{
+            ui->Chart_L->xAxis->setRange(0, 50000);
+            ui->Chart_L->xAxis2->setRange(0, 50000);
+        }
+
+
+
+        //set yAxis range - A% path
+        float L_Aper_Limit = ui->L_limit_Aper->text().toFloat() * 1.5;
+        float R_Aper_Limit = ui->R_limit_Aper->text().toFloat() * 1.5;
+
+        ui->Chart_L->yAxis->setRange(-L_Aper_Limit, L_Aper_Limit);
+        ui->Chart_R->yAxis->setRange(-R_Aper_Limit, R_Aper_Limit);
+
+        //set yAxis2 range - CV path
+        float L_CVper_Limit = ui->L_limit_CVper->text().toFloat() * 1.5;
+        float R_CVper_Limit = ui->R_limit_CVper->text().toFloat() * 1.5;
+
+        ui->Chart_L->yAxis2->setRange(-0.5, L_CVper_Limit);
+        ui->Chart_R->yAxis2->setRange(-0.5, R_CVper_Limit);
+
+
+        //reset sampleTimes
+        sampleTimes = 0;
+        avg_AD_value = 0;
+    }
+}
+
+
+void qualitymonitor::Read_oldData()
+{
+    QString Filename_L = QDir().currentPath() + "/real_input_L";
+    QString Filename_R = QDir().currentPath() + "/real_input_R";
+
+    QFile real_input_L(Filename_L);
+    QFile real_input_R(Filename_R);
+
+    //series = new QSplineSeries();
+
+    if(!real_input_L.open(QFile::ReadOnly | QFile::Text) \
+      |!real_input_R.open(QFile::ReadOnly | QFile::Text))
+    {
+        qDebug() << "Cannot read old data!";
+    }
+    QTextStream Readin_L(&real_input_L);
+    QString read_data_L = Readin_L.readAll();
+    //qDebug() << read_data;
+    DataWrite_L.append(read_data_L);
+    //qDebug() << DataWrite_L;
+    //qDebug() << read_data_L.count("\n");
+
+    for(int i =0; i < read_data_L.count("\n"); i++){
+        float read_data_tras = read_data_L.section("\n",i,i).toFloat();
+        //qDebug() << read_data_tras;
+        mData_L.append((read_data_tras - ui->L_feedoutcenter->text().toFloat()) / ui->L_feedoutcenter->text().toFloat()*100);
+        axixX_L.append(i + 1);
+    }
+
+    real_input_L.close();    
+
+    QTextStream Readin_R(&real_input_R);
+    QString read_data_R = Readin_R.readAll();
+    DataWrite_R.append(read_data_R);
+
+    for(int i =0; i < read_data_R.count("\n"); i++){
+        float read_data_tras = read_data_R.section("\n",i,i).toFloat();
+        //qDebug() << read_data_tras;
+        mData_R.append((read_data_tras - ui->R_feedoutcenter->text().toInt()) / ui->R_feedoutcenter->text().toInt()*100);
+        axixX_R.append(i + 1);
+        //mData_R.append(QPointF(i, read_data_tras));
+    }
+    real_input_R.close();
 
 }
+void qualitymonitor::Write_newData(int index)
+{
+    /*******************************************************
+     * Right side need to modify
+     * ****************************************************/
+    switch(index){
+        case Write_L:{
+            QString Filename_L = QDir().currentPath() + "/real_input_L";
+            QFile real_input_L(Filename_L);
+
+            if(!real_input_L.open(QFile::WriteOnly | QFile::Text))
+            {
+                qDebug() << "Cannot write new data";
+            }
+            QTextStream Writeout_L(&real_input_L);
+            //DataWrite_L.append(QString::number( ui->out1_pos->text().toFloat()) + "\n");
+            Writeout_L << DataWrite_L;
+            real_input_L.flush();
+            real_input_L.close();
+            break;
+        }
+        case Write_R:{
+            QString Filename_R = QDir().currentPath() + "/real_input_R";
+            QFile real_input_R(Filename_R);
+
+            if(!real_input_R.open(QFile::WriteOnly | QFile::Text))
+            {
+                qDebug() << "Cannot write new data";
+            }
+            QTextStream Writeout_R(&real_input_R);
+            //DataWrite_R.append(QString::number( ui->out2_pos->text().toFloat()) + "\n");
+            Writeout_R << DataWrite_L;
+            real_input_R.flush();
+            real_input_R.close();
+            break;
+        }
+        case Write_SPG :{
+            QString Filename = QDir().currentPath() + "/SPG_data";
+            QFile SPG(Filename);
+
+            if(!SPG.open(QFile::WriteOnly | QFile::Text))
+            {
+                qDebug() << "Cannot write new data";
+            }
+            QTextStream out(&SPG);
+            out << DataWrite_SPG.join("\n");
+            SPG.flush();
+            SPG.close();
+            break;
+        }
+    }
+}
+
+void qualitymonitor::Set_Graphics_L()
+{
+    static double datalenght = 0;
+    datalenght = mData_L.count() + 1;
+
+    ui->Chart_L->addGraph();
+    ui->Chart_L->addGraph(ui->Chart_L->xAxis2, ui->Chart_L->yAxis2);
+
+    //ui->Chart_L->graph(0)->setData(axixX_L, mData_L);
+    //ui->Chart_L->graph(1)->setData(axixX_L, CV_path);
+
+    //set CV yAxis visible
+    ui->Chart_L->yAxis2->setVisible(true);
+    ui->Chart_L->yAxis2->setTickLabelColor(Qt::blue);
+
+    QPen pen = ui->Chart_L->graph(0)->pen();
+    pen.setWidth(5);
+    QLinearGradient linearGradient(0, 0, 0, 320);
+    linearGradient.setColorAt(0,    Qt::red);
+    linearGradient.setColorAt(0.19, Qt::red);
+    linearGradient.setColorAt(0.20, Qt::yellow);
+    linearGradient.setColorAt(0.34, Qt::yellow);
+    linearGradient.setColorAt(0.35, Qt::green);
+    linearGradient.setColorAt(0.65, Qt::green);
+    linearGradient.setColorAt(0.66, Qt::yellow);
+    linearGradient.setColorAt(0.80, Qt::yellow);
+    linearGradient.setColorAt(0.81, Qt::red);
+    linearGradient.setColorAt(1.0,  Qt::red);
+
+    pen.setBrush(QBrush(linearGradient));
+
+    ui->Chart_L->graph(0)->setPen(pen);
+
+    // set axes ranges:
+    if(datalenght >= 50000){
+        ui->Chart_L->xAxis->setRange(datalenght-50000, datalenght);
+        ui->Chart_L->xAxis2->setRange(datalenght-50000, datalenght);
+    }
+    else{
+        ui->Chart_L->xAxis->setRange(0, 50000);
+        ui->Chart_L->xAxis2->setRange(0, 50000);
+    }
+
+    float L_Aper_Limit = ui->L_limit_Aper->text().toFloat() * 1.5;
+    float CV_per_Limit = ui->L_limit_CVper->text().toFloat() * 1.5;
+
+    ui->Chart_L->yAxis->setRange(-L_Aper_Limit, L_Aper_Limit);
+    ui->Chart_L->yAxis2->setRange(-0.5, CV_per_Limit);
+
+    ui->Chart_L->replot();
+}
+
+void qualitymonitor::Set_Graphics_R()
+{
+    static double datalenght = 0;
+    datalenght = mData_R.count() + 1;
+
+    ui->Chart_R->addGraph();
+    ui->Chart_R->addGraph(ui->Chart_R->xAxis2, ui->Chart_R->yAxis2);
+
+    //ui->Chart_R->graph(0)->setData(axixX_R, mData_R);
+
+    QPen pen = ui->Chart_R->graph(0)->pen();
+    pen.setWidth(5);
+    QLinearGradient linearGradient(0, 0, 0, 200);
+    linearGradient.setColorAt(0,    Qt::red);
+    linearGradient.setColorAt(0.12, Qt::red);
+    linearGradient.setColorAt(0.20, Qt::yellow);
+    linearGradient.setColorAt(0.39, Qt::yellow);
+    linearGradient.setColorAt(0.40, Qt::green);
+    linearGradient.setColorAt(0.74, Qt::green);
+    linearGradient.setColorAt(0.75, Qt::yellow);
+    linearGradient.setColorAt(0.95, Qt::yellow);
+    linearGradient.setColorAt(1.0,  Qt::red);
+
+    pen.setBrush(QBrush(linearGradient));
+
+    ui->Chart_R->graph(0)->setPen(pen);
+
+    // set axes ranges:
+    if(datalenght >= 50000)
+        ui->Chart_R->xAxis->setRange(datalenght-50000, datalenght);
+    else
+        ui->Chart_R->xAxis->setRange(0, 50000);
+    float R_Aper_Limit = ui->R_limit_Aper->text().toFloat() * 1.5;
+    float CV_per_Limit = ui->R_limit_CVper->text().toFloat() * 1.5;
+
+    ui->Chart_R->yAxis->setRange(-R_Aper_Limit, R_Aper_Limit);
+    ui->Chart_R->yAxis2->setRange(-0.5, CV_per_Limit);
+
+    ui->Chart_R->replot();
+
+}
+
+void qualitymonitor::timerEvent(QTimerEvent *event)
+{
+    //clock
+    if(event->timerId() == timeid_DateTime){
+        DateTimeSlot();
+        ui->Chart_L->replot();
+        ui->Chart_R->replot();
+        //Write_newData(Write_L);
+        //Write_newData(Write_R);
+        Write_newData(Write_SPG);
+    }
+    //over limit
+    else if (event->timerId() == timeid_Alarm){
+        if(ui->pushbutton_QMenble->isChecked()) //QM enable
+            if(overAper_L || overAper_R)
+            {
+                qDebug() << "STOP!";
+                AlarmFlag = 0;
+                killTimer(this->timeid_Alarm);
+                //clear CV data array
+                CV_1m.clear();
+
+                on_pushButton_ErrorSig_clicked("over A%");
+                gpioWrite(Stop_signal, PI_HIGH);    //emit stop signal
+                ui->label_stopFlag->setText(QString::number(1));
+            }
+    }
+    else if (event->timerId() == timeid_AlarmofCV){
+        if(ui->pushbutton_QMenble->isChecked()) //QM enable
+            if(overCV_per_L || overCV_per_L)
+            {
+                qDebug() << "STOP!";
+                AlarmFlagofCV = 0;
+                killTimer(this->timeid_AlarmofCV);
+                //clear CV data array
+                CV_1m.clear();
+
+                on_pushButton_ErrorSig_clicked("over CV%");
+                gpioWrite(Stop_signal, PI_HIGH);    //emit stop signal
+                ui->label_stopFlag->setText(QString::number(1));
+            }
+    }
+
+    //ISR counter
+    else if(event->timerId() == timeid_TrigCount){
+        count_ISR_times();
+    }
+
+}
+
+
+void qualitymonitor::on_pushButton_ErrorSig_clicked(QString resons)
+{
+    parameter ErrorRecord;
+    //error happened do, and be slot
+    //name *item as add QtableWidget item
+
+    //insertRow in Row 0
+    ui->tableWidget->insertRow(0);
+    //add Date, Time and Reason
+    //Reason need modify as sig
+    QTableWidgetItem *item = new QTableWidgetItem();
+    item = new QTableWidgetItem(QString(QDate().currentDate().toString("yyyy/MM/dd")));
+    item->setFlags(item->flags() ^ Qt::ItemIsEditable);                     //set item cannot edit
+    ui->tableWidget->setItem(0, 0, item);
+    item = new QTableWidgetItem(QString(QTime().currentTime().toString()));
+    item->setFlags(item->flags() ^ Qt::ItemIsEditable);                     //set item cannot edit
+    ui->tableWidget->setItem(0, 1, item);
+    item = new QTableWidgetItem(resons.append(""));
+    item->setFlags(item->flags() ^ Qt::ItemIsEditable);                     //set item cannot edit
+    ui->tableWidget->setItem(0, 2, item);
+
+    QString beWrite;
+    beWrite = QString(";%1;%2;%3").arg(QString(QDate().currentDate().toString("yyyy/MM/dd")))   \
+              .arg(QString(QTime().currentTime().toString()))                                   \
+              .arg(resons.append("\n"))                                                   \
+              .append(ErrorRecord.Read(QDir().currentPath() + "/errorhistory", 0));
+
+    //qDebug() << beWrite;
+
+    /*
+    QString result;
+    foreach(const QString &str, beWrite){
+        result.append(str);
+    }/
+    qDebug() << result;*/
+    ErrorRecord.Write(QDir().currentPath() + "/errorhistory" , beWrite);
+}
+
+void qualitymonitor::Setup_HistoryChart()
+{
+    ui->HistoryChart->addGraph();
+    ui->HistoryChart->xAxis->setRange(0, 50000);
+    ui->HistoryChart->yAxis->setRange(-0.5, 10);
+
+}
+
+/***********************************************************
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *  Test finished!
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ * *********************************************************/
 
 void qualitymonitor::DateTimeSlot()
 {   //label_14
@@ -228,12 +664,19 @@ void qualitymonitor::DateTimeSlot()
     ui->Date -> setText(Date);
     ui->Time -> setText(Time);
     //qDebug() << QThread::currentThread();
-
-    ui->Chart_L->replot();
-    ui->Chart_R->replot();
-
-    //Write_newData();
 }
+
+void qualitymonitor::count_ISR_times()
+{
+    float pulselength = ui->PulseLength->text().toFloat();
+    ui->label_L_speed->setText("Speed: " + QString::number(isr_count_tick *pulselength *60 /1000));
+    ui->trig_count->setText(QString::number(isr_count_tick));
+    isr_count_tick = 0; //
+    //qDebug() << "count";
+
+}
+
+
 void qualitymonitor::setupParameter()
 {
     parameter initParameter;
@@ -270,14 +713,13 @@ void qualitymonitor::setupParameter()
     ui->R_limit_Aper    ->setText(R_limit_Aper);
     ui->R_limit_CVper   ->setText(R_limit_CVper);
 
-    QString CR_diameter = QString::number(initParameter.CR_diameter());
-    QString DetectGear  = QString::number(initParameter.DetectGear());
+    //setup EE parameter
+    QString PulseLength = QString::number(initParameter.PulseLength());
     QString Filter_1    = QString::number(initParameter.Filter_1());
     QString Filter_2    = QString::number(initParameter.Filter_2());
     QString BiasAdjust  = QString::number(initParameter.BiasAdjust());
 
-    ui->CR_diameter ->setText(CR_diameter);
-    ui->DetectGear  ->setText(DetectGear);
+    ui->PulseLength ->setText(PulseLength);
     ui->Filter_1    ->setText(Filter_1);
     ui->Filter_2    ->setText(Filter_2);
     ui->BiasAdjust  ->setText(BiasAdjust);
@@ -290,153 +732,6 @@ void qualitymonitor::setupParameter()
     ui->out2_offset->setText(outputR_offset);
 }
 
-void qualitymonitor::Read_oldData()
-{
-    QString Filename_L = QDir().currentPath() + "/real_input_L";
-    QString Filename_R = QDir().currentPath() + "/real_input_R";
-
-    QFile real_input_L(Filename_L);
-    QFile real_input_R(Filename_R);
-
-    //series = new QSplineSeries();
-
-    if(!real_input_L.open(QFile::ReadOnly | QFile::Text) \
-      |!real_input_R.open(QFile::ReadOnly | QFile::Text))
-    {
-        qDebug() << "Cannot read old data!";
-    }
-    QTextStream Readin_L(&real_input_L);
-    QString read_data_L = Readin_L.readAll();
-    //QByteArray data;
-    //qDebug() << read_data;
-    DataWrite_L.append(read_data_L);
-    //qDebug() << DataWrite_L;
-    //qDebug() << read_data_L.count("\n");
-    for(int i =0; i < read_data_L.count("\n"); i++){
-        float read_data_tras = read_data_L.section("\n",i,i).toFloat();
-        //qDebug() << read_data_tras;
-        mData_L.append((read_data_tras - ui->L_feedoutcenter->text().toFloat()) / ui->L_feedoutcenter->text().toFloat()*100);
-        axixX_L.append(i + 1);
-    }
-
-    real_input_L.close();    
-
-    QTextStream Readin_R(&real_input_R);
-    QString read_data_R = Readin_R.readAll();
-    DataWrite_R.append(read_data_R);
-    for(int i =0; i < read_data_R.count("\n"); i++){
-        float read_data_tras = read_data_R.section("\n",i,i).toFloat();
-        //qDebug() << read_data_tras;
-        mData_R.append((read_data_tras - ui->R_feedoutcenter->text().toInt()) / ui->R_feedoutcenter->text().toInt()*100);
-        axixX_R.append(i + 1);
-        //mData_R.append(QPointF(i, read_data_tras));
-    }
-    real_input_R.close();
-
-}
-void qualitymonitor::Write_newData()
-{
-    /*******************************************************
-     * Right side need to modify
-     *
-     * ****************************************************/
-
-    QString Filename_L = QDir().currentPath() + "/real_input_L";
-    QString Filename_R = QDir().currentPath() + "/real_input_R";DataWrite_L.append(QString::number( ui->out1_pos->text().toFloat()) + "\n");
-
-    QFile real_input_L(Filename_L);
-    QFile real_input_R(Filename_R);
-
-
-    if(!real_input_L.open(QFile::WriteOnly | QFile::Text) \
-      |!real_input_R.open(QFile::WriteOnly | QFile::Text))
-    {
-        qDebug() << "Cannot write new data";
-    }
-    QTextStream Writeout_L(&real_input_L);
-    //DataWrite_L.append(QString::number( ui->out1_pos->text().toFloat()) + "\n");
-    Writeout_L << DataWrite_L;
-    real_input_L.flush();
-    real_input_L.close();
-/*
-    QTextStream Writeout_R(&real_input_L);
-    DataWrite_R.append(QString::number( ui->out2_pos->text().toFloat()) + "\n");
-    Writeout_R << DataWrite_L;
-    real_input_R.flush();
-    real_input_R.close();
-*/
-}
-
-void qualitymonitor::Set_Graphics_L()
-{
-    static double datalenght = 0;
-    datalenght = mData_L.count() + 1;
-
-    ui->Chart_L->addGraph();
-    ui->Chart_L->addGraph();
-
-    ui->Chart_L->graph(0)->addData(axixX_L, mData_L);
-
-    QPen pen = ui->Chart_L->graph(0)->pen();
-    //pen.setWidth(5);
-    QLinearGradient linearGradient(0, 0, 0, 320);
-    linearGradient.setColorAt(0,    Qt::red);
-    linearGradient.setColorAt(0.19, Qt::red);
-    linearGradient.setColorAt(0.20, Qt::yellow);
-    linearGradient.setColorAt(0.34, Qt::yellow);
-    linearGradient.setColorAt(0.35, Qt::green);
-    linearGradient.setColorAt(0.65, Qt::green);
-    linearGradient.setColorAt(0.66, Qt::yellow);
-    linearGradient.setColorAt(0.80, Qt::yellow);
-    linearGradient.setColorAt(0.81, Qt::red);
-    linearGradient.setColorAt(1.0,  Qt::red);
-
-    pen.setBrush(QBrush(linearGradient));
-
-    ui->Chart_L->graph(0)->setPen(pen);
-
-    // set axes ranges, so we see all data:
-    if(datalenght >= 50000)
-        ui->Chart_L->xAxis->setRange(datalenght-50000, datalenght);
-    else
-        ui->Chart_L->xAxis->setRange(0, 50000);
-    ui->Chart_L->yAxis->setRange(-5, 5);
-}
-
-void qualitymonitor::Set_Graphics_R()
-{
-    static double datalenght = 0;
-    datalenght = mData_R.count() + 1;
-
-    ui->Chart_R->addGraph();
-    ui->Chart_R->addGraph();
-
-    ui->Chart_R->graph(0)->addData(axixX_R, mData_R);
-
-    QPen pen = ui->Chart_R->graph(0)->pen();
-    //pen.setWidth(5);
-    QLinearGradient linearGradient(0, 0, 0, 200);
-    linearGradient.setColorAt(0,    Qt::red);
-    linearGradient.setColorAt(0.12, Qt::red);
-    linearGradient.setColorAt(0.20, Qt::yellow);
-    linearGradient.setColorAt(0.39, Qt::yellow);
-    linearGradient.setColorAt(0.40, Qt::green);
-    linearGradient.setColorAt(0.74, Qt::green);
-    linearGradient.setColorAt(0.75, Qt::yellow);
-    linearGradient.setColorAt(0.95, Qt::yellow);
-    linearGradient.setColorAt(1.0,  Qt::red);
-
-    pen.setBrush(QBrush(linearGradient));
-
-    ui->Chart_R->graph(0)->setPen(pen);
-
-    // set axes ranges, so we see all data:
-    if(datalenght >= 50000)
-        ui->Chart_R->xAxis->setRange(datalenght-50000, datalenght);
-    else
-        ui->Chart_R->xAxis->setRange(0, 50000);
-    ui->Chart_R->yAxis->setRange(-5, 5);
-}
 
 
 void qualitymonitor::Setup_History()
@@ -501,44 +796,7 @@ void qualitymonitor::on_pushButton_2_clicked()
     //mThread->Stop = true;
 
 }
-void qualitymonitor::on_pushButton_ErrorSig_clicked()
-{
-    parameter ErrorRecord;
-    //error happened do, and be slot
-    //name *item as add QtableWidget item
 
-    //insertRow in Row 0
-    ui->tableWidget->insertRow(0);
-    //add Date, Time and Reason
-    //Reason need modify as sig
-    QTableWidgetItem *item = new QTableWidgetItem();
-    item = new QTableWidgetItem(QString(QDate().currentDate().toString("yyyy/MM/dd")));
-    item->setFlags(item->flags() ^ Qt::ItemIsEditable);                     //set item cannot edit
-    ui->tableWidget->setItem(0, 0, item);
-    item = new QTableWidgetItem(QString(QTime().currentTime().toString()));
-    item->setFlags(item->flags() ^ Qt::ItemIsEditable);                     //set item cannot edit
-    ui->tableWidget->setItem(0, 1, item);
-    item = new QTableWidgetItem(QString("Hello World!").append(""));
-    item->setFlags(item->flags() ^ Qt::ItemIsEditable);                     //set item cannot edit
-    ui->tableWidget->setItem(0, 2, item);
-
-    QString beWrite;
-    beWrite = QString(";%1;%2;%3").arg(QString(QDate().currentDate().toString("yyyy/MM/dd")))   \
-              .arg(QString(QTime().currentTime().toString()))                                   \
-              .arg(QString("Hello World!\n"))                                                   \
-              .append(ErrorRecord.Read(QDir().currentPath() + "/errorhistory", 0));
-
-    qDebug() << beWrite;
-
-    /*
-    QString result;
-    foreach(const QString &str, beWrite){
-        result.append(str);
-    }/
-    qDebug() << result;*/
-    ErrorRecord.Write(QDir().currentPath() + "/errorhistory" , beWrite);
-
-}
 void qualitymonitor::on_pushButton_Search_clicked()
 {
     //error history search button
@@ -606,16 +864,14 @@ void qualitymonitor::toSaveDate(int indx){
         }
         case EEParameter :{
             QString saveData;
-            QString CR_diameter = writeParameter.TrantoNumberType(ui->CR_diameter->text());
-            QString DetectGear  = writeParameter.TrantoNumberType(ui->DetectGear->text());
+            QString PulseLength = writeParameter.TrantoNumberType(ui->PulseLength->text());
             QString Filter_1    = writeParameter.TrantoNumberType(ui->Filter_1->text());
             QString Filter_2    = writeParameter.TrantoNumberType(ui->Filter_2->text());
             QString BiasAdjust  = writeParameter.TrantoNumberType(ui->BiasAdjust->text());
             QString outputL_offset = writeParameter.TrantoNumberType(ui->out1_offset->text());
             QString outputR_offset = writeParameter.TrantoNumberType(ui->out2_offset->text());
 
-            saveData = (CR_diameter         + "\n");
-            saveData.append(DetectGear      + "\n");
+            saveData = (PulseLength         + "\n");
             saveData.append(Filter_1        + "\n");
             saveData.append(Filter_2        + "\n");
             saveData.append(BiasAdjust      + "\n");
@@ -739,7 +995,6 @@ void qualitymonitor::on_pushButton_out2offset_clicked()
 
 
 
-
 /***********************************************************************************
 MyTrigger::MyTrigger()
 {
@@ -753,3 +1008,8 @@ void MyTrigger::run()
     emit emit_trig_sig();
 }
 *************************************************************************************/
+
+void qualitymonitor::on_reset_clicked()
+{
+    gpioWrite(Stop_signal, PI_LOW);     //reset stop signal
+}
