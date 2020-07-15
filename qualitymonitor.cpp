@@ -79,12 +79,10 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     this->setCursor(Qt::BlankCursor);   //hide mouse
     ISR_excute_ptr = this;              //qualitymonitor::qualitymonitor ptr
 
-//set timer
-    /* old timer
-    timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(DateTimeSlot()));
-    timer->start(100);
-    */
+    //set QM enable button to green
+    ui->pushbutton_QMenble->setStyleSheet("background : green ; color : white");
+    //ui->pushbutton_QMenble->setStyleSheet("color : white");
+
     timeid_DateTime = startTimer(100);
 
 //setup parameter
@@ -102,7 +100,6 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     on_pushButton_Search_clicked();
 
 //Setup_Graphics;
-    //Read_oldData();
 
     Set_Graphics_L();
     Set_Graphics_R();
@@ -189,7 +186,7 @@ void qualitymonitor::on_Receive_ADval(float getAD_val)
     ui->label_L_A_per->setText("A%: "+QString::number(Mymathtool.A_per(ui->L_feedoutcenter->text(), AD_value), 'f', 2)+" %");
     ui->label_R_A_per->setText("A%: "+QString::number(Mymathtool.A_per(ui->R_feedoutcenter->text(), AD_value), 'f', 2)+" %");
 
-    // need to test
+
     //change runframe A% text color
     if(qAbs(Mymathtool.A_per(ui->L_feedoutcenter->text(), AD_value)) > ui->L_limit_Aper->text().toFloat()*0.65)
     {
@@ -221,12 +218,13 @@ void qualitymonitor::on_Receive_ADval(float getAD_val)
 
 }
 void qualitymonitor::on_Receive_Trig()
-{   //AD trig
+{   //prepare to delete
     //Set_GraphicsView();
     //qDebug() << "on_Receive_Trig :" << thread()->currentThreadId();
 }
 void qualitymonitor::slot()
 {
+    //AD trig
     /************************************************************
      *
      * R side still NOT added
@@ -267,6 +265,7 @@ void qualitymonitor::slot()
 
         //too ugly
         //cal CV%
+
         float SD = 0;
         float avg = 0;
         for (int i = 0; i < SampleLength; i++)
@@ -349,6 +348,7 @@ void qualitymonitor::slot()
 
 void qualitymonitor::Read_oldData()
 {
+    //need change
     QString Filename_L = QDir().currentPath() + "/real_input_L";
     QString Filename_R = QDir().currentPath() + "/real_input_R";
 
@@ -564,6 +564,8 @@ void qualitymonitor::timerEvent(QTimerEvent *event)
                 on_pushButton_ErrorSig_clicked("over A%");
                 gpioWrite(Stop_signal, PI_HIGH);    //emit stop signal
                 ui->label_stopFlag->setText(QString::number(1));
+                on_errorfram_Button_clicked();
+
             }
     }
     else if (event->timerId() == timeid_AlarmofCV){
@@ -579,6 +581,7 @@ void qualitymonitor::timerEvent(QTimerEvent *event)
                 on_pushButton_ErrorSig_clicked("over CV%");
                 gpioWrite(Stop_signal, PI_HIGH);    //emit stop signal
                 ui->label_stopFlag->setText(QString::number(1));
+                on_errorfram_Button_clicked();
             }
     }
 
@@ -630,10 +633,42 @@ void qualitymonitor::on_pushButton_ErrorSig_clicked(QString resons)
 
 void qualitymonitor::Setup_HistoryChart()
 {
-    ui->HistoryChart->addGraph();
+    ui->HistoryChart->addGraph();    
     ui->HistoryChart->xAxis->setRange(0, 50000);
     ui->HistoryChart->yAxis->setRange(-0.5, 10);
 
+    ui->SPG_Chart->addGraph();
+    QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog);
+    ui->SPG_Chart->xAxis->setTicker(logTicker);
+    ui->SPG_Chart->xAxis->setScaleType(QCPAxis::stLogarithmic);
+
+    ui->SPG_Chart->xAxis->setRange(1, 10000);
+    ui->SPG_Chart->yAxis->setRange(-0.5, 10);
+}
+
+
+void qualitymonitor::set_SPG_Chart()
+{
+    QVector<double> SPG = Mymathtool.SPG(SPG_Data);
+    QVector<double> interval(SPG.length());
+
+    //clear data when work done
+    int chw = 5 * log2(8192 / 4) - 4;
+
+    for(int i= 0; i <= chw; i++){                //set how many chs
+        interval[i] = pow(2 , 0.2*(i+5));       //pow()用來求 x 的 y 次方
+        //printf("%f\n", interval[i]);
+    }
+
+    QCPBars *SPG_Bar = new QCPBars(ui->SPG_Chart->xAxis, ui->SPG_Chart->yAxis);
+    //setData to Bar Chart
+    SPG_Bar->setData(interval, SPG);
+    SPG_Bar->setWidth(0);
+    //setRange
+    ui->SPG_Chart->xAxis->setRange(1, 10000);
+    ui->SPG_Chart->replot();
+    //clear data
+    SPG_Bar->data()->clear();
 }
 
 /***********************************************************
@@ -921,6 +956,7 @@ void qualitymonitor::on_test_Button_clicked()
 }
 void qualitymonitor::on_errorfram_Button_clicked()
 {
+    ui->errorhistory->raise();
     if(!ui->Dateframe->isTopLevel()){
         ui->Dateframe->raise();
         ui->MenuFrame->raise();
@@ -955,6 +991,18 @@ void qualitymonitor::on_pushButton_3_clicked()
 void qualitymonitor::on_pushButton_OutputCenter_clicked()
 {
     ui->frameOutputCenter->raise();
+    if(!ui->Dateframe->isTopLevel()){
+        ui->Dateframe->raise();
+        ui->MenuFrame->raise();
+    }
+}
+
+void qualitymonitor::on_pushButton_SPG_clicked()
+{
+    //cal & set SPG
+    set_SPG_Chart();
+
+    ui->frame_SPG->raise();
     if(!ui->Dateframe->isTopLevel()){
         ui->Dateframe->raise();
         ui->MenuFrame->raise();
@@ -1011,5 +1059,25 @@ void MyTrigger::run()
 
 void qualitymonitor::on_reset_clicked()
 {
+    CV_1m.clear();
     gpioWrite(Stop_signal, PI_LOW);     //reset stop signal
+
+}
+
+
+
+void qualitymonitor::on_pushButton_replot_clicked()
+{
+    //cal & set SPG
+    set_SPG_Chart();
+}
+
+
+void qualitymonitor::on_pushbutton_QMenble_clicked()
+{
+    if(ui->pushbutton_QMenble->isChecked())
+        ui->pushbutton_QMenble->setStyleSheet("background : green ; color : white");
+    else
+        ui->pushbutton_QMenble->setStyleSheet("background : red ; color : white");
+
 }

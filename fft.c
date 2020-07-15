@@ -4,6 +4,9 @@
 #include <math.h>
 #include "fft.h"
 
+#include <QtCore>
+#include <QString>
+
 #ifndef FFT_N
 #define FFT_N   4096
 #endif // FFT_N

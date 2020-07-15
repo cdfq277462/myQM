@@ -59,7 +59,6 @@ private slots:
 
     void on_pushButton_2_clicked();
 
-    void SetErrorTable();
 
     void on_pushButton_Search_clicked();
 
@@ -68,8 +67,6 @@ private slots:
     void on_pushButton_Settiing_clicked();
 
     void on_pushButton_3_clicked();
-
-    void Setup_History();
 
     void on_pushButton_5_clicked();
 
@@ -81,14 +78,30 @@ private slots:
 
     void on_pushButton_OutputCenter_clicked();
 
+    void on_pushButton_replot_clicked();
+
+    void on_pushButton_SPG_clicked();
+
+
+
+    void Setup_History();
+
     void Read_oldData();
 
     void Write_newData(int);
 
     void Setup_HistoryChart();
 
-
     void on_reset_clicked();
+
+    void SetErrorTable();
+
+    void set_SPG_Chart();
+
+
+
+
+    void on_pushbutton_QMenble_clicked();
 
 public slots:
     void timerEvent(QTimerEvent *event);

@@ -21,7 +21,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     adread.cpp \
-    fft.c \
     main.cpp \
     mathtools.cpp \
     mythread.cpp \
@@ -31,7 +30,6 @@ SOURCES += \
 
 HEADERS += \
     adread.h \
-    fft.h \
     mathtools.h \
     mythread.h \
     parameter.h \
