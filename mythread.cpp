@@ -3,7 +3,6 @@
 #include <QThread>
 #include <QtDebug>
 
-#include "fft.h"
 #include <pigpio.h>
 #include "mathtools.h"
 

@@ -9,7 +9,6 @@
 #include <QDebug>
 #include <QThread>
 
-#include "fft.h"
 #include "mythread.h"
 #include "parameter.h"
 
@@ -21,6 +20,8 @@
 #define	trig_pin	27 // trigger
 
 #define ADC_Setup   1
+
+
 
 
 /*
@@ -49,7 +50,8 @@ void ADtrig_ISR(int gpio, int level, uint32_t tick){
 */
 int main(int argc, char *argv[])
 {
-    qputenv("QT_IM_MODULE", QByteArray("qtvirtualkeyboard"));
+
+    //qputenv("QT_IM_MODULE", QByteArray("qtvirtualkeyboard"));
 
     QApplication a(argc, argv);
     qualitymonitor w;

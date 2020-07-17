@@ -43,10 +43,13 @@ using namespace QtCharts;
 #include "adread.h"
 #include "pigpio.h"
 #include <time.h>
+#include "qcustomplot.h"
 
+//parameter read index
 #define  normalParameter    1
 #define  EEParameter        2
 
+//write data index
 #define Write_L     1
 #define Write_R     2
 #define Write_SPG   3
@@ -56,9 +59,15 @@ using namespace QtCharts;
 #define Stop_signal 17
 #define AL_enable   18
 
+//sample length
 //unit = cm
 #define SPG_SampleLength    10000
 #define SampleLength        50
+
+//combobox index
+#define LeftSide    0
+#define RightSide   1
+
 
 //interrupt flag
 int flag = 0;
@@ -78,6 +87,7 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     QWidget::showFullScreen();
     this->setCursor(Qt::BlankCursor);   //hide mouse
     ISR_excute_ptr = this;              //qualitymonitor::qualitymonitor ptr
+    time_sleep(0.1);
 
     //set QM enable button to green
     ui->pushbutton_QMenble->setStyleSheet("background : green ; color : white");
@@ -93,6 +103,7 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     ui->Dateframe->raise();
     //qDebug() << "main: " << QThread::currentThread();
     Setup_History();
+    set_listview_historyFile();
 
     AlarmFlag = 0;
     AlarmFlagofCV = 0;
@@ -100,7 +111,6 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     on_pushButton_Search_clicked();
 
 //Setup_Graphics;
-
     Set_Graphics_L();
     Set_Graphics_R();
     Setup_HistoryChart();
@@ -245,7 +255,6 @@ void qualitymonitor::slot()
 
     SPG_Data.append(AD_value);
     DataWrite_SPG.append(QString::number(AD_value));
-
     CV_Data.append(AD_value);
 
     //avg_AD_value is used to calculating average of A% & CV% per SampleLength
@@ -346,51 +355,26 @@ void qualitymonitor::slot()
 }
 
 
-void qualitymonitor::Read_oldData()
+void qualitymonitor::Read_historyData(QString filename)
 {
-    //need change
-    QString Filename_L = QDir().currentPath() + "/real_input_L";
-    QString Filename_R = QDir().currentPath() + "/real_input_R";
 
-    QFile real_input_L(Filename_L);
-    QFile real_input_R(Filename_R);
-
+    QFile ReadHistory(filename);
     //series = new QSplineSeries();
 
-    if(!real_input_L.open(QFile::ReadOnly | QFile::Text) \
-      |!real_input_R.open(QFile::ReadOnly | QFile::Text))
+    if(!ReadHistory.open(QFile::ReadOnly | QFile::Text))
     {
         qDebug() << "Cannot read old data!";
     }
-    QTextStream Readin_L(&real_input_L);
-    QString read_data_L = Readin_L.readAll();
+    QTextStream Readin(&ReadHistory);
+    QStringList Historylist = Readin.readAll().split("\n");
     //qDebug() << read_data;
-    DataWrite_L.append(read_data_L);
-    //qDebug() << DataWrite_L;
-    //qDebug() << read_data_L.count("\n");
-
-    for(int i =0; i < read_data_L.count("\n"); i++){
-        float read_data_tras = read_data_L.section("\n",i,i).toFloat();
-        //qDebug() << read_data_tras;
-        mData_L.append((read_data_tras - ui->L_feedoutcenter->text().toFloat()) / ui->L_feedoutcenter->text().toFloat()*100);
-        axixX_L.append(i + 1);
+    double i = 0;
+    foreach (QString str, Historylist) {
+        historyData.append(str.toDouble());
+        historyData_x.append(i);
+        i++;
     }
-
-    real_input_L.close();    
-
-    QTextStream Readin_R(&real_input_R);
-    QString read_data_R = Readin_R.readAll();
-    DataWrite_R.append(read_data_R);
-
-    for(int i =0; i < read_data_R.count("\n"); i++){
-        float read_data_tras = read_data_R.section("\n",i,i).toFloat();
-        //qDebug() << read_data_tras;
-        mData_R.append((read_data_tras - ui->R_feedoutcenter->text().toInt()) / ui->R_feedoutcenter->text().toInt()*100);
-        axixX_R.append(i + 1);
-        //mData_R.append(QPointF(i, read_data_tras));
-    }
-    real_input_R.close();
-
+    ReadHistory.close();
 }
 void qualitymonitor::Write_newData(int index)
 {
@@ -610,7 +594,7 @@ void qualitymonitor::on_pushButton_ErrorSig_clicked(QString resons)
     item = new QTableWidgetItem(QString(QTime().currentTime().toString()));
     item->setFlags(item->flags() ^ Qt::ItemIsEditable);                     //set item cannot edit
     ui->tableWidget->setItem(0, 1, item);
-    item = new QTableWidgetItem(resons.append(""));
+    item = new QTableWidgetItem(resons);
     item->setFlags(item->flags() ^ Qt::ItemIsEditable);                     //set item cannot edit
     ui->tableWidget->setItem(0, 2, item);
 
@@ -636,7 +620,16 @@ void qualitymonitor::Setup_HistoryChart()
     ui->HistoryChart->addGraph();    
     ui->HistoryChart->xAxis->setRange(0, 50000);
     ui->HistoryChart->yAxis->setRange(-0.5, 10);
+    //set chart can Drag, Zoom & Selected
+    ui->HistoryChart->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
 
+    connect(ui->HistoryChart->yAxis, SIGNAL(rangeChanged(QCPRange)), this, SLOT(fixed_yAxisRange(QCPRange)));
+    connect(ui->HistoryChart->xAxis, SIGNAL(rangeChanged(QCPRange)), this, SLOT(fixed_xAxisRange(QCPRange)));
+}
+
+
+void qualitymonitor::set_SPG_Chart()
+{
     ui->SPG_Chart->addGraph();
     QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog);
     ui->SPG_Chart->xAxis->setTicker(logTicker);
@@ -644,11 +637,7 @@ void qualitymonitor::Setup_HistoryChart()
 
     ui->SPG_Chart->xAxis->setRange(1, 10000);
     ui->SPG_Chart->yAxis->setRange(-0.5, 10);
-}
 
-
-void qualitymonitor::set_SPG_Chart()
-{
     QVector<double> SPG = Mymathtool.SPG(SPG_Data);
     QVector<double> interval(SPG.length());
 
@@ -666,9 +655,82 @@ void qualitymonitor::set_SPG_Chart()
     SPG_Bar->setWidth(0);
     //setRange
     ui->SPG_Chart->xAxis->setRange(1, 10000);
+    ui->SPG_Chart->yAxis->rescale();
+
     ui->SPG_Chart->replot();
     //clear data
     SPG_Bar->data()->clear();
+}
+
+void qualitymonitor::fixed_xAxisRange(QCPRange boundRange)
+{
+    //while range over data range, fixed axis range
+    if(boundRange.lower < 0)
+        ui->HistoryChart->xAxis->setRange(0, boundRange.upper);
+    if(boundRange.upper > historyData_x.length())
+        ui->HistoryChart->xAxis->setRange(boundRange.lower, historyData_x.length());
+}
+
+void qualitymonitor::fixed_yAxisRange(QCPRange)
+{
+    ui->HistoryChart->yAxis->rescale();
+}
+
+void qualitymonitor::set_listview_historyFile()
+{
+    //setup listview historyFile
+    History_filemodel = new QFileSystemModel(this);
+    QString HistoryRootPath = QDir().currentPath() + "/History";
+
+    //make sure all the director existed
+    if(!QDir(HistoryRootPath).exists())
+        QDir().mkdir("History");
+    if(!QDir(HistoryRootPath + "/RightSide").exists())
+        QDir(HistoryRootPath).mkdir("RightSide");
+    if(!QDir(HistoryRootPath + "/LeftSide").exists())
+        QDir(HistoryRootPath).mkdir("LeftSide");
+
+    History_filemodel->setRootPath(HistoryRootPath);
+    History_filemodel->setFilter(QDir::NoDotAndDotDot | QDir::Files);
+
+    ui->listView_historyFile->setModel(History_filemodel);
+    //default Left Side
+    ui->listView_historyFile->setRootIndex(History_filemodel->setRootPath(HistoryRootPath + "/LeftSide"));
+}
+
+
+void qualitymonitor::on_listView_historyFile_clicked(const QModelIndex &index)
+{
+    //history file view
+    QString filename = History_filemodel->fileInfo(index).absoluteFilePath();
+    //init Data
+    historyData.clear();
+    historyData_x.clear();
+
+    Read_historyData(filename);
+    ui->HistoryChart->graph(0)->setData(historyData_x, historyData);
+    ui->HistoryChart->xAxis->rescale();
+    ui->HistoryChart->yAxis->rescale();
+
+    ui->HistoryChart->replot();
+}
+
+void qualitymonitor::on_comboBox_SideChose_currentIndexChanged(int index)
+{
+    //side chose combobox
+    QString HistoryRootPath = QDir().currentPath() + "/History";
+
+    switch(index){
+        case LeftSide:{
+            ui->listView_historyFile->setRootIndex(History_filemodel->setRootPath(HistoryRootPath + "/LeftSide"));
+            break;
+        }
+
+        case RightSide:{
+            ui->listView_historyFile->setRootIndex(History_filemodel->setRootPath(HistoryRootPath + "/RightSide"));
+            break;
+        }
+    }
 }
 
 /***********************************************************
@@ -1059,6 +1121,8 @@ void MyTrigger::run()
 
 void qualitymonitor::on_reset_clicked()
 {
+    //test
+    //emit reset sig to arduino
     CV_1m.clear();
     gpioWrite(Stop_signal, PI_LOW);     //reset stop signal
 
@@ -1075,9 +1139,12 @@ void qualitymonitor::on_pushButton_replot_clicked()
 
 void qualitymonitor::on_pushbutton_QMenble_clicked()
 {
+    //change QM enable button color
     if(ui->pushbutton_QMenble->isChecked())
         ui->pushbutton_QMenble->setStyleSheet("background : green ; color : white");
     else
         ui->pushbutton_QMenble->setStyleSheet("background : red ; color : white");
 
 }
+
+

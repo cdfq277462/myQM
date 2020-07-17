@@ -5,6 +5,7 @@
 #include <QWidget>
 
 #include <QtCharts>
+#include "qcustomplot.h"
 
 #include "mathtools.h"
 using namespace QtCharts;
@@ -36,6 +37,8 @@ public:
     QVector<double> mData_L, mData_R, axixX_L, axixX_R;
     QVector<double> SPG_Data, CV_Data;
     QVector<double> CV_1m, CV_path;
+
+    QVector<double> historyData_x, historyData;
     QString DataWrite_L, DataWrite_R;
     QStringList DataWrite_SPG;
     //QByteArray DataWrite_SPG;
@@ -82,11 +85,14 @@ private slots:
 
     void on_pushButton_SPG_clicked();
 
+    void fixed_yAxisRange(QCPRange);
+    void fixed_xAxisRange(QCPRange);
+
 
 
     void Setup_History();
 
-    void Read_oldData();
+    void Read_historyData(QString);
 
     void Write_newData(int);
 
@@ -98,10 +104,16 @@ private slots:
 
     void set_SPG_Chart();
 
+    void set_listview_historyFile();
+
 
 
 
     void on_pushbutton_QMenble_clicked();
+
+    void on_listView_historyFile_clicked(const QModelIndex &index);
+
+    void on_comboBox_SideChose_currentIndexChanged(int index);
 
 public slots:
     void timerEvent(QTimerEvent *event);
@@ -128,6 +140,10 @@ signals:
 
 private:
     Ui::qualitymonitor *ui;
+
+    QFileSystemModel *History_filemodel;
+
+    QDateTime RunDateTime;
 
     float AD_value;
 
