@@ -55,14 +55,13 @@ using namespace QtCharts;
 #define Write_SPG   3
 
 #define	trig_pin	27 // trigger
-//#define Run_signal  17 // run signal
+#define run_signal  22 // run signal
 #define Stop_signal 17
 #define AL_enable   18
 
 //sample length
 //unit = cm
-#define SPG_SampleLength    10000
-#define SampleLength        50
+#define SPG_SampleLength    4096
 
 //combobox index
 #define LeftSide    0
@@ -87,7 +86,7 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     QWidget::showFullScreen();
     this->setCursor(Qt::BlankCursor);   //hide mouse
     ISR_excute_ptr = this;              //qualitymonitor::qualitymonitor ptr
-    time_sleep(0.1);
+    time_sleep(1);
 
     //set QM enable button to green
     ui->pushbutton_QMenble->setStyleSheet("background : green ; color : white");
@@ -125,10 +124,12 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     time_sleep(0.001);
 
     gpioSetISRFunc(trig_pin, FALLING_EDGE, 0, ADtrig_ISR); //ISR
+    gpioSetISRFunc(run_signal, RISING_EDGE, 0, Running);
+
     gpioWrite(Stop_signal, PI_LOW);
     ui->label_stopFlag->setText(QString::number(0));
 
-    connect(&mTrigger, SIGNAL(emit_trig_sig()), this, SLOT(slot()));
+    //connect(&mTrigger, SIGNAL(emit_trig_sig()), this, SLOT(slot()));
     connect(this, SIGNAL(sig()), this, SLOT(slot()));
 
     //connect(this, SIGNAL(on_trig(int)), this, SLOT(speed_cal(int)));
@@ -138,6 +139,7 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     connect(mAD, SIGNAL(emit_AD_value(float)), this, SLOT(on_Receive_ADval(float)));
     connect(this, SIGNAL(emit_adc_enable()), mAD, SLOT(ADC_enable()));
     mAD->start();
+    //pulselength = ui->PulseLength->text().toDouble();
 /*****************************************************************/
     time_sleep(0.1);
 
@@ -146,17 +148,23 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     ui->lineEdit_password->setEchoMode(QLineEdit::Password);
 
 }
+void qualitymonitor::Running(int gpio, int level, uint32_t tick)
+{
 
+}
 void qualitymonitor::ADtrig_ISR(int gpio, int level, uint32_t tick)
-{//7983 Hz
-    flag ++; 
-    isr_count_tick++;
+{
 
+    //flag ++;
+    isr_count_tick++;
+    //read AD
+    emit ISR_excute_ptr->sig();
+/*
     if(flag == 5){
-        emit ISR_excute_ptr->sig();
         //AD start to read
         flag = 0;
     }
+*/
 }
 
 qualitymonitor::~qualitymonitor()
@@ -201,27 +209,27 @@ void qualitymonitor::on_Receive_ADval(float getAD_val)
     if(qAbs(Mymathtool.A_per(ui->L_feedoutcenter->text(), AD_value)) > ui->L_limit_Aper->text().toFloat()*0.65)
     {
         if(qAbs(Mymathtool.A_per(ui->L_feedoutcenter->text(), AD_value)) > ui->L_limit_Aper->text().toFloat())
-            ui->label_L_A_per->setStyleSheet("color : red");
+            ui->label_L_A_per->setStyleSheet("color : red ; font-size : 15px");
         else
-            ui->label_L_A_per->setStyleSheet("color : yellow");
+            ui->label_L_A_per->setStyleSheet("color : yellow ; font-size : 15px");
     }
     else
-        ui->label_L_A_per->setStyleSheet("color : green");
+        ui->label_L_A_per->setStyleSheet("color : green ; font-size : 15px");
 
     if(qAbs(Mymathtool.A_per(ui->R_feedoutcenter->text(), AD_value)) > ui->R_limit_Aper->text().toFloat()*0.65)
     {
         if(qAbs(Mymathtool.A_per(ui->R_feedoutcenter->text(), AD_value)) > ui->R_limit_Aper->text().toFloat())
-            ui->label_R_A_per->setStyleSheet("color : red");
+            ui->label_R_A_per->setStyleSheet("color : red ; font-size : 15px");
         else
-            ui->label_R_A_per->setStyleSheet("color : yellow");
+            ui->label_R_A_per->setStyleSheet("color : yellow ; font-size : 15px");
     }
     else
-        ui->label_R_A_per->setStyleSheet("color : green");
+        ui->label_R_A_per->setStyleSheet("color : green ; font-size : 15px");
 
 
     //set testframe ADC value
-    ui->test_inputL->setText(QString::number(AD_value* 3.111* 2/ 4096));
-    ui->test_inputR->setText(QString::number(AD_value* 3.111* 2/ 4096));
+    ui->test_inputL->setText(QString::number(AD_value* 3.111* 2/ 4096, 'f',2));
+    ui->test_inputR->setText(QString::number(AD_value* 3.111* 2/ 4096, 'f',2));
 
     //if(AD_val > 3)
         //on_pushButton_ErrorSig_clicked();
@@ -232,78 +240,238 @@ void qualitymonitor::on_Receive_Trig()
     //Set_GraphicsView();
     //qDebug() << "on_Receive_Trig :" << thread()->currentThreadId();
 }
+
 void qualitymonitor::slot()
 {
-    //AD trig
+    //every trig do once
+    //
     /************************************************************
      *
      * R side still NOT added
      *
      * ***********************************************************/
-    static float avg_AD_value = 0;
-    static int sampleTimes = 0;
-    static double datalenght_L = mData_L.count();
-    static double datalenght_R = mData_L.count();
+    static float avg_AD_value_1cm = 0;
+    static float avg_AD_value_forGUI = 0;
+    static float avg_AD_value_forWrite = 0;
 
-    static int CV_times = 0;
+    //SampleTimes is count trig times
+    //static int SampleTimes = 0;
 
-    //keep SPG_Data length always be SPG_SampleLength
-    if(datalenght_L >= SPG_SampleLength){
+    static double datalenght_L = 0;
+    static double datalenght_R = 0;
+
+    static int CV1m_times = 0;
+    static int CV10m_times = 0;
+
+    static float avg_CV1m = 0;
+    static float avg_CV10m = 0;
+    static float avg_CV100m = 0;
+
+    static double SampleTimes[3] = {0};
+    /* *********************************
+     * SampleTimes[0] = SPG's flag
+     * SampleTimes[1] = GUI's flag(A% CV1m)
+     * SampleTimes[2] = A% CV 100m datawrite
+     * *********************************/
+    int tmp = ui->PulseLength->text().toFloat();
+    int OneCentimeterSampleTimes =0;
+    if(tmp != 0)
+        OneCentimeterSampleTimes =  10 / tmp; //unit = mm
+
+    //GUI_SampleLength = 100cm
+    //GUI A% update every 5m
+    //GUI CV1m update every 10m
+    int GUI_SampleLength = 100 ;
+
+    //Datawrite_SampleLength = 100m
+    int Datawrite_SampleLength = 10000 ;
+/*
+    ui->label_test1->setNum(OneCentimeterSampleTimes);
+    ui->label_test2->setNum(GUI_SampleLength);
+    ui->label_test3->setNum(Datawrite_SampleLength);
+*/
+
+    //avg_AD_value_forGUI is used to calculating average of A% & CV% per SampleLength
+    avg_AD_value_1cm      += AD_value / OneCentimeterSampleTimes;
+    avg_AD_value_forGUI   += AD_value / GUI_SampleLength / OneCentimeterSampleTimes;
+    avg_AD_value_forWrite += AD_value / Datawrite_SampleLength / OneCentimeterSampleTimes;
+
+    SampleTimes[0]++;
+    //SampleTimes[1]++;
+    //SampleTimes[2]++;
+
+
+    bool SPG_Flag       =   SampleTimes[0] == OneCentimeterSampleTimes;
+    //bool GUI_Flag       =   SampleTimes[1] == GUI_SampleLength;
+    //bool DataWrite_Flag =   SampleTimes[2] == Datawrite_SampleLength;
+
+
+    //keep SPG_Data length always be SPG_SampleLength(4096)
+    //SPG_Data is used to cal fft
+    //DataWrite_SPG is used to store
+    if(SPG_Data.length() >= SPG_SampleLength){
         SPG_Data.removeFirst();
         DataWrite_SPG.removeFirst();
+        Write_newData(Write_SPG);
     }
 
-    SPG_Data.append(AD_value);
-    DataWrite_SPG.append(QString::number(AD_value));
-    CV_Data.append(AD_value);
-
-    //avg_AD_value is used to calculating average of A% & CV% per SampleLength
-    avg_AD_value += AD_value / SampleLength;
-
-    sampleTimes++;
-
-    //every 50cm, do onece
-    if(sampleTimes == SampleLength)
+    if(SPG_Flag)
     {
-        datalenght_L += SampleLength;
-        float A_per = (avg_AD_value - ui->L_feedoutcenter->text().toFloat()) / ui->L_feedoutcenter->text().toFloat() *100;
+        //every 1cm store AD_value
+        SPG_Data.append(avg_AD_value_1cm);
+        DataWrite_SPG.append(QString::number(avg_AD_value_1cm));
+        CV_1m.append(avg_AD_value_1cm);
 
-        ui->label->setText(QString::number(A_per, 'f', 2)+" %");                //remove later
-        //qDebug() << "on_slot :" << thread()->currentThreadId();
+        /************test******************/
+        ui->label_test1->setNum(avg_AD_value_1cm);
+        /**********************************/
 
+        avg_AD_value_1cm = 0;   //clear avg_AD_value_1cm
+        SampleTimes[0] = 0; //reset flag
 
-        //too ugly
-        //cal CV%
+        SampleTimes[1]++;
+        SampleTimes[2]++;
 
-        float SD = 0;
-        float avg = 0;
-        for (int i = 0; i < SampleLength; i++)
-            SD += pow(SPG_Data.at(SampleLength - i) - avg_AD_value, 2);
-        SD = sqrt(SD / (SampleLength - 1)) / avg_AD_value *100;
-        //ui->label_L_CV1m->setText("CV%: " +QString::number(SD) + "%");
-        CV_1m.append(SD / 2);
-        CV_times++;
+        bool GUI_Flag = SampleTimes[1] == GUI_SampleLength;
 
-        if(CV_1m.length() == 20){
-            for(int i = 0; i < CV_1m.length(); i+=2)
-                avg += (CV_1m.at(CV_1m.length() -i)/2 + CV_1m.at(CV_1m.length() -i-1)/2)/10;
-            //SD = (CV_1m.at(0) + CV_1m.at(1));
-            ui->label_L_CV1m->setText("1mCV%: " +QString::number(avg, 'f', 2) + "%");
-            CV_path.append(avg);
-            ui->Chart_L->graph(1)->addData(datalenght_L, avg);
+        if(GUI_Flag)
+        {
+            //every 100cm do once
+            float A_per = (avg_AD_value_forGUI - ui->L_feedoutcenter->text().toFloat()) / ui->L_feedoutcenter->text().toFloat() *100;
 
-            overCV_per_L = avg >= ui->L_limit_CVper->text().toFloat();
+            ui->label->setText(QString::number(A_per, 'f', 2)+" %");                //remove later; used to debug
+            //qDebug() << CV_1m.length();
+            float SD = 0;
+            foreach(double CV_number, CV_1m)
+                SD += pow(CV_number - avg_AD_value_forGUI , 2);
+            /*
+            for (int i = 0; i < GUI_SampleLength; i++)
+                SD += pow(CV_1m.at(GUI_SampleLength - i) - avg_AD_value_forGUI, 2);
+            */
+            SD = sqrt(SD / (CV_1m.length() - 1)) / avg_AD_value_forGUI *100;
+
+            ui->label_L_CV1m->setText("1mCV%: " +QString::number(SD, 'f', 2) + "%");
+            avg_CV1m += SD/100;
+            /************test******************/
+            ui->label_test2->setNum(avg_AD_value_forGUI);
+            /**********************************/
+
+            //Over A% limit more than 3s, emit STOP sig.
+            overAper_L = qAbs(A_per) >= ui->L_limit_Aper->text().toFloat();
+            //qDebug() << overAper;
+            if(overAper_L)
+                if(AlarmFlag == 0)
+                {
+                    timeid_Alarm = startTimer(3000);
+                    AlarmFlag = 1;
+                    //qDebug() << "alarm";
+                }
+
+            //Over 1mCV% limit more than 5s, emit STOP sig.
+            overCV_per_L = SD > ui->L_limit_CVper->text().toFloat();
             if(overCV_per_L)
                 if(AlarmFlagofCV == 0)
                 {
                     timeid_AlarmofCV = startTimer(5000);
                     AlarmFlagofCV = 1;
                 }
-            CV_times = 0;
+
+            //CV1m_times++;
+            CV_1m.clear();
+            avg_AD_value_forGUI = 0;    //clear avg_AD_value_forGUI
+            SampleTimes[1] = 0; //reset flag
+            bool DataWrite_Flag =   SampleTimes[2] == Datawrite_SampleLength;
+
+
+            if(DataWrite_Flag)
+            {
+                A_per = (avg_AD_value_forWrite - ui->L_feedoutcenter->text().toFloat()) / ui->L_feedoutcenter->text().toFloat() *100;
+                //set Data to be Writed, and to be plot
+                /************test******************/
+                ui->label_test3->setNum(avg_AD_value_forWrite);
+                /**********************************/
+
+                //datalenght_L's unit is meter
+                datalenght_L += Datawrite_SampleLength / 100;
+
+                ui->Chart_L->graph(0)->addData(datalenght_L, A_per);
+                ui->Chart_L->graph(1)->addData(datalenght_L, avg_CV1m);
+
+                DataWrite_L.append(QString::number(avg_AD_value_forWrite));
+                DataWrite_CV_L.append(QString::number(avg_CV1m));
+
+
+                //display xAxis to 30000m
+                if(datalenght_L >= 30000){
+                    ui->Chart_L->xAxis->setRange(datalenght_L-30000, datalenght_L);
+                    ui->Chart_L->xAxis2->setRange(datalenght_L-30000, datalenght_L);
+                }
+                else{
+                    ui->Chart_L->xAxis->setRange(0, 30000);
+                    ui->Chart_L->xAxis2->setRange(0, 30000);
+                }
+
+
+
+                //set yAxis range - A% path
+                float L_Aper_Limit = ui->L_limit_Aper->text().toFloat() * 1.5;
+                float R_Aper_Limit = ui->R_limit_Aper->text().toFloat() * 1.5;
+
+                ui->Chart_L->yAxis->setRange(-L_Aper_Limit, L_Aper_Limit);
+                ui->Chart_R->yAxis->setRange(-R_Aper_Limit, R_Aper_Limit);
+
+                //set yAxis2 range - CV path
+                float L_CVper_Limit = ui->L_limit_CVper->text().toFloat() * 1.5;
+                float R_CVper_Limit = ui->R_limit_CVper->text().toFloat() * 1.5;
+
+                ui->Chart_L->yAxis2->setRange(-0.5, L_CVper_Limit);
+                ui->Chart_R->yAxis2->setRange(-0.5, R_CVper_Limit);
+
+                ui->Chart_L->replot();
+                ui->Chart_R->replot();
+
+                avg_CV1m = 0;
+                avg_AD_value_forWrite = 0;
+                SampleTimes[2] = 0; //reset flag
+            }
+        }
+    }
+
+    /*
+    if(GUI_Flag)
+    {
+
+
+        if(CV1m_times == 20){
+            //CV_1m.append(avg);
+            //SD = (CV_1m.at(0) + CV_1m.at(1));
+            ui->label_L_CV1m->setText("1mCV%: " +QString::number(avg_CV1m, 'f', 2) + "%");
+            //CV_path.append(avg_CV1m);
+            avg_CV10m += avg_CV1m /10;
+
+            overCV_per_L = avg_CV1m > ui->L_limit_CVper->text().toFloat();
+            if(overCV_per_L)
+                if(AlarmFlagofCV == 0)
+                {
+                    timeid_AlarmofCV = startTimer(5000);
+                    AlarmFlagofCV = 1;
+                }
+            CV1m_times = 0;
+            CV10m_times++;
+
+            avg_CV1m = 0;
             CV_1m.clear();
         }
 
+        if(CV10m_times == 10)
+        {
+            //CV10m
+            //avg_CV100m += avg_CV10m /10;
+            ui->label_R_CV1m->setNum(avg_CV10m);
 
+            avg_CV10m = 0;
+            CV10m_times = 0;
+        }
 
         //Over A% limit more than 3s, emit STOP sig.
         overAper_L = qAbs(A_per) >= ui->L_limit_Aper->text().toFloat();
@@ -316,19 +484,40 @@ void qualitymonitor::slot()
                 //qDebug() << "alarm";
             }
 
+        SampleTimes[1] = 0; //reset flag to false
+        avg_AD_value_forGUI = 0;
+    }
+/*
+    if(DataWrite_Flag)
+    {
+        ui->label_R_speed->setNum(avg_AD_value_forWrite);
+
+        //every 100m, plot once
+        datalenght_L += Datawrite_SampleLength;
+        float A_per = (avg_AD_value_forWrite - ui->L_feedoutcenter->text().toFloat()) / ui->L_feedoutcenter->text().toFloat() *100;
+
+        //ui->label->setText(QString::number(A_per, 'f', 2)+" %");                //remove later
+
         //get AD_val
         //qDebug() << datalenght;
 
-        mData_L.append(A_per);
-        DataWrite_L.append(QString::number(AD_value) + "\n");
+        ui->label_2->setNum(A_per);
+        //avg_CV100m = 0;
+
+        DataWrite_L.append(QString::number(avg_AD_value_forWrite) + "\n");
         ui->Chart_L->graph(0)->addData(datalenght_L, A_per);
-        if(datalenght_L >= 50000){
-            ui->Chart_L->xAxis->setRange(datalenght_L-50000, datalenght_L);
-            ui->Chart_L->xAxis2->setRange(datalenght_L-50000, datalenght_L);
+        ui->Chart_L->graph(1)->addData(datalenght_L, avg_CV100m);
+        avg_CV10m = 0;
+        avg_CV100m = 0;
+
+        //display xAxis to 30000m
+        if(datalenght_L >= 3000000){
+            ui->Chart_L->xAxis->setRange(datalenght_L-3000000, datalenght_L);
+            ui->Chart_L->xAxis2->setRange(datalenght_L-3000000, datalenght_L);
         }
         else{
-            ui->Chart_L->xAxis->setRange(0, 50000);
-            ui->Chart_L->xAxis2->setRange(0, 50000);
+            ui->Chart_L->xAxis->setRange(0, 3000000);
+            ui->Chart_L->xAxis2->setRange(0, 3000000);
         }
 
 
@@ -349,11 +538,12 @@ void qualitymonitor::slot()
 
 
         //reset sampleTimes
-        sampleTimes = 0;
-        avg_AD_value = 0;
+        //SampleTimes = 0;
+        avg_AD_value_forWrite = 0;
+        SampleTimes[2] = 0;
     }
+*/
 }
-
 
 void qualitymonitor::Read_historyData(QString filename)
 {
@@ -383,7 +573,7 @@ void qualitymonitor::Write_newData(int index)
      * ****************************************************/
     switch(index){
         case Write_L:{
-            QString Filename_L = QDir().currentPath() + "/real_input_L";
+            QString Filename_L = QDir().currentPath() + "/History/LeftSide/real_input_L";
             QFile real_input_L(Filename_L);
 
             if(!real_input_L.open(QFile::WriteOnly | QFile::Text))
@@ -398,7 +588,7 @@ void qualitymonitor::Write_newData(int index)
             break;
         }
         case Write_R:{
-            QString Filename_R = QDir().currentPath() + "/real_input_R";
+            QString Filename_R = QDir().currentPath() + "/History/RightSide/real_input_R";
             QFile real_input_R(Filename_R);
 
             if(!real_input_R.open(QFile::WriteOnly | QFile::Text))
@@ -432,7 +622,7 @@ void qualitymonitor::Write_newData(int index)
 void qualitymonitor::Set_Graphics_L()
 {
     static double datalenght = 0;
-    datalenght = mData_L.count() + 1;
+    datalenght = 0;
 
     ui->Chart_L->addGraph();
     ui->Chart_L->addGraph(ui->Chart_L->xAxis2, ui->Chart_L->yAxis2);
@@ -463,13 +653,13 @@ void qualitymonitor::Set_Graphics_L()
     ui->Chart_L->graph(0)->setPen(pen);
 
     // set axes ranges:
-    if(datalenght >= 50000){
-        ui->Chart_L->xAxis->setRange(datalenght-50000, datalenght);
-        ui->Chart_L->xAxis2->setRange(datalenght-50000, datalenght);
+    if(datalenght >= 30000){
+        ui->Chart_L->xAxis->setRange(datalenght-30000, datalenght);
+        ui->Chart_L->xAxis2->setRange(datalenght-30000, datalenght);
     }
     else{
-        ui->Chart_L->xAxis->setRange(0, 50000);
-        ui->Chart_L->xAxis2->setRange(0, 50000);
+        ui->Chart_L->xAxis->setRange(0, 30000);
+        ui->Chart_L->xAxis2->setRange(0, 30000);
     }
 
     float L_Aper_Limit = ui->L_limit_Aper->text().toFloat() * 1.5;
@@ -484,10 +674,13 @@ void qualitymonitor::Set_Graphics_L()
 void qualitymonitor::Set_Graphics_R()
 {
     static double datalenght = 0;
-    datalenght = mData_R.count() + 1;
+    datalenght = 0;
 
     ui->Chart_R->addGraph();
     ui->Chart_R->addGraph(ui->Chart_R->xAxis2, ui->Chart_R->yAxis2);
+
+    ui->Chart_R->yAxis2->setVisible(true);
+    ui->Chart_R->yAxis2->setTickLabelColor(Qt::blue);
 
     //ui->Chart_R->graph(0)->setData(axixX_R, mData_R);
 
@@ -509,10 +702,16 @@ void qualitymonitor::Set_Graphics_R()
     ui->Chart_R->graph(0)->setPen(pen);
 
     // set axes ranges:
-    if(datalenght >= 50000)
-        ui->Chart_R->xAxis->setRange(datalenght-50000, datalenght);
-    else
-        ui->Chart_R->xAxis->setRange(0, 50000);
+    // set axes ranges:
+    if(datalenght >= 30000){
+        ui->Chart_R->xAxis->setRange(datalenght-30000, datalenght);
+        ui->Chart_R->xAxis2->setRange(datalenght-30000, datalenght);
+    }
+    else{
+        ui->Chart_R->xAxis->setRange(0, 30000);
+        ui->Chart_R->xAxis2->setRange(0, 30000);
+    }
+
     float R_Aper_Limit = ui->R_limit_Aper->text().toFloat() * 1.5;
     float CV_per_Limit = ui->R_limit_CVper->text().toFloat() * 1.5;
 
@@ -528,11 +727,11 @@ void qualitymonitor::timerEvent(QTimerEvent *event)
     //clock
     if(event->timerId() == timeid_DateTime){
         DateTimeSlot();
-        ui->Chart_L->replot();
-        ui->Chart_R->replot();
+        //ui->Chart_L->replot();
+        //ui->Chart_R->replot();
         //Write_newData(Write_L);
         //Write_newData(Write_R);
-        Write_newData(Write_SPG);
+        //Write_newData(Write_SPG);
     }
     //over limit
     else if (event->timerId() == timeid_Alarm){
@@ -540,15 +739,17 @@ void qualitymonitor::timerEvent(QTimerEvent *event)
             if(overAper_L || overAper_R)
             {
                 qDebug() << "STOP!";
-                AlarmFlag = 0;
+                gpioWrite(Stop_signal, PI_HIGH);    //emit stop signal
                 killTimer(this->timeid_Alarm);
                 //clear CV data array
                 CV_1m.clear();
 
                 on_pushButton_ErrorSig_clicked("over A%");
-                gpioWrite(Stop_signal, PI_HIGH);    //emit stop signal
+
                 ui->label_stopFlag->setText(QString::number(1));
                 on_errorfram_Button_clicked();
+
+                AlarmFlag = 0;
 
             }
     }
@@ -557,15 +758,16 @@ void qualitymonitor::timerEvent(QTimerEvent *event)
             if(overCV_per_L || overCV_per_L)
             {
                 qDebug() << "STOP!";
-                AlarmFlagofCV = 0;
+                gpioWrite(Stop_signal, PI_HIGH);    //emit stop signal
                 killTimer(this->timeid_AlarmofCV);
                 //clear CV data array
                 CV_1m.clear();
 
                 on_pushButton_ErrorSig_clicked("over CV%");
-                gpioWrite(Stop_signal, PI_HIGH);    //emit stop signal
                 ui->label_stopFlag->setText(QString::number(1));
                 on_errorfram_Button_clicked();
+
+                AlarmFlagofCV = 0;
             }
     }
 
@@ -631,30 +833,50 @@ void qualitymonitor::Setup_HistoryChart()
 void qualitymonitor::set_SPG_Chart()
 {
     ui->SPG_Chart->addGraph();
-    QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog);
-    ui->SPG_Chart->xAxis->setTicker(logTicker);
-    ui->SPG_Chart->xAxis->setScaleType(QCPAxis::stLogarithmic);
+    //QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog);
+    //ui->SPG_Chart->xAxis->setTicker(logTicker);
+
+    QSharedPointer<QCPAxisTickerText> TransTologTicker(new QCPAxisTickerText);
+    ui->SPG_Chart->xAxis->setTicker(TransTologTicker);
+    //ui->SPG_Chart->xAxis->setScaleType(QCPAxis::stLogarithmic);
 
     ui->SPG_Chart->xAxis->setRange(1, 10000);
     ui->SPG_Chart->yAxis->setRange(-0.5, 10);
 
     QVector<double> SPG = Mymathtool.SPG(SPG_Data);
-    QVector<double> interval(SPG.length());
+    //QVector<double> interval(SPG.length());
+    QVector<QString> interval(SPG.length());
+    QVector<double> x(SPG.length());
 
     //clear data when work done
-    int chw = 5 * log2(8192 / 4) - 4;
-
+    int chw = 5 * log2(4096 / 4) - 4;
+/*
     for(int i= 0; i <= chw; i++){                //set how many chs
         interval[i] = pow(2 , 0.2*(i+5));       //pow()用來求 x 的 y 次方
         //printf("%f\n", interval[i]);
     }
+*/
+    for(int i= 0; i <= chw; i++){                //set how many chs
+        interval[i] = QString::number(pow(2 , 0.2*(i+5)), 'f', 0);       //pow()用來求 x 的 y 次方
+        //printf("%f\n", interval[i]);
+    }
+    for(int i= 0; i < SPG.length(); i++){
+        x[i] = i+1;
+        //set ticklabel
+        if(i % 5 == 0)
+            TransTologTicker->addTick(i, interval[i]);
+    }
+
+
 
     QCPBars *SPG_Bar = new QCPBars(ui->SPG_Chart->xAxis, ui->SPG_Chart->yAxis);
     //setData to Bar Chart
-    SPG_Bar->setData(interval, SPG);
-    SPG_Bar->setWidth(0);
+    //SPG_Bar->setData(interval, SPG);
+    SPG_Bar->setData(x, SPG);
+
+    SPG_Bar->setWidth(1);
     //setRange
-    ui->SPG_Chart->xAxis->setRange(1, 10000);
+    ui->SPG_Chart->xAxis->setRange(1, 50);
     ui->SPG_Chart->yAxis->rescale();
 
     ui->SPG_Chart->replot();
@@ -766,7 +988,7 @@ void qualitymonitor::DateTimeSlot()
 void qualitymonitor::count_ISR_times()
 {
     float pulselength = ui->PulseLength->text().toFloat();
-    ui->label_L_speed->setText("Speed: " + QString::number(isr_count_tick *pulselength *60 /1000));
+    ui->label_L_speed->setText("Speed: " + QString::number(isr_count_tick *pulselength *60 /1000, 'f' , 1));
     ui->trig_count->setText(QString::number(isr_count_tick));
     isr_count_tick = 0; //
     //qDebug() << "count";

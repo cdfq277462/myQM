@@ -34,13 +34,13 @@ public:
 
     MyTrigger mTrigger;
 
-    QVector<double> mData_L, mData_R, axixX_L, axixX_R;
+    QVector<double> axixX_L, axixX_R;
     QVector<double> SPG_Data, CV_Data;
     QVector<double> CV_1m, CV_path;
 
     QVector<double> historyData_x, historyData;
     QString DataWrite_L, DataWrite_R;
-    QStringList DataWrite_SPG;
+    QStringList DataWrite_SPG, DataWrite_CV_L, DataWrite_CV_R;
     //QByteArray DataWrite_SPG;
 
 private slots:
@@ -131,6 +131,7 @@ public slots:
     void count_ISR_times();
 
     static void  ADtrig_ISR(int gpio, int level, uint32_t tick);
+    static void  Running(int gpio, int level, uint32_t tick);
 
 signals:
     void emit_adc_enable();

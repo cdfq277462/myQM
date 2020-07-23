@@ -1172,6 +1172,27 @@
        </property>
       </widget>
      </item>
+     <item row="2" column="2">
+      <widget class="QLabel" name="label_test1">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QLabel" name="label_test2">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="2">
+      <widget class="QLabel" name="label_test3">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
     </layout>
     <zorder>test_inputL</zorder>
     <zorder>label_9</zorder>
@@ -1185,6 +1206,9 @@
     <zorder>label_25</zorder>
     <zorder>label_57</zorder>
     <zorder>label_stopFlag</zorder>
+    <zorder>label_test1</zorder>
+    <zorder>label_test2</zorder>
+    <zorder>label_test3</zorder>
    </widget>
   </widget>
   <widget class="QFrame" name="index">
@@ -2627,15 +2651,15 @@
   <zorder>prameter</zorder>
   <zorder>lvdt</zorder>
   <zorder>EEprameter</zorder>
-  <zorder>test</zorder>
   <zorder>SettingFrame</zorder>
   <zorder>index</zorder>
   <zorder>Dateframe</zorder>
   <zorder>MenuFrame</zorder>
   <zorder>frame_SPG</zorder>
-  <zorder>runframe</zorder>
   <zorder>errorhistory</zorder>
   <zorder>frame_search</zorder>
+  <zorder>test</zorder>
+  <zorder>runframe</zorder>
  </widget>
  <customwidgets>
   <customwidget>

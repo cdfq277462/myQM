@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     MyThread AD7606;
     AD7606.Setup(cThread, 1);
     AD7606.moveToThread(&cThread);
-    cThread.start();
+    //cThread.start();
 
     //start_t = clock();
 
