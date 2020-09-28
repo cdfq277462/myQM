@@ -25,6 +25,9 @@
 #define  BiasAdjust_EE      4
 #define  Out1_Offset_pos    5
 #define  Out2_Offset_pos    6
+#define  setUTC             8
+#define  setPassword        7
+
 
 
 QString mfilename  = QDir().currentPath() + "/config";
@@ -33,10 +36,11 @@ QString EEfilename = QDir().currentPath() + "/EEconfig";
 parameter::parameter()
 {
     //qDebug() << "hello";
-
+/*
     QFile config(mfilename);
     Read(mfilename, 0);
     Read(EEfilename, 0);
+*/
 }
 QString parameter::Read(QString Filename, int index){
 
@@ -170,5 +174,17 @@ int parameter::Out1_Offset()
 int parameter::Out2_Offset()
 {
     int getdata = Read(EEfilename, Out2_Offset_pos).toInt();
+    return getdata;
+}
+
+//Setting
+int parameter::UTC()
+{
+    int getdata = Read(EEfilename, setUTC).toInt();
+    return getdata;
+}
+double parameter::Password()
+{
+    double getdata = Read(EEfilename, setPassword).toDouble();
     return getdata;
 }

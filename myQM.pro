@@ -21,6 +21,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     adread.cpp \
+    keyboard.cpp \
     main.cpp \
     mathtools.cpp \
     mythread.cpp \
@@ -30,6 +31,7 @@ SOURCES += \
 
 HEADERS += \
     adread.h \
+    keyboard.h \
     mathtools.h \
     mythread.h \
     parameter.h \
@@ -47,3 +49,6 @@ LIBS += -lpigpio -lrt -lpthread
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /home/pi/$${TARGET}
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    qrc.qrc

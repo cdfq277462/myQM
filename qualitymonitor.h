@@ -8,6 +8,8 @@
 #include "qcustomplot.h"
 
 #include "mathtools.h"
+#include "keyboard.h"
+#include "adread.h"
 using namespace QtCharts;
 
 
@@ -32,16 +34,30 @@ public:
 
     mathtools Mymathtool;
 
-    MyTrigger mTrigger;
+    ADread *mAD;
+
+    keyboard *mKeyboard;
 
     QVector<double> axixX_L, axixX_R;
     QVector<double> SPG_Data, CV_Data;
-    QVector<double> CV_1m, CV_path;
+    QVector<double> SPG_Data_R, CV_Data_R;
 
-    QVector<double> historyData_x, historyData;
-    QString DataWrite_L, DataWrite_R;
-    QStringList DataWrite_SPG, DataWrite_CV_L, DataWrite_CV_R;
+    QVector<double> CV_1m, CV_path;
+    QVector<double> CV_1m_R, CV_path_R;
+
+    QVector<double> oldData_Aper_L, oldData_Aper_R;
+    QVector<double> oldData_CV_L, oldData_CV_R;
+    double datalenght_L, datalenght_R;
+
+    QVector<double> historyData_x, historyData, historyData_CV;
+    QString DataWrite_L, DataWrite_R, DataWrite_CV_L, DataWrite_CV_R;
+
+    QStringList DataWrite_SPG, DataWrite_SPG_R;
     //QByteArray DataWrite_SPG;
+
+    int Feedoutcenter_L, Feedoutcenter_R;
+
+    int whichFrameRequestPassword;
 
 private slots:
     void on_saveButton_clicked();
@@ -93,6 +109,7 @@ private slots:
     void Setup_History();
 
     void Read_historyData(QString);
+    void Read_oldData(int);
 
     void Write_newData(int);
 
@@ -106,6 +123,10 @@ private slots:
 
     void set_listview_historyFile();
 
+    void set_Keyboard();
+
+    void RunFrame_Display(float, float);
+
 
 
 
@@ -115,12 +136,32 @@ private slots:
 
     void on_comboBox_SideChose_currentIndexChanged(int index);
 
+    void on_pushButton_historysearch_clicked();
+
+    void on_checkBox_A_per_stateChanged(int arg1);
+
+    void on_checkBox_CV_stateChanged(int arg1);
+
+    void on_pushButton_Passwordcancel_clicked();
+
+    void on_pushButton_PasswordOK_clicked();
+
+    void on_pushButton_clicked();
+
+    void on_pushButton_SettingSave_clicked();
+
+    void on_pushButton_centerConfirm_clicked();
+
+    void on_pushButton_startDetect_clicked();
+
+    void on_pushButton_7_clicked();
+
 public slots:
     void timerEvent(QTimerEvent *event);
 
     void DateTimeSlot();
 
-    void on_Receive_ADval(float);
+    void on_Receive_ADval();
 
     void on_Receive_Trig();
 
@@ -129,6 +170,8 @@ public slots:
 
     void slot();
     void count_ISR_times();
+
+    void on_KeyboardSlot(QKeyEvent*);
 
     static void  ADtrig_ISR(int gpio, int level, uint32_t tick);
     static void  Running(int gpio, int level, uint32_t tick);
@@ -144,17 +187,19 @@ private:
 
     QFileSystemModel *History_filemodel;
 
-    QDateTime RunDateTime;
+    QString RunDateTime;
 
-    float AD_value;
-
-    int timeid_DateTime, timeid_Alarm, timeid_TrigCount, timeid_AlarmofCV;
+    int timeid_DateTime, timeid_TrigCount, timeid_AlarmofCV, timeid_Alarm, timeid_replotSPG;
+    int timeid_GUI_ADC_Value;
     int AlarmFlag, AlarmFlagofCV;
 
     bool overAper_L, overAper_R;
     bool overCV_per_L, overCV_per_R;
 
     QTimer *timer;
+
+    bool eventFilter(QObject *,QEvent *);
+
 
 };
 
