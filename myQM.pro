@@ -3,7 +3,6 @@ QT       += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 CONFIG += c++11
-QT += charts
 
 QT += gui widgets
 QT += virtualkeyboard
@@ -24,7 +23,6 @@ SOURCES += \
     keyboard.cpp \
     main.cpp \
     mathtools.cpp \
-    mythread.cpp \
     parameter.cpp \
     qcustomplot.cpp \
     qualitymonitor.cpp
@@ -33,7 +31,6 @@ HEADERS += \
     adread.h \
     keyboard.h \
     mathtools.h \
-    mythread.h \
     parameter.h \
     qcustomplot.h \
     qualitymonitor.h

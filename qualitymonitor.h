@@ -4,14 +4,11 @@
 #include "mythread.h"
 #include <QWidget>
 
-#include <QtCharts>
 #include "qcustomplot.h"
 
 #include "mathtools.h"
 #include "keyboard.h"
 #include "adread.h"
-using namespace QtCharts;
-
 
 
 QT_BEGIN_NAMESPACE
@@ -125,7 +122,7 @@ private slots:
 
     void set_Keyboard();
 
-    void RunFrame_Display(float, float);
+    void RunFrame_Display(float, float, float, float);
 
 
 
@@ -155,6 +152,8 @@ private slots:
     void on_pushButton_startDetect_clicked();
 
     void on_pushButton_7_clicked();
+
+    void deleteOldHistoryData();
 
 public slots:
     void timerEvent(QTimerEvent *event);

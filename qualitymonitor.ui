@@ -155,44 +155,6 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>100</y>
-      <width>371</width>
-      <height>30</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="horizontalLayout_14">
-     <item>
-      <widget class="QLabel" name="label_L_A_per">
-       <property name="minimumSize">
-        <size>
-         <width>120</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>120</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>L_A%</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_L_CV1m">
-       <property name="text">
-        <string>L_CV1m</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
       <y>70</y>
       <width>371</width>
       <height>30</height>
@@ -200,7 +162,7 @@
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_15">
      <item>
-      <widget class="QLabel" name="label_L_speed">
+      <widget class="QLabel" name="label_speed">
        <property name="font">
         <font>
          <family>Arial</family>
@@ -209,13 +171,6 @@
        </property>
        <property name="text">
         <string>Speed :</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>TextLabel</string>
        </property>
       </widget>
      </item>
@@ -295,13 +250,6 @@
        </property>
       </widget>
      </item>
-     <item>
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>TextLabel</string>
-       </property>
-      </widget>
-     </item>
     </layout>
    </widget>
    <widget class="QPushButton" name="pushButton_SPG">
@@ -333,6 +281,50 @@
     <property name="text">
      <string>SPG</string>
     </property>
+   </widget>
+   <widget class="QWidget" name="layoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>100</y>
+      <width>295</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_14">
+     <item>
+      <widget class="QLabel" name="label_L_A_per">
+       <property name="minimumSize">
+        <size>
+         <width>142</width>
+         <height>28</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>120</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>L_A%</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_L_CV1m">
+       <property name="minimumSize">
+        <size>
+         <width>145</width>
+         <height>28</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>L_CV1m</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QFrame" name="lvdt">
@@ -1023,6 +1015,9 @@
        <property name="text">
         <string>TextLabel</string>
        </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
       </widget>
      </item>
      <item row="0" column="3">
@@ -1071,6 +1066,9 @@
        <property name="text">
         <string>TextLabel</string>
        </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
       </widget>
      </item>
      <item row="0" column="4">
@@ -1090,6 +1088,9 @@
       <widget class="QLabel" name="label_test1">
        <property name="text">
         <string>TextLabel</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
        </property>
       </widget>
      </item>
@@ -1143,12 +1144,18 @@
        <property name="text">
         <string>GPIO</string>
        </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
       </widget>
      </item>
      <item row="3" column="2">
       <widget class="QLabel" name="label_Binary_R">
        <property name="text">
         <string>TextLabel</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
        </property>
       </widget>
      </item>
@@ -1165,12 +1172,18 @@
        <property name="text">
         <string>INPUT</string>
        </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
       </widget>
      </item>
      <item row="3" column="1">
       <widget class="QLabel" name="test_inputR">
        <property name="text">
         <string>ADC</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
        </property>
       </widget>
      </item>
@@ -1212,12 +1225,18 @@
        <property name="text">
         <string>ADC</string>
        </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
       </widget>
      </item>
      <item row="4" column="1">
       <widget class="QLabel" name="trig_count">
        <property name="text">
         <string>GPIO / ISR</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
        </property>
       </widget>
      </item>
@@ -1226,12 +1245,18 @@
        <property name="text">
         <string>TextLabel</string>
        </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
       </widget>
      </item>
      <item row="6" column="4">
       <widget class="QLabel" name="label_stopFlag">
        <property name="text">
         <string>GPIO</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
        </property>
       </widget>
      </item>
@@ -1248,6 +1273,9 @@
        <property name="text">
         <string>INPUT BINARY</string>
        </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
       </widget>
      </item>
      <item row="1" column="4">
@@ -1255,12 +1283,19 @@
        <property name="text">
         <string>OUTPUT</string>
        </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
       </widget>
      </item>
      <item row="1" column="3">
       <widget class="QLabel" name="label_55">
        <property name="text">
-        <string>CALCULATE RESULT</string>
+        <string>CALCULATE 
+RESULT</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
        </property>
       </widget>
      </item>
@@ -3133,12 +3168,12 @@
   <zorder>lvdt</zorder>
   <zorder>prameter</zorder>
   <zorder>pushButton_5</zorder>
-  <zorder>runframe</zorder>
   <zorder>frame_SPG</zorder>
   <zorder>MenuFrame</zorder>
   <zorder>index</zorder>
-  <zorder>test</zorder>
   <zorder>frame_search</zorder>
+  <zorder>test</zorder>
+  <zorder>runframe</zorder>
  </widget>
  <customwidgets>
   <customwidget>
@@ -3159,22 +3194,6 @@
     <hint type="sourcelabel">
      <x>734</x>
      <y>44</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>399</x>
-     <y>239</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>test_Button</sender>
-   <signal>clicked()</signal>
-   <receiver>test</receiver>
-   <slot>raise()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>372</x>
-     <y>226</y>
     </hint>
     <hint type="destinationlabel">
      <x>399</x>
@@ -3303,6 +3322,22 @@
     <hint type="sourcelabel">
      <x>589</x>
      <y>178</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>239</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>test_Button</sender>
+   <signal>clicked()</signal>
+   <receiver>test</receiver>
+   <slot>raise()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>372</x>
+     <y>226</y>
     </hint>
     <hint type="destinationlabel">
      <x>399</x>

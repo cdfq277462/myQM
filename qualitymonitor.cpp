@@ -35,9 +35,6 @@
 #include <QTimer>
 #include <QDateTime>
 
-#include <QtCharts>
-using namespace QtCharts;
-
 #include "mythread.h"
 #include "parameter.h"
 #include "adread.h"
@@ -138,6 +135,7 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     gpioSetISRFunc(trig_pin, FALLING_EDGE, 0, ADtrig_ISR); //ISR
     gpioSetISRFunc(run_signal, EITHER_EDGE, 0, Running);
 
+    // test frame flags
     gpioWrite(Stop_signal, PI_LOW);
     ui->label_stopFlag->setText(QString::number(0));
 
@@ -152,7 +150,7 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     //connect(mAD, SIGNAL(emit_AD_value(int)), this, SLOT(on_Receive_ADval(int)));
     connect(this, SIGNAL(emit_adc_enable()), mAD, SLOT(ADC_enable()));
     mAD->start();
-    timeid_GUI_ADC_Value = startTimer(30);
+    timeid_GUI_ADC_Value = startTimer(300);
     //pulselength = ui->PulseLength->text().toDouble();
 /*****************************************************************/
     time_sleep(0.1);
@@ -308,8 +306,8 @@ void qualitymonitor::on_Receive_ADval()
 
     //set testframe ADC value
     // AD7606 each LSB = 0.000152 uV
-    ui->test_inputL->setText(QString::number(AD_value_L* 0.000152));
-    ui->test_inputR->setText(QString::number(AD_value_R* 0.000152));
+    ui->test_inputL->setText(QString::number(AD_value_L* 0.000152, 'f', 3));
+    ui->test_inputR->setText(QString::number(AD_value_R* 0.000152, 'f', 3));
 
 
     QString AD_L = QString::number(AD_value_L, 2);
@@ -330,12 +328,16 @@ void qualitymonitor::on_Receive_Trig()
     //qDebug() << "on_Receive_Trig :" << thread()->currentThreadId();
 }
 
-void qualitymonitor::RunFrame_Display(float AD_value_L, float AD_value_R)
+void qualitymonitor::RunFrame_Display(float AD_value_L, float AD_value_R, float SD_L, float SD_R)
 {
 
     //set runframe A%
     ui->label_L_A_per->setText("A%: "+QString::number(Mymathtool.A_per(ui->L_feedoutcenter->text(), AD_value_L), 'f', 2)+" %");
     ui->label_R_A_per->setText("A%: "+QString::number(Mymathtool.A_per(ui->R_feedoutcenter->text(), AD_value_R), 'f', 2)+" %");
+
+    //set runframe CV%
+    ui->label_L_CV1m->setText("1mCV%: " +QString::number(SD_L, 'f', 2) + " %");
+    ui->label_R_CV1m->setText("1mCV%: " +QString::number(SD_R, 'f', 2) + " %");
 
     //change runframe A% text color
     if(qAbs(Mymathtool.A_per(ui->L_feedoutcenter->text(), AD_value_L)) > ui->L_limit_Aper->text().toFloat()*0.65)
@@ -364,7 +366,7 @@ void qualitymonitor::slot()
     //
     /************************************************************
      *
-     * R side still NOT added
+     *
      *
      * ***********************************************************/
     int AD_value = mAD->readADCvalue();
@@ -503,16 +505,14 @@ void qualitymonitor::slot()
             SD = sqrt(SD / (CV_1m.length() - 1)) / avg_AD_value_forGUI *100;
             SD_R = sqrt(SD_R / (CV_1m_R.length() - 1)) / avg_AD_value_forGUI_R *100;
 
-            ui->label_L_CV1m->setText("1mCV%: " +QString::number(SD, 'f', 2) + "%");
-            ui->label_R_CV1m->setText("1mCV%: " +QString::number(SD_R, 'f', 2) + "%");
-
             avg_CV1m += SD/100;
             avg_CV1m_R += SD_R/100;
 
             /************test******************/
             ui->label_test2->setNum(avg_AD_value_forGUI);
             /**********************************/
-            RunFrame_Display(AD_value_L, AD_value_R);
+            RunFrame_Display(AD_value_L, AD_value_R \
+                             , SD, SD_R);
 
             //Over A% limit more than 3s, emit STOP sig.
             overAper_L = qAbs(A_per) >= ui->L_limit_Aper->text().toFloat();
@@ -664,7 +664,7 @@ void qualitymonitor::Read_oldData(int index)
                     //historyData_x.append(i);
                     oldData_Aper_L.append(str.toDouble());
                     axixX_L.append(i);
-                    i+=100;
+                    i += 100;
                 }
 
                 oldData.close();
@@ -698,7 +698,7 @@ void qualitymonitor::Read_oldData(int index)
                     //historyData_x.append(i);
                     oldData_Aper_R.append(str.toDouble());
                     axixX_R.append(i);
-                    i+=100;
+                    i += 100;
                 }
 
                 oldData.close();
@@ -770,11 +770,46 @@ void qualitymonitor::Read_oldData(int index)
 
 
 }
+
+void qualitymonitor::deleteOldHistoryData()
+{
+    QDate Today = QDate().currentDate();
+    QString Filename = QDir().currentPath() + "/History";
+    QDir dir(Filename + "/LeftSide");
+
+    // remove dot and dotdot
+    dir.setFilter(QDir::Files);
+
+    // Left side
+    QFileInfoList fileList = dir.entryInfoList();
+
+    foreach(QFileInfo file, fileList)
+    {
+        QDate fileDate = QDate().fromString(file.fileName(), Qt::ISODate);
+        if(fileDate < Today.addDays(-14))
+            dir.remove(file.fileName());
+    }
+
+    // Right side
+    dir.setPath(Filename + "/RightSide");
+    fileList = dir.entryInfoList();
+
+    foreach(QFileInfo file, fileList)
+    {
+        QDate fileDate = QDate().fromString(file.fileName(), Qt::ISODate);
+        if(fileDate < Today.addDays(-14))
+            dir.remove(file.fileName());
+    }
+
+}
 void qualitymonitor::Write_newData(int index)
 {
     /*******************************************************
      * Right side need to modify
      * ****************************************************/
+
+    deleteOldHistoryData();
+
     switch(index){
         case LeftSide:{
             QString Filename_L = QDir().currentPath() + "/History/LeftSide/" + RunDateTime;
@@ -908,6 +943,15 @@ void qualitymonitor::Set_Graphics_L()
 
     ui->Chart_L->graph(0)->setPen(pen);
 
+    QPen CV_pen;
+    CV_pen.setWidth(2);
+    CV_pen.setColor(Qt::blue);
+    ui->Chart_L->graph(1)->setPen(CV_pen);
+
+    QFont xAxis_TickLabelFont;
+    xAxis_TickLabelFont.setPointSize(8);
+    ui->Chart_L->xAxis->setTickLabelFont(xAxis_TickLabelFont);
+
     // set axes ranges:
     if(datalenght >= 30000){
         ui->Chart_L->xAxis->setRange(datalenght-30000, datalenght);
@@ -971,6 +1015,16 @@ void qualitymonitor::Set_Graphics_R()
 
     ui->Chart_R->graph(0)->setPen(pen);
 
+    QPen CV_pen;
+    CV_pen.setWidth(2);
+    CV_pen.setColor(Qt::blue);
+    ui->Chart_R->graph(1)->setPen(CV_pen);
+
+
+    QFont xAxis_TickLabelFont;
+    xAxis_TickLabelFont.setPointSize(8);
+    ui->Chart_R->xAxis->setTickLabelFont(xAxis_TickLabelFont);
+
     // set axes ranges:
     if(datalenght >= 30000){
         ui->Chart_R->xAxis->setRange(datalenght-30000, datalenght);
@@ -989,9 +1043,6 @@ void qualitymonitor::Set_Graphics_R()
 
     ui->Chart_R->replot();
 }
-
-
-
 void qualitymonitor::Setup_HistoryChart()
 {
     ui->HistoryChart->addGraph();    
@@ -1007,8 +1058,14 @@ void qualitymonitor::Setup_HistoryChart()
     ui->HistoryChart->yAxis2->setVisible(true);
     ui->HistoryChart->yAxis2->setTickLabelColor(Qt::blue);
 
+    ui->HistoryChart->xAxis->setLabel("Length(m)");
+    ui->HistoryChart->yAxis->setLabel("A%");
+    ui->HistoryChart->yAxis2->setLabel("CV%");
+
     QPen pen = ui->HistoryChart->graph(0)->pen();
     pen.setWidth(3);
+
+
     QLinearGradient linearGradient(0, 0, 0, 320);
     linearGradient.setColorAt(0,    Qt::red);
     linearGradient.setColorAt(0.19, Qt::red);
@@ -1024,6 +1081,10 @@ void qualitymonitor::Setup_HistoryChart()
     pen.setBrush(QBrush(linearGradient));
 
     ui->HistoryChart->graph(0)->setPen(pen);
+    QPen CV_pen;
+    CV_pen.setWidth(2);
+    CV_pen.setColor(Qt::blue);
+    ui->HistoryChart->graph(1)->setPen(CV_pen);
 
     float Aper_Limit = ui->L_limit_Aper->text().toFloat() * 1.5;
     float CV_per_Limit = ui->L_limit_CVper->text().toFloat() * 1.5;
@@ -1255,6 +1316,8 @@ void qualitymonitor::on_comboBox_SideChose_currentIndexChanged(int index)
     }*/
 }
 
+
+
 /***********************************************************
  *
  *
@@ -1325,8 +1388,8 @@ void qualitymonitor::DateTimeSlot()
 void qualitymonitor::count_ISR_times()
 {
     float pulselength = ui->PulseLength->text().toFloat();
-    ui->label_L_speed->setText("Speed: " + QString::number(isr_count_tick *pulselength *60 /1000, 'f' , 1));
-    ui->trig_count->setText(QString::number(isr_count_tick));
+    ui->label_speed->setText("Speed: " + QString::number(isr_count_tick *pulselength *60 /1000, 'f' , 1) + "\t m/min");
+    ui->trig_count->setText(QString::number(isr_count_tick) + "  times/sec");
     isr_count_tick = 0; //
     //qDebug() << "count";
 }
@@ -1553,6 +1616,7 @@ void qualitymonitor::toSaveDate(int indx){
             saveData.append(outputR_offset  + "\n");
             saveData.append(password              );
             writeParameter.Write(QDir().currentPath() + "/EEconfig", saveData);
+            break;
         }
     }
 }
@@ -1665,6 +1729,7 @@ void qualitymonitor::on_pushButton_SPG_clicked()
     QRect FrameSPG_Rect = ui->frame_SPG->geometry();
     ui->frame_SPG->move(FrameSPG_Rect.x(), 480 - FrameSPG_Rect.height());
 
+    set_SPG_Chart();
 
 /*
     ui->frame_SPG->raise();
@@ -1680,6 +1745,8 @@ void qualitymonitor::on_pushButton_7_clicked()
     ui->frame_SPG->hide();
     //killTimer(this->timeid_replotSPG);
 }
+
+
 
 void qualitymonitor::on_pushButton_replot_clicked()
 {
@@ -1779,7 +1846,7 @@ void qualitymonitor::timerEvent(QTimerEvent *event)
                 //clear CV data array
                 CV_1m.clear();
 
-                on_pushButton_ErrorSig_clicked("over A%");
+                on_pushButton_ErrorSig_clicked("Left side over A%");
 
                 ui->label_stopFlag->setText(QString::number(1));
                 on_errorfram_Button_clicked();
@@ -1797,7 +1864,7 @@ void qualitymonitor::timerEvent(QTimerEvent *event)
                 //clear CV data array
                 CV_1m.clear();
 
-                on_pushButton_ErrorSig_clicked("over CV%");
+                on_pushButton_ErrorSig_clicked("Left side over CV%");
                 ui->label_stopFlag->setText(QString::number(1));
                 on_errorfram_Button_clicked();
 
