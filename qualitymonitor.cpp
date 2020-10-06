@@ -35,7 +35,6 @@
 #include <QTimer>
 #include <QDateTime>
 
-#include "mythread.h"
 #include "parameter.h"
 #include "adread.h"
 #include "pigpio.h"
@@ -120,6 +119,7 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     ui->HistoryChart->installEventFilter(this);
     ui->frame_SPG->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint   \
                                  | Qt::Tool | Qt::X11BypassWindowManagerHint);
+    ui->frame_SPG->setCursor(Qt::BlankCursor);
 //GPIO setup
     gpioInitialise();
     gpioSetMode(trig_pin, PI_INPUT);            //ISR pin
@@ -163,6 +163,7 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     ui->frame_password->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint   \
                                        | Qt::Tool | Qt::X11BypassWindowManagerHint);
     ui->frame_password->hide();
+    ui->frame_password->setCursor(Qt::BlankCursor);
 
 
     //creat keyboard dialog
@@ -309,14 +310,9 @@ void qualitymonitor::on_Receive_ADval()
     ui->test_inputL->setText(QString::number(AD_value_L* 0.000152, 'f', 3));
     ui->test_inputR->setText(QString::number(AD_value_R* 0.000152, 'f', 3));
 
-
-    QString AD_L = QString::number(AD_value_L, 2);
-    QString AD_R = QString::number(AD_value_R, 2);
-
     //AD_L = QString().setNum(AD_L.toInt());
-
-    ui->label_Binary_L->setText(AD_L);
-    ui->label_Binary_R->setText(AD_R);
+    ui->label_Binary_L->setText(QString("%1").arg(int(AD_value_L), 16, 2, QLatin1Char('0')));
+    ui->label_Binary_R->setText(QString("%1").arg(int(AD_value_R), 16, 2, QLatin1Char('0')));
 
     //ui->test_inputL->setText(QString::number(AD_value_L* 3.093* 2/ 4096, 'f',2));
     //ui->test_inputR->setText(QString::number(AD_value_R* 3.093* 2/ 4096, 'f',2));
@@ -469,6 +465,7 @@ void qualitymonitor::slot()
 
         /************test******************/
         ui->label_test1->setNum(avg_AD_value_1cm);
+        ui->label_test1R->setNum(avg_AD_value_1cm_R);
         /**********************************/
 
         avg_AD_value_1cm = 0;   //clear avg_AD_value_1cm
@@ -510,6 +507,7 @@ void qualitymonitor::slot()
 
             /************test******************/
             ui->label_test2->setNum(avg_AD_value_forGUI);
+            ui->label_test2R->setNum(avg_AD_value_forGUI_R);
             /**********************************/
             RunFrame_Display(AD_value_L, AD_value_R \
                              , SD, SD_R);
@@ -526,6 +524,13 @@ void qualitymonitor::slot()
                     AlarmFlag = 1;
                     //qDebug() << "alarm";
                 }
+            if(overAper_R)
+                if(AlarmFlag == 0)
+                {
+                    timeid_Alarm_R = startTimer(3000);
+                    AlarmFlag = 1;
+                    //qDebug() << "alarm";
+                }
 
             //Over 1mCV% limit more than 5s, emit STOP sig.
             overCV_per_L = SD > ui->L_limit_CVper->text().toFloat();
@@ -537,6 +542,13 @@ void qualitymonitor::slot()
                     timeid_AlarmofCV = startTimer(5000);
                     AlarmFlagofCV = 1;
                 }
+            if(overCV_per_R)
+                if(AlarmFlagofCV == 0)
+                {
+                    timeid_AlarmofCV_R = startTimer(5000);
+                    AlarmFlagofCV = 1;
+                }
+
 
             CV_1m.clear();
             CV_1m_R.clear();
@@ -556,6 +568,7 @@ void qualitymonitor::slot()
                 //set Data to be Writed, and to be plot
                 /************test******************/
                 ui->label_test3->setNum(avg_AD_value_forWrite);
+                ui->label_test3R->setNum(avg_AD_value_forWrite_R);
                 /**********************************/
 
                 //datalenght_L's unit is meter
@@ -765,10 +778,7 @@ void qualitymonitor::Read_oldData(int index)
             }
             break;
         }
-
     }
-
-
 }
 
 void qualitymonitor::deleteOldHistoryData()
@@ -1389,7 +1399,9 @@ void qualitymonitor::count_ISR_times()
 {
     float pulselength = ui->PulseLength->text().toFloat();
     ui->label_speed->setText("Speed: " + QString::number(isr_count_tick *pulselength *60 /1000, 'f' , 1) + "\t m/min");
-    ui->trig_count->setText(QString::number(isr_count_tick) + "  times/sec");
+    // show speed in test frame
+    ui->label_testframe_speed->setText(QString::number(isr_count_tick *pulselength *60 /1000, 'f' , 1) + "\t m/min");
+    ui->trig_count->setText(QString::number(isr_count_tick) + "\t times/sec");
     isr_count_tick = 0; //
     //qDebug() << "count";
 }
@@ -1455,16 +1467,21 @@ void qualitymonitor::setupParameter()
     ui->out1_offset->setText(outputL_offset);
     ui->out2_offset->setText(outputR_offset);
 
-    QString password = QString::number(initParameter.Password());
+    QString password = initParameter.Password();
 
+    //qDebug() << password;
     ui->lineEdit_password->setText(password);
+
+    // set current center in test frame
+    ui->label_CurrentCenter_L->setText(ui->L_feedoutcenter->text());
+    ui->label_CurrentCenter_R->setText(ui->R_feedoutcenter->text());
 
 /*
     QFile password(":/password");
     if(!password.open(QFile::ReadOnly | QFile::Text))
         qDebug() << "Cannot load password";
     QTextStream readSavedPassword(&password);
-    ui->lineEdit_password->setText(readSavedPassword.readAll());
+    ui->->setText(readSavedPassword.readAll());
     */
 }
 
@@ -1596,6 +1613,11 @@ void qualitymonitor::toSaveDate(int indx){
 
             //qDebug() << saveData;
             writeParameter.Write(QDir().currentPath() + "/config", saveData);
+
+            // set current center in test frame
+            ui->label_CurrentCenter_L->setText(ui->L_feedoutcenter->text());
+            ui->label_CurrentCenter_R->setText(ui->R_feedoutcenter->text());
+
             break;
         }
         case EEParameter :{
@@ -1606,7 +1628,7 @@ void qualitymonitor::toSaveDate(int indx){
             QString BiasAdjust  = writeParameter.TrantoNumberType(ui->BiasAdjust->text());
             QString outputL_offset = writeParameter.TrantoNumberType(ui->out1_offset->text());
             QString outputR_offset = writeParameter.TrantoNumberType(ui->out2_offset->text());
-            QString password    = writeParameter.TrantoNumberType(ui->lineEdit_PasswordInput->text());
+            QString password    = ui->lineEdit_password->text();
 
             saveData = (PulseLength         + "\n");
             saveData.append(Filter_1        + "\n");
@@ -1828,25 +1850,28 @@ void qualitymonitor::timerEvent(QTimerEvent *event)
     //clock
     if(event->timerId() == timeid_DateTime){
         DateTimeSlot();
-        //ui->Chart_L->replot();
-        //ui->Chart_R->replot();
-        //Write_newData(Write_L);
-        //Write_newData(Write_R);
+
         Write_newData(LeftSide_SPG);
         Write_newData(RightSide_SPG);
     }
-    //over limit
-    else if (event->timerId() == timeid_Alarm){
+    /*********************************************
+     * About alarm I got two options:
+     * 1. two side seperate
+     * 2. combine
+     * now I test is 2nd option.
+     * *******************************************/
+    if (event->timerId() == timeid_Alarm_R){
         if(ui->pushbutton_QMenble->isChecked()) //QM enable
-            if(overAper_L || overAper_R)
+            if(overAper_L | overAper_R)
             {
                 qDebug() << "STOP!";
                 gpioWrite(Stop_signal, PI_HIGH);    //emit stop signal
                 killTimer(this->timeid_Alarm);
                 //clear CV data array
                 CV_1m.clear();
+                CV_1m_R.clear();
 
-                on_pushButton_ErrorSig_clicked("Left side over A%");
+                on_pushButton_ErrorSig_clicked("Over A%");
 
                 ui->label_stopFlag->setText(QString::number(1));
                 on_errorfram_Button_clicked();
@@ -1856,13 +1881,72 @@ void qualitymonitor::timerEvent(QTimerEvent *event)
     }
     else if (event->timerId() == timeid_AlarmofCV){
         if(ui->pushbutton_QMenble->isChecked()) //QM enable
-            if(overCV_per_L || overCV_per_L)
+            if(overCV_per_L | overCV_per_R)
             {
                 qDebug() << "STOP!";
                 gpioWrite(Stop_signal, PI_HIGH);    //emit stop signal
                 killTimer(this->timeid_AlarmofCV);
                 //clear CV data array
                 CV_1m.clear();
+                CV_1m_R.clear();
+
+                on_pushButton_ErrorSig_clicked("Over CV%");
+                ui->label_stopFlag->setText(QString::number(1));
+                on_errorfram_Button_clicked();
+
+                AlarmFlagofCV = 0;
+            }
+    }
+    /*
+    //over limit
+    else if (event->timerId() == timeid_Alarm){
+        if(ui->pushbutton_QMenble->isChecked()) //QM enable
+            if(overAper_L)
+            {
+                qDebug() << "STOP!";
+                gpioWrite(Stop_signal, PI_HIGH);    //emit stop signal
+                killTimer(this->timeid_Alarm);
+                //clear CV data array
+                CV_1m.clear();
+                CV_1m_R.clear();
+
+                on_pushButton_ErrorSig_clicked("Left side over A%");
+
+                ui->label_stopFlag->setText(QString::number(1));
+                on_errorfram_Button_clicked();
+
+                AlarmFlag = 0;
+            }
+    }
+    if (event->timerId() == timeid_Alarm_R){
+        if(ui->pushbutton_QMenble->isChecked()) //QM enable
+            if(overAper_R)
+            {
+                qDebug() << "STOP!";
+                gpioWrite(Stop_signal, PI_HIGH);    //emit stop signal
+                killTimer(this->timeid_Alarm_R);
+                //clear CV data array
+                CV_1m.clear();
+                CV_1m_R.clear();
+
+                on_pushButton_ErrorSig_clicked("Right side over A%");
+
+                ui->label_stopFlag->setText(QString::number(1));
+                on_errorfram_Button_clicked();
+
+                AlarmFlag = 0;
+            }
+    }
+    else if (event->timerId() == timeid_AlarmofCV){
+        if(ui->pushbutton_QMenble->isChecked()) //QM enable
+            if(overCV_per_L)
+            {
+                qDebug() << "STOP!";
+                gpioWrite(Stop_signal, PI_HIGH);    //emit stop signal
+                killTimer(this->timeid_AlarmofCV);
+                //clear CV data array
+                CV_1m.clear();
+                CV_1m_R.clear();
 
                 on_pushButton_ErrorSig_clicked("Left side over CV%");
                 ui->label_stopFlag->setText(QString::number(1));
@@ -1871,7 +1955,25 @@ void qualitymonitor::timerEvent(QTimerEvent *event)
                 AlarmFlagofCV = 0;
             }
     }
+    else if (event->timerId() == timeid_AlarmofCV_R){
+        if(ui->pushbutton_QMenble->isChecked()) //QM enable
+            if(overCV_per_L)
+            {
+                qDebug() << "STOP!";
+                gpioWrite(Stop_signal, PI_HIGH);    //emit stop signal
+                killTimer(this->timeid_AlarmofCV_R);
+                //clear CV data array
+                CV_1m.clear();
+                CV_1m_R.clear();
 
+                on_pushButton_ErrorSig_clicked("Right side over CV%");
+                ui->label_stopFlag->setText(QString::number(1));
+                on_errorfram_Button_clicked();
+
+                AlarmFlagofCV = 0;
+            }
+    }
+    */
     //ISR counter
     else if(event->timerId() == timeid_TrigCount){
         count_ISR_times();

@@ -9,7 +9,6 @@
 #include <QDebug>
 #include <QThread>
 
-#include "mythread.h"
 #include "parameter.h"
 
 #include <pigpio.h>

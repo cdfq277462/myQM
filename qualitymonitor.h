@@ -1,7 +1,6 @@
 #ifndef QUALITYMONITOR_H
 #define QUALITYMONITOR_H
 
-#include "mythread.h"
 #include <QWidget>
 
 #include "qcustomplot.h"
@@ -188,7 +187,7 @@ private:
 
     QString RunDateTime;
 
-    int timeid_DateTime, timeid_TrigCount, timeid_AlarmofCV, timeid_Alarm, timeid_replotSPG;
+    int timeid_DateTime, timeid_TrigCount, timeid_AlarmofCV, timeid_Alarm, timeid_replotSPG, timeid_AlarmofCV_R, timeid_Alarm_R;
     int timeid_GUI_ADC_Value;
     int AlarmFlag, AlarmFlagofCV;
 

@@ -183,8 +183,8 @@ int parameter::UTC()
     int getdata = Read(EEfilename, setUTC).toInt();
     return getdata;
 }
-double parameter::Password()
+QString parameter::Password()
 {
-    double getdata = Read(EEfilename, setPassword).toDouble();
+    QString getdata = Read(EEfilename, setPassword);
     return getdata;
 }

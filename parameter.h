@@ -35,7 +35,7 @@ public:
     int     Out2_Offset();
 
     int UTC();
-    double Password();
+    QString Password();
 
 
     QString   Read(QString Filename, int);
