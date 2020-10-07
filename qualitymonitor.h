@@ -55,6 +55,8 @@ public:
 
     int whichFrameRequestPassword;
 
+    bool is_DetectCenter();
+
 private slots:
     void on_saveButton_clicked();
 

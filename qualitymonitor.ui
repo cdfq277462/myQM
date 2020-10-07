@@ -233,25 +233,6 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>410</x>
-      <y>70</y>
-      <width>291</width>
-      <height>30</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="horizontalLayout_17">
-     <item>
-      <widget class="QLabel" name="label_R_speed">
-       <property name="text">
-        <string>Speed :</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
    <widget class="QPushButton" name="pushButton_SPG">
     <property name="geometry">
      <rect>
@@ -2858,10 +2839,10 @@
    <widget class="QPushButton" name="pushButton_startDetect">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>440</y>
-      <width>140</width>
-      <height>31</height>
+      <x>30</x>
+      <y>410</y>
+      <width>101</width>
+      <height>61</height>
      </rect>
     </property>
     <property name="maximumSize">
@@ -2883,10 +2864,10 @@
    <widget class="QPushButton" name="pushButton_centerConfirm">
     <property name="geometry">
      <rect>
-      <x>650</x>
-      <y>440</y>
-      <width>140</width>
-      <height>31</height>
+      <x>680</x>
+      <y>410</y>
+      <width>101</width>
+      <height>61</height>
      </rect>
     </property>
     <property name="font">
@@ -2896,7 +2877,7 @@
      </font>
     </property>
     <property name="text">
-     <string>confirm</string>
+     <string>Confirm</string>
     </property>
    </widget>
    <widget class="QWidget" name="layoutWidget">
@@ -2905,7 +2886,7 @@
       <x>10</x>
       <y>120</y>
       <width>781</width>
-      <height>311</height>
+      <height>281</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_20">
@@ -2920,9 +2901,9 @@
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>160</x>
-      <y>440</y>
-      <width>481</width>
+      <x>150</x>
+      <y>420</y>
+      <width>504</width>
       <height>35</height>
      </rect>
     </property>
@@ -2930,21 +2911,30 @@
      <item>
       <widget class="QLabel" name="label_20">
        <property name="text">
-        <string>Left Side</string>
+        <string>Left Side :</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QLineEdit" name="lineEdit_LeftCenter">
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       <property name="minimumSize">
+        <size>
+         <width>140</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="placeholderText">
+        <string>New weight</string>
+       </property>
+       <property name="clearButtonEnabled">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QLabel" name="label_44">
        <property name="text">
-        <string>Right Side</string>
+        <string>Right Side :</string>
        </property>
       </widget>
      </item>
@@ -2968,7 +2958,13 @@
         </font>
        </property>
        <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+       <property name="placeholderText">
+        <string>New weight</string>
+       </property>
+       <property name="clearButtonEnabled">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -3255,7 +3251,6 @@
   <zorder>frame_password</zorder>
   <zorder>EEprameter</zorder>
   <zorder>errorhistory</zorder>
-  <zorder>frameOutputCenter</zorder>
   <zorder>lvdt</zorder>
   <zorder>prameter</zorder>
   <zorder>pushButton_5</zorder>
@@ -3264,11 +3259,9 @@
   <zorder>index</zorder>
   <zorder>frame_search</zorder>
   <zorder>SettingFrame</zorder>
-  <zorder>label</zorder>
-  <zorder>label_CurrentCenter_L</zorder>
-  <zorder>label_CurrentCenter_R</zorder>
-  <zorder>runframe</zorder>
   <zorder>test</zorder>
+  <zorder>runframe</zorder>
+  <zorder>frameOutputCenter</zorder>
  </widget>
  <customwidgets>
   <customwidget>

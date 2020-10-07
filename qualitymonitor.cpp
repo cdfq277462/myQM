@@ -209,6 +209,8 @@ qualitymonitor::~qualitymonitor()
     delete ui;
 }
 
+
+
 void qualitymonitor::on_KeyboardSlot(QKeyEvent *keyPressEvent)
 {
     //emit str to LineEdit
@@ -517,13 +519,14 @@ void qualitymonitor::slot()
             overAper_R = qAbs(A_per_R) >= ui->R_limit_Aper->text().toFloat();
 
             //qDebug() << overAper;
-            if(overAper_L)
+            if(overAper_L | overAper_R)
                 if(AlarmFlag == 0)
                 {
                     timeid_Alarm = startTimer(3000);
                     AlarmFlag = 1;
                     //qDebug() << "alarm";
                 }
+            /*
             if(overAper_R)
                 if(AlarmFlag == 0)
                 {
@@ -531,24 +534,25 @@ void qualitymonitor::slot()
                     AlarmFlag = 1;
                     //qDebug() << "alarm";
                 }
-
+            */
             //Over 1mCV% limit more than 5s, emit STOP sig.
             overCV_per_L = SD > ui->L_limit_CVper->text().toFloat();
             overCV_per_R = SD_R > ui->R_limit_CVper->text().toFloat();
 
-            if(overCV_per_L)
+            if(overCV_per_L | overCV_per_R)
                 if(AlarmFlagofCV == 0)
                 {
                     timeid_AlarmofCV = startTimer(5000);
                     AlarmFlagofCV = 1;
                 }
+            /*
             if(overCV_per_R)
                 if(AlarmFlagofCV == 0)
                 {
                     timeid_AlarmofCV_R = startTimer(5000);
                     AlarmFlagofCV = 1;
                 }
-
+            */
 
             CV_1m.clear();
             CV_1m_R.clear();
@@ -600,20 +604,20 @@ void qualitymonitor::slot()
 
                 //display xAxis to 30000m
                 if(datalenght_L >= 30000){
-                    ui->Chart_L->xAxis->setRange(datalenght_L-30000, datalenght_L);
+                    ui->Chart_L->xAxis->setRange(datalenght_L-30000, datalenght_L + 1000);
                     //ui->Chart_L->xAxis2->setRange(datalenght_L-30000, datalenght_L);
                 }
                 else{
-                    ui->Chart_L->xAxis->setRange(0, 30000);
+                    ui->Chart_L->xAxis->setRange(0, 31000);
                     //ui->Chart_L->xAxis2->setRange(0, 30000);
                 }
 
                 if(datalenght_R >= 30000){
-                    ui->Chart_R->xAxis->setRange(datalenght_R-30000, datalenght_R);
+                    ui->Chart_R->xAxis->setRange(datalenght_R-30000, datalenght_R + 1000);
                     //ui->Chart_R->xAxis2->setRange(datalenght_R-30000, datalenght_R);
                 }
                 else{
-                    ui->Chart_R->xAxis->setRange(0, 30000);
+                    ui->Chart_R->xAxis->setRange(0, 31000);
                     //ui->Chart_R->xAxis2->setRange(0, 30000);
                 }
 
@@ -964,11 +968,11 @@ void qualitymonitor::Set_Graphics_L()
 
     // set axes ranges:
     if(datalenght >= 30000){
-        ui->Chart_L->xAxis->setRange(datalenght-30000, datalenght);
+        ui->Chart_L->xAxis->setRange(datalenght-30000, datalenght +1000);
         //ui->Chart_L->xAxis2->setRange(datalenght-30000, datalenght);
     }
     else{
-        ui->Chart_L->xAxis->setRange(0, 30000);
+        ui->Chart_L->xAxis->setRange(0, 31000);
         //ui->Chart_L->xAxis2->setRange(0, 30000);
     }
 
@@ -1037,11 +1041,11 @@ void qualitymonitor::Set_Graphics_R()
 
     // set axes ranges:
     if(datalenght >= 30000){
-        ui->Chart_R->xAxis->setRange(datalenght-30000, datalenght);
+        ui->Chart_R->xAxis->setRange(datalenght-30000, datalenght +1000);
         //ui->Chart_R->xAxis2->setRange(datalenght-30000, datalenght);
     }
     else{
-        ui->Chart_R->xAxis->setRange(0, 30000);
+        ui->Chart_R->xAxis->setRange(0, 31000);
         //ui->Chart_R->xAxis2->setRange(0, 30000);
     }
 
@@ -1860,7 +1864,7 @@ void qualitymonitor::timerEvent(QTimerEvent *event)
      * 2. combine
      * now I test is 2nd option.
      * *******************************************/
-    if (event->timerId() == timeid_Alarm_R){
+    if (event->timerId() == timeid_Alarm){
         if(ui->pushbutton_QMenble->isChecked()) //QM enable
             if(overAper_L | overAper_R)
             {
@@ -2150,34 +2154,48 @@ void qualitymonitor::on_pushButton_SettingSave_clicked()
 
 void qualitymonitor::on_pushButton_centerConfirm_clicked()
 {
+    // push Center Confirm button
     if(!(ui->lineEdit_LeftCenter->text().isEmpty() | ui->lineEdit_RightCenter->text().isEmpty()))
     {
-        float newL_center = ui->lineEdit_LeftCenter->text().toFloat();
-        float newR_center = ui->lineEdit_RightCenter->text().toFloat();
+        float currentWeight_L   = ui->L_outputweight->text().toFloat();
+        float currentWeight_R   = ui->R_outputweight->text().toFloat();
+        int currentCenter_L     = ui->L_feedoutcenter->text().toInt();
+        int currentCenter_R     = ui->R_feedoutcenter->text().toInt();
 
-        float oldL_center = ui->L_feedoutcenter->text().toFloat();
-        float oldR_center = ui->R_feedoutcenter->text().toFloat();
+        float newWeight_L = ui->lineEdit_LeftCenter->text().toFloat();
+        float newWeight_R = ui->lineEdit_RightCenter->text().toFloat();
 
+        int newCenter_L = currentCenter_L * newWeight_L / currentWeight_L;
+        int newCenter_R = currentCenter_R * newWeight_R / currentWeight_R;
+
+        //qDebug() << newCenter_L << newCenter_R;
         // leak threshold
 
 
     }
     else
     {
+    /*
         QMessageBox warning;
         warning.setText("Please type in new weight");
         warning.setWindowFlags(Qt::WindowDoesNotAcceptFocus | Qt::FramelessWindowHint |
                                Qt::WindowStaysOnTopHint | Qt::Tool | Qt::X11BypassWindowManagerHint);
         warning.setIcon(QMessageBox::Warning);
         warning.exec();
+
+    */
     }
 }
 
 void qualitymonitor::on_pushButton_startDetect_clicked()
 {
 
-}
 
+}
+bool qualitymonitor::is_DetectCenter()
+{
+
+}
 
 
 
