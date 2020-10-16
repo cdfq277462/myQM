@@ -63,6 +63,8 @@
 //unit = cm
 #define SPG_SampleLength    4096
 
+#define DetectCenter_Length 10000
+
 /*
 //combobox index
 #define LeftSide    0
@@ -151,6 +153,9 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     connect(this, SIGNAL(emit_adc_enable()), mAD, SLOT(ADC_enable()));
     mAD->start();
     timeid_GUI_ADC_Value = startTimer(300);
+    // init AD value array
+    //org_ADC_value[3] = {0};
+    //output_ADC_value[] = {0};
     //pulselength = ui->PulseLength->text().toDouble();
 /*****************************************************************/
     time_sleep(0.1);
@@ -165,6 +170,8 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     ui->frame_password->hide();
     ui->frame_password->setCursor(Qt::BlankCursor);
 
+
+    is_DetectCenter = false;
 
     //creat keyboard dialog
     set_Keyboard();
@@ -183,7 +190,7 @@ void qualitymonitor::Running(int gpio, int level, uint32_t tick)
         //run
         //qDebug() << "run";
         ISR_excute_ptr->RunDateTime = QDateTime().currentDateTime().toString("yyyy-MM-dd");
-        qDebug() << ISR_excute_ptr->RunDateTime;
+        //qDebug() << ISR_excute_ptr->RunDateTime;
 
     }
     //qDebug() << gpio;
@@ -330,17 +337,17 @@ void qualitymonitor::RunFrame_Display(float AD_value_L, float AD_value_R, float 
 {
 
     //set runframe A%
-    ui->label_L_A_per->setText("A%: "+QString::number(Mymathtool.A_per(ui->L_feedoutcenter->text(), AD_value_L), 'f', 2)+" %");
-    ui->label_R_A_per->setText("A%: "+QString::number(Mymathtool.A_per(ui->R_feedoutcenter->text(), AD_value_R), 'f', 2)+" %");
+    ui->label_L_A_per->setText("A%: "+QString::number(Mymathtool.A_per(Feedoutcenter_L, AD_value_L), 'f', 2)+" %");
+    ui->label_R_A_per->setText("A%: "+QString::number(Mymathtool.A_per(Feedoutcenter_R, AD_value_R), 'f', 2)+" %");
 
     //set runframe CV%
     ui->label_L_CV1m->setText("1mCV%: " +QString::number(SD_L, 'f', 2) + " %");
     ui->label_R_CV1m->setText("1mCV%: " +QString::number(SD_R, 'f', 2) + " %");
 
     //change runframe A% text color
-    if(qAbs(Mymathtool.A_per(ui->L_feedoutcenter->text(), AD_value_L)) > ui->L_limit_Aper->text().toFloat()*0.65)
+    if(qAbs(Mymathtool.A_per(Feedoutcenter_L, AD_value_L)) > ui->L_limit_Aper->text().toFloat()*0.65)
     {
-        if(qAbs(Mymathtool.A_per(ui->L_feedoutcenter->text(), AD_value_L)) > ui->L_limit_Aper->text().toFloat())
+        if(qAbs(Mymathtool.A_per(Feedoutcenter_L, AD_value_L)) > ui->L_limit_Aper->text().toFloat())
             ui->label_L_A_per->setStyleSheet("color : red ; font-size : 15px");
         else
             ui->label_L_A_per->setStyleSheet("color : yellow ; font-size : 15px");
@@ -348,9 +355,9 @@ void qualitymonitor::RunFrame_Display(float AD_value_L, float AD_value_R, float 
     else
         ui->label_L_A_per->setStyleSheet("color : green ; font-size : 15px");
 
-    if(qAbs(Mymathtool.A_per(ui->R_feedoutcenter->text(), AD_value_R)) > ui->R_limit_Aper->text().toFloat()*0.65)
+    if(qAbs(Mymathtool.A_per(Feedoutcenter_R, AD_value_R)) > ui->R_limit_Aper->text().toFloat()*0.65)
     {
-        if(qAbs(Mymathtool.A_per(ui->R_feedoutcenter->text(), AD_value_R)) > ui->R_limit_Aper->text().toFloat())
+        if(qAbs(Mymathtool.A_per(Feedoutcenter_R, AD_value_R)) > ui->R_limit_Aper->text().toFloat())
             ui->label_R_A_per->setStyleSheet("color : red ; font-size : 15px");
         else
             ui->label_R_A_per->setStyleSheet("color : yellow ; font-size : 15px");
@@ -367,9 +374,31 @@ void qualitymonitor::slot()
      *
      *
      * ***********************************************************/
+
     int AD_value = mAD->readADCvalue();
-    float AD_value_L = AD_value >> 16 & 0x7fff;
-    float AD_value_R = AD_value & 0x00007fff;
+
+    org_ADC_value[2] = org_ADC_value[1];
+    org_ADC_value[1] = org_ADC_value[0];
+    org_ADC_value[0] = AD_value;
+
+    float LowPassC = ui->Filter_2->text().toFloat();
+
+    output_ADC_value_L[2] = output_ADC_value_L[1];
+    output_ADC_value_L[1] = output_ADC_value_L[0];
+    output_ADC_value_L[0] = LowPassC * (org_ADC_value[0] >> 16 & 0x7fff) + (1 - LowPassC) * output_ADC_value_L[1];
+    //output_ADC_value[0] = org_ADC_value[0];
+
+    output_ADC_value_R[2] = output_ADC_value_R[1];
+    output_ADC_value_R[1] = output_ADC_value_R[0];
+    output_ADC_value_R[0] = LowPassC * (org_ADC_value[0]& 0x00007fff) + (1 - LowPassC) * output_ADC_value_R[1];
+
+
+    //float AD_value_L = AD_value >> 16 & 0x7fff;
+    //float AD_value_R = AD_value & 0x00007fff;
+
+    float AD_value_L = output_ADC_value_L[0];
+    float AD_value_R = output_ADC_value_R[0];
+
     //qDebug() << AD_value;
     static float avg_AD_value_1cm = 0;
     static float avg_AD_value_forGUI = 0;
@@ -378,6 +407,11 @@ void qualitymonitor::slot()
     static float avg_AD_value_1cm_R = 0;
     static float avg_AD_value_forGUI_R = 0;
     static float avg_AD_value_forWrite_R = 0;
+
+    static int DetectCenter_times = 0;
+    static float avg_DetectCenter_L = 0;
+    static float avg_DetectCenter_R = 0;
+
 
     //SampleTimes is count trig times
     //static int SampleTimes = 0;
@@ -400,7 +434,7 @@ void qualitymonitor::slot()
      * SampleTimes[1] = GUI's flag(A% CV1m)
      * SampleTimes[2] = A% CV 100m datawrite
      * *********************************/
-    static int tmp = ui->PulseLength->text().toFloat();
+    int tmp = ui->PulseLength->text().toFloat();
     int OneCentimeterSampleTimes =0;
     if(tmp != 0)
         OneCentimeterSampleTimes =  10 / tmp; //unit = mm // (how many sample times / 1cm)
@@ -439,6 +473,7 @@ void qualitymonitor::slot()
     //bool DataWrite_Flag =   SampleTimes[2] == Datawrite_SampleLength;
 
 
+
     //keep SPG_Data length always be SPG_SampleLength(4096)
     //SPG_Data is used to cal fft
     //DataWrite_SPG is used to store
@@ -455,6 +490,52 @@ void qualitymonitor::slot()
 
     if(SPG_Flag)
     {
+        /***********************************************************
+         * Center detect
+         * *********************************************************/
+
+        if(is_DetectCenter)
+        {
+            DetectCenter_times ++;
+
+            //DetectCenter_L.append(AD_value_L);
+            //DetectCenter_R.append(AD_value_R);
+            avg_DetectCenter_L += avg_AD_value_1cm / DetectCenter_Length;
+            avg_DetectCenter_R += avg_AD_value_1cm_R / DetectCenter_Length;
+
+            //avg_DetectCenter_R += output_ADC_value_R[0] / DetectCenter_Length;
+
+            ui->Chart_DetectCenter_L->graph(0)->addData(DetectCenter_times, avg_AD_value_1cm);
+            ui->Chart_DetectCenter_R->graph(0)->addData(DetectCenter_times, avg_AD_value_1cm_R);
+
+            //ui->label_2->setText(QString::number(DetectCenter_times));
+
+            if(DetectCenter_times == DetectCenter_Length)
+            {
+                //ui->label_center_L_test->setText(QString::number(int(avg_DetectCenter_L)));
+                //ui->label_center_R_test->setText(QString::number(int(avg_DetectCenter_R)));
+                ui->label_center_L_test->setText(QString::number((avg_DetectCenter_L)));
+                ui->label_center_R_test->setText(QString::number((avg_DetectCenter_R)));
+                // clear chart
+                ui->Chart_DetectCenter_L->graph(0)->data()->clear();
+                ui->Chart_DetectCenter_R->graph(0)->data()->clear();
+                //qDebug() << DetectCenter_L.length();
+                //DetectCenter_L.clear();
+                //DetectCenter_R.clear();
+                // reset all conditions
+                DetectCenter_times = 0;
+                avg_DetectCenter_L = 0;
+                avg_DetectCenter_R = 0;
+
+                // kill timer for detect center
+                this->killTimer(timeid_DetectCenter);
+                is_DetectCenter = false;
+            }
+        }
+        /***********************************************************
+         * Center detect end
+         * *********************************************************/
+
         //every 1cm store AD_value
         SPG_Data.append(avg_AD_value_1cm);
         SPG_Data_R.append(avg_AD_value_1cm_R);
@@ -468,11 +549,13 @@ void qualitymonitor::slot()
         /************test******************/
         ui->label_test1->setNum(avg_AD_value_1cm);
         ui->label_test1R->setNum(avg_AD_value_1cm_R);
+        //ui->label_2->setNum(output_ADC_value[0]);
         /**********************************/
 
         avg_AD_value_1cm = 0;   //clear avg_AD_value_1cm
         avg_AD_value_1cm_R = 0;   //clear avg_AD_value_1cm_R
 
+        //qDebug() << SampleTimes[0];
         SampleTimes[0] = 0; //reset flag
 
         SampleTimes[1]++;
@@ -488,7 +571,7 @@ void qualitymonitor::slot()
 
             //qDebug() << A_per;
             //ui->label->setText(QString::number(A_per, 'f', 2)+" %");                //remove later; used to debug
-            //qDebug() << CV_1m.length(); 
+            //qDebug() << CV_1m.length();
             float SD = 0;
             float SD_R = 0;
 
@@ -575,7 +658,7 @@ void qualitymonitor::slot()
                 ui->label_test3R->setNum(avg_AD_value_forWrite_R);
                 /**********************************/
 
-                //datalenght_L's unit is meter
+                //datalenght unit is meter
                 datalenght_L += Datawrite_SampleLength / 100;
                 datalenght_R += Datawrite_SampleLength / 100;
 
@@ -1456,7 +1539,7 @@ void qualitymonitor::setupParameter()
     //setup EE parameter
     QString PulseLength = QString::number(initParameter.PulseLength());
     QString Filter_1    = QString::number(initParameter.Filter_1());
-    QString Filter_2    = QString::number(initParameter.Filter_2());
+    QString Filter_2    = QString::number(initParameter.Filter_2(), 'f');
     QString BiasAdjust  = QString::number(initParameter.BiasAdjust());
 
     ui->PulseLength ->setText(PulseLength);
@@ -1583,6 +1666,8 @@ void qualitymonitor::on_pushButton_Search_clicked()
 
 void qualitymonitor::toSaveDate(int indx){
     parameter writeParameter;
+    Feedoutcenter_L = ui->L_feedoutcenter->text().toInt();
+    Feedoutcenter_R = ui->R_feedoutcenter->text().toInt();
     switch (indx) {
         case normalParameter :
         {
@@ -1735,6 +1820,22 @@ void qualitymonitor::on_pushButton_OutputCenter_clicked()
         ui->Dateframe->raise();
         ui->MenuFrame->raise();
     }
+
+    ui->Chart_DetectCenter_L->addGraph();
+    ui->Chart_DetectCenter_R->addGraph();
+
+    ui->Chart_DetectCenter_L->addGraph(ui->Chart_DetectCenter_L->xAxis, ui->Chart_DetectCenter_L->yAxis2);
+
+    ui->Chart_DetectCenter_L->xAxis->setRange(0, DetectCenter_Length);
+    ui->Chart_DetectCenter_R->xAxis->setRange(0, DetectCenter_Length);
+
+    ui->Chart_DetectCenter_L->xAxis->setTickLabels(false);
+    ui->Chart_DetectCenter_R->xAxis->setTickLabels(false);
+    ui->Chart_DetectCenter_L->yAxis->setTickLabels(false);
+    ui->Chart_DetectCenter_R->yAxis->setTickLabels(false);
+
+    ui->Chart_DetectCenter_L->replot();
+    ui->Chart_DetectCenter_R->replot();
 }
 void qualitymonitor::on_pushButton_clicked()
 {
@@ -1993,6 +2094,16 @@ void qualitymonitor::timerEvent(QTimerEvent *event)
     {
         on_Receive_ADval();
     }
+    if(event->timerId() == timeid_DetectCenter)
+    {
+        ui->Chart_DetectCenter_L->yAxis->rescale();
+        ui->Chart_DetectCenter_R->yAxis->rescale();
+
+        ui->Chart_DetectCenter_L->yAxis2->rescale();
+
+        ui->Chart_DetectCenter_L->replot();
+        ui->Chart_DetectCenter_R->replot();
+    }
 
 }
 
@@ -2136,7 +2247,8 @@ void qualitymonitor::on_pushButton_PasswordOK_clicked()
         //wrong password
         QMessageBox warning;
         warning.setText("Wrong Password!");
-        warning.setWindowFlags(Qt::WindowDoesNotAcceptFocus | Qt::FramelessWindowHint |     \
+        // allow password frame stay focus
+        warning.setWindowFlags(Qt::FramelessWindowHint |     \
                                Qt::WindowStaysOnTopHint | Qt::Tool | Qt::X11BypassWindowManagerHint);
         warning.setIcon(QMessageBox::Warning);
         warning.exec();
@@ -2159,8 +2271,11 @@ void qualitymonitor::on_pushButton_centerConfirm_clicked()
     {
         float currentWeight_L   = ui->L_outputweight->text().toFloat();
         float currentWeight_R   = ui->R_outputweight->text().toFloat();
-        int currentCenter_L     = ui->L_feedoutcenter->text().toInt();
-        int currentCenter_R     = ui->R_feedoutcenter->text().toInt();
+        int currentCenter_L     = ui->label_center_L_test->text().toFloat();
+        int currentCenter_R     = ui->label_center_R_test->text().toFloat();
+
+        int savedCenter_L     = ui->L_feedoutcenter->text().toFloat();
+        int savedCenter_R     = ui->R_feedoutcenter->text().toFloat();
 
         float newWeight_L = ui->lineEdit_LeftCenter->text().toFloat();
         float newWeight_R = ui->lineEdit_RightCenter->text().toFloat();
@@ -2171,14 +2286,55 @@ void qualitymonitor::on_pushButton_centerConfirm_clicked()
         //qDebug() << newCenter_L << newCenter_R;
         // leak threshold
 
+        QMessageBox CheckChangeCenter;
+        CheckChangeCenter.setIcon(QMessageBox::Warning);
+        CheckChangeCenter.setStandardButtons(QMessageBox::Discard | QMessageBox::Save);
+        CheckChangeCenter.setDefaultButton(QMessageBox::Save);
 
+        CheckChangeCenter.setCursor(Qt::BlankCursor);
+        CheckChangeCenter.setWindowFlags(Qt::FramelessWindowHint |   \
+                                         Qt::WindowStaysOnTopHint | Qt::Tool | Qt::X11BypassWindowManagerHint);
+
+        QString ChangeInfo;
+        ChangeInfo = QString("<pre align='center' style='font-family:Arial'><p style='font-size:14pt'>"
+                             "<b> Left &#9; Right</b></p>"
+
+                             "<p style='font-size:12pt'>"
+                             "%1 &#9; %2<br>"
+                             "↓ &#9; ↓</p>"
+
+                             "<p style='color:red' style='font-size:12pt'>"
+                             "%3 &#9; %4</p></pre>").arg(savedCenter_L).arg(savedCenter_R).arg(newCenter_L).arg(newCenter_R);
+
+        CheckChangeCenter.setText(ChangeInfo);
+
+        //CheckChangeCenter.exec();
+        /***************************************
+         * ChangeInfo is used html to write:
+         *
+         *    Left     Right
+         *  current   current
+         *     ↓         ↓
+         *  changed   changed
+         * *************************************/
+        if(CheckChangeCenter.exec() == QMessageBox::Save)
+        {
+            ui->L_feedoutcenter->setText(QString::number(newCenter_L));
+            ui->R_feedoutcenter->setText(QString::number(newCenter_R));
+            //ui->label_center_L_test->text().clear();
+            //ui->label_center_L_test->text().clear();
+
+            toSaveDate(normalParameter);
+        }
+        ui->lineEdit_LeftCenter->text().clear();
+        ui->lineEdit_LeftCenter->text().clear();
     }
     else
     {
     /*
         QMessageBox warning;
         warning.setText("Please type in new weight");
-        warning.setWindowFlags(Qt::WindowDoesNotAcceptFocus | Qt::FramelessWindowHint |
+        warning.setWindowFlags(Qt::WindowDoesNotAcceptFocus | Qt::FramelessWindowHint |     \
                                Qt::WindowStaysOnTopHint | Qt::Tool | Qt::X11BypassWindowManagerHint);
         warning.setIcon(QMessageBox::Warning);
         warning.exec();
@@ -2189,13 +2345,23 @@ void qualitymonitor::on_pushButton_centerConfirm_clicked()
 
 void qualitymonitor::on_pushButton_startDetect_clicked()
 {
+    // start detecting center
+    // clear old data array
+    DetectCenter_L.clear();
+    DetectCenter_R.clear();
+    DetectCenter_axixX_L.clear();
+    DetectCenter_axixX_R.clear();
+
+    ui->Chart_DetectCenter_L->replot();
+    ui->Chart_DetectCenter_R->replot();
+
+    // set detect flag to true
+    timeid_DetectCenter = startTimer(1);
+    is_DetectCenter = true;
 
 
 }
-bool qualitymonitor::is_DetectCenter()
-{
 
-}
 
 
 

@@ -154,8 +154,8 @@ int parameter::Filter_1(){
     int getdata = Read(EEfilename, Filter_1_EE).toInt();
     return getdata;
 }
-int parameter::Filter_2(){
-    int getdata = Read(EEfilename, Filter_2_EE).toInt();
+float parameter::Filter_2(){
+    float getdata = Read(EEfilename, Filter_2_EE).toFloat();
     return getdata;
 }
 int parameter::BiasAdjust(){

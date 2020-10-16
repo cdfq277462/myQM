@@ -85,11 +85,11 @@ mathtools::mathtools()
 
 }
 
-float mathtools:: A_per(QString current_feedOut_Center, float DataIn)
+float mathtools:: A_per(int current_feedOut_Center, float DataIn)
 {
-    float current_feedOut_Center_Num  = QString(current_feedOut_Center).toFloat();
+    //float current_feedOut_Center_Num  = QString(current_feedOut_Center).toFloat();
 
-    return (DataIn - current_feedOut_Center_Num) / current_feedOut_Center_Num * 100;
+    return (DataIn - current_feedOut_Center) / current_feedOut_Center * 100;
 }
 QVector<double> mathtools::SPG(QVector<double> datainput)
 {

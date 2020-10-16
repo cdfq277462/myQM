@@ -35,6 +35,7 @@ ADread::ADread()
     AD7606_IOSet();
     AD7606_RST();
     ADC_value = 0;
+    ADC_value_R = 0;
 }
 void ADread::BUSY_ISR(int gpio, int level, uint32_t tick)
 {
@@ -133,6 +134,9 @@ void ADread::run()
         count = spiRead(spiSigHandle, (char *)rxBuf, 4);
         //qDebug() << "count : " << count;
         if(count == 4){
+            //ADC_value[0] = ADC_value[1];
+            //ADC_value_R[0] = ADC_value_R[1];
+
             ADC_value = ((rxBuf[0] & 0x7f) << 8) | rxBuf[1];
             ADC_value_R = ((rxBuf[2] & 0x7f) << 8) | rxBuf[3];
             //qDebug() << real_val;
@@ -224,5 +228,7 @@ void ADread::AD7606_startConv()
 uint ADread::readADCvalue()
 {
     // combine L & R value
+
+
     return (ADC_value << 16) | ADC_value_R;
 }

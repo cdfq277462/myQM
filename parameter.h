@@ -28,7 +28,7 @@ public:
 
     float   PulseLength();
     int     Filter_1();
-    int     Filter_2();
+    float   Filter_2();
     int     BiasAdjust();
 
     int     Out1_Offset();

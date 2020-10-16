@@ -15,7 +15,7 @@ public:
 
 public slots:
 
-    float A_per(QString, float);
+    float A_per(int, float);
 
     QVector<double> SPG(QVector<double>);
 

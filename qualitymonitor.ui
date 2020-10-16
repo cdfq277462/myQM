@@ -1081,7 +1081,7 @@
         </font>
        </property>
        <property name="text">
-        <string>CH1_L</string>
+        <string>CH_L</string>
        </property>
       </widget>
      </item>
@@ -1111,7 +1111,7 @@
         </font>
        </property>
        <property name="text">
-        <string>CH0_R</string>
+        <string>CH_R</string>
        </property>
       </widget>
      </item>
@@ -1255,6 +1255,13 @@
        </property>
       </widget>
      </item>
+     <item row="2" column="3">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
     </layout>
     <zorder>test_inputL</zorder>
     <zorder>label_9</zorder>
@@ -1275,6 +1282,7 @@
     <zorder>label_57</zorder>
     <zorder>label_55</zorder>
     <zorder>label_testframe_speed</zorder>
+    <zorder>label_2</zorder>
    </widget>
    <widget class="QWidget" name="gridLayoutWidget_2">
     <property name="geometry">
@@ -2891,10 +2899,10 @@
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_20">
      <item>
-      <widget class="QCustomPlot" name="widget_2" native="true"/>
+      <widget class="QCustomPlot" name="Chart_DetectCenter_L" native="true"/>
      </item>
      <item>
-      <widget class="QCustomPlot" name="widget_3" native="true"/>
+      <widget class="QCustomPlot" name="Chart_DetectCenter_R" native="true"/>
      </item>
     </layout>
    </widget>
@@ -2969,6 +2977,32 @@
       </widget>
      </item>
     </layout>
+   </widget>
+   <widget class="QLabel" name="label_center_L_test">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>100</y>
+      <width>81</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_center_R_test">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>100</y>
+      <width>81</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
+    </property>
    </widget>
   </widget>
   <widget class="QFrame" name="frame_SPG">
@@ -3252,16 +3286,16 @@
   <zorder>EEprameter</zorder>
   <zorder>errorhistory</zorder>
   <zorder>lvdt</zorder>
-  <zorder>prameter</zorder>
   <zorder>pushButton_5</zorder>
   <zorder>frame_SPG</zorder>
   <zorder>MenuFrame</zorder>
   <zorder>index</zorder>
   <zorder>frame_search</zorder>
   <zorder>SettingFrame</zorder>
-  <zorder>test</zorder>
-  <zorder>runframe</zorder>
   <zorder>frameOutputCenter</zorder>
+  <zorder>prameter</zorder>
+  <zorder>runframe</zorder>
+  <zorder>test</zorder>
  </widget>
  <customwidgets>
   <customwidget>

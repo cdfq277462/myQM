@@ -20,6 +20,7 @@ public:
     static ADread *ISR_excute_ptr;
 
     int ADC_value, ADC_value_R;
+    //int ADC_value[2], ADC_value_R[2];
 
 
 

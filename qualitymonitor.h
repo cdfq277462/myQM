@@ -55,7 +55,12 @@ public:
 
     int whichFrameRequestPassword;
 
-    bool is_DetectCenter();
+    QVector<double> DetectCenter_L, DetectCenter_R;
+    QVector<double> DetectCenter_axixX_L, DetectCenter_axixX_R;
+    bool is_DetectCenter;
+
+    int org_ADC_value[3];
+    float output_ADC_value_L[3], output_ADC_value_R[3];
 
 private slots:
     void on_saveButton_clicked();
@@ -190,8 +195,9 @@ private:
     QString RunDateTime;
 
     int timeid_DateTime, timeid_TrigCount, timeid_AlarmofCV, timeid_Alarm, timeid_replotSPG, timeid_AlarmofCV_R, timeid_Alarm_R;
-    int timeid_GUI_ADC_Value;
+    int timeid_GUI_ADC_Value, timeid_DetectCenter;
     int AlarmFlag, AlarmFlagofCV;
+
 
     bool overAper_L, overAper_R;
     bool overCV_per_L, overCV_per_R;
