@@ -286,8 +286,8 @@ bool qualitymonitor::eventFilter(QObject *watched,QEvent *event)
 void qualitymonitor::on_Receive_ADval()
 {
     int AD_value = mAD->readADCvalue();
-    uint AD_value_L = AD_value >> 16 & 0x7fff;
-    uint AD_value_R = AD_value & 0x00007fff;
+    uint AD_value_L = (AD_value >> 16 & 0x7fff) << 1;
+    uint AD_value_R = (AD_value & 0x00007fff) << 1;
     ui->out1_pos->setText(QString::number(AD_value_L));
     ui->out2_pos->setText(QString::number(AD_value_R));
 
@@ -316,12 +316,15 @@ void qualitymonitor::on_Receive_ADval()
 
     //set testframe ADC value
     // AD7606 each LSB = 0.000152 uV
-    ui->test_inputL->setText(QString::number(AD_value_L* 0.000152, 'f', 3));
-    ui->test_inputR->setText(QString::number(AD_value_R* 0.000152, 'f', 3));
+    ui->test_inputL->setText(QString::number(AD_value_L* 0.000152, 'f', 3) + "\t V");
+    ui->test_inputR->setText(QString::number(AD_value_R* 0.000152, 'f', 3) + "\t V");
 
     //AD_L = QString().setNum(AD_L.toInt());
     ui->label_Binary_L->setText(QString("%1").arg(int(AD_value_L), 16, 2, QLatin1Char('0')));
     ui->label_Binary_R->setText(QString("%1").arg(int(AD_value_R), 16, 2, QLatin1Char('0')));
+
+    ui->label_testTranscodeL->setText(QString::number(AD_value_L));
+    ui->label_testTranscodeR->setText(QString::number(AD_value_R));
 
     //ui->test_inputL->setText(QString::number(AD_value_L* 3.093* 2/ 4096, 'f',2));
     //ui->test_inputR->setText(QString::number(AD_value_R* 3.093* 2/ 4096, 'f',2));
@@ -339,8 +342,6 @@ void qualitymonitor::RunFrame_Display(float AD_value_L, float AD_value_R, float 
     //set runframe A%
     ui->label_L_A_per->setText("A%: "+QString::number(Mymathtool.A_per(Feedoutcenter_L, AD_value_L), 'f', 2)+" %");
     ui->label_R_A_per->setText("A%: "+QString::number(Mymathtool.A_per(Feedoutcenter_R, AD_value_R), 'f', 2)+" %");
-
-    //set runframe CV%
     ui->label_L_CV1m->setText("1mCV%: " +QString::number(SD_L, 'f', 2) + " %");
     ui->label_R_CV1m->setText("1mCV%: " +QString::number(SD_R, 'f', 2) + " %");
 
@@ -385,12 +386,12 @@ void qualitymonitor::slot()
 
     output_ADC_value_L[2] = output_ADC_value_L[1];
     output_ADC_value_L[1] = output_ADC_value_L[0];
-    output_ADC_value_L[0] = LowPassC * (org_ADC_value[0] >> 16 & 0x7fff) + (1 - LowPassC) * output_ADC_value_L[1];
+    output_ADC_value_L[0] = LowPassC * ((org_ADC_value[0] >> 16 & 0x7fff) << 1) + (1 - LowPassC) * output_ADC_value_L[1];
     //output_ADC_value[0] = org_ADC_value[0];
 
     output_ADC_value_R[2] = output_ADC_value_R[1];
     output_ADC_value_R[1] = output_ADC_value_R[0];
-    output_ADC_value_R[0] = LowPassC * (org_ADC_value[0]& 0x00007fff) + (1 - LowPassC) * output_ADC_value_R[1];
+    output_ADC_value_R[0] = LowPassC * ((org_ADC_value[0]& 0x00007fff) << 1) + (1 - LowPassC) * output_ADC_value_R[1];
 
 
     //float AD_value_L = AD_value >> 16 & 0x7fff;
@@ -409,8 +410,8 @@ void qualitymonitor::slot()
     static float avg_AD_value_forWrite_R = 0;
 
     static int DetectCenter_times = 0;
-    static float avg_DetectCenter_L = 0;
-    static float avg_DetectCenter_R = 0;
+    static int avg_DetectCenter_L = 0;
+    static int avg_DetectCenter_R = 0;
 
 
     //SampleTimes is count trig times
@@ -434,10 +435,10 @@ void qualitymonitor::slot()
      * SampleTimes[1] = GUI's flag(A% CV1m)
      * SampleTimes[2] = A% CV 100m datawrite
      * *********************************/
-    int tmp = ui->PulseLength->text().toFloat();
+
     int OneCentimeterSampleTimes =0;
-    if(tmp != 0)
-        OneCentimeterSampleTimes =  10 / tmp; //unit = mm // (how many sample times / 1cm)
+    if(onePulseLength != 0)
+        OneCentimeterSampleTimes =  10 / onePulseLength; //unit = mm // (how many sample times / 1cm)
 
     //GUI_SampleLength = 100cm
     //GUI A% update every 10m
@@ -490,6 +491,7 @@ void qualitymonitor::slot()
 
     if(SPG_Flag)
     {
+        //qDebug() << avg_AD_value_1cm;
         /***********************************************************
          * Center detect
          * *********************************************************/
@@ -500,8 +502,11 @@ void qualitymonitor::slot()
 
             //DetectCenter_L.append(AD_value_L);
             //DetectCenter_R.append(AD_value_R);
-            avg_DetectCenter_L += avg_AD_value_1cm / DetectCenter_Length;
-            avg_DetectCenter_R += avg_AD_value_1cm_R / DetectCenter_Length;
+            //avg_DetectCenter_L += avg_AD_value_1cm / DetectCenter_Length;
+            //avg_DetectCenter_R += avg_AD_value_1cm_R / DetectCenter_Length;
+
+            avg_DetectCenter_L += avg_AD_value_1cm;
+            avg_DetectCenter_R += avg_AD_value_1cm_R;
 
             //avg_DetectCenter_R += output_ADC_value_R[0] / DetectCenter_Length;
 
@@ -514,8 +519,13 @@ void qualitymonitor::slot()
             {
                 //ui->label_center_L_test->setText(QString::number(int(avg_DetectCenter_L)));
                 //ui->label_center_R_test->setText(QString::number(int(avg_DetectCenter_R)));
-                ui->label_center_L_test->setText(QString::number((avg_DetectCenter_L)));
-                ui->label_center_R_test->setText(QString::number((avg_DetectCenter_R)));
+                ui->label_center_L_test->setText(QString::number((avg_DetectCenter_L / DetectCenter_Length)));
+                ui->label_center_R_test->setText(QString::number((avg_DetectCenter_R / DetectCenter_Length)));
+
+                ui->Chart_DetectCenter_L->yAxis->rescale();
+                ui->Chart_DetectCenter_R->yAxis->rescale();
+                ui->Chart_DetectCenter_L->replot();
+                ui->Chart_DetectCenter_R->replot();
                 // clear chart
                 ui->Chart_DetectCenter_L->graph(0)->data()->clear();
                 ui->Chart_DetectCenter_R->graph(0)->data()->clear();
@@ -527,8 +537,11 @@ void qualitymonitor::slot()
                 avg_DetectCenter_L = 0;
                 avg_DetectCenter_R = 0;
 
+
+                ui->pushButton_startDetect->setText("Done!");
+
                 // kill timer for detect center
-                this->killTimer(timeid_DetectCenter);
+                //this->killTimer(timeid_DetectCenter);
                 is_DetectCenter = false;
             }
         }
@@ -538,7 +551,9 @@ void qualitymonitor::slot()
 
         //every 1cm store AD_value
         SPG_Data.append(avg_AD_value_1cm);
-        SPG_Data_R.append(avg_AD_value_1cm_R);
+        SPG_Data_R.append(avg_AD_value_1cm_R);        
+
+
 
         DataWrite_SPG.append(QString::number(avg_AD_value_1cm));
         DataWrite_SPG_R.append(QString::number(avg_AD_value_1cm_R));
@@ -1539,7 +1554,7 @@ void qualitymonitor::setupParameter()
     //setup EE parameter
     QString PulseLength = QString::number(initParameter.PulseLength());
     QString Filter_1    = QString::number(initParameter.Filter_1());
-    QString Filter_2    = QString::number(initParameter.Filter_2(), 'f');
+    QString Filter_2    = QString::number(initParameter.Filter_2());
     QString BiasAdjust  = QString::number(initParameter.BiasAdjust());
 
     ui->PulseLength ->setText(PulseLength);
@@ -1562,6 +1577,8 @@ void qualitymonitor::setupParameter()
     // set current center in test frame
     ui->label_CurrentCenter_L->setText(ui->L_feedoutcenter->text());
     ui->label_CurrentCenter_R->setText(ui->R_feedoutcenter->text());
+
+    onePulseLength = ui->PulseLength->text().toFloat();
 
 /*
     QFile password(":/password");
@@ -1727,6 +1744,8 @@ void qualitymonitor::toSaveDate(int indx){
             saveData.append(outputR_offset  + "\n");
             saveData.append(password              );
             writeParameter.Write(QDir().currentPath() + "/EEconfig", saveData);
+
+            onePulseLength = ui->PulseLength->text().toFloat();
             break;
         }
     }
@@ -1836,6 +1855,9 @@ void qualitymonitor::on_pushButton_OutputCenter_clicked()
 
     ui->Chart_DetectCenter_L->replot();
     ui->Chart_DetectCenter_R->replot();
+
+    ui->pushButton_startDetect->setEnabled(true);
+    ui->pushButton_startDetect->setText("Start");
 }
 void qualitymonitor::on_pushButton_clicked()
 {
@@ -2099,8 +2121,6 @@ void qualitymonitor::timerEvent(QTimerEvent *event)
         ui->Chart_DetectCenter_L->yAxis->rescale();
         ui->Chart_DetectCenter_R->yAxis->rescale();
 
-        ui->Chart_DetectCenter_L->yAxis2->rescale();
-
         ui->Chart_DetectCenter_L->replot();
         ui->Chart_DetectCenter_R->replot();
     }
@@ -2356,12 +2376,11 @@ void qualitymonitor::on_pushButton_startDetect_clicked()
     ui->Chart_DetectCenter_R->replot();
 
     // set detect flag to true
-    timeid_DetectCenter = startTimer(1);
+    //timeid_DetectCenter = startTimer(500);
+    ui->pushButton_startDetect->setText("Detecting...");
+    ui->pushButton_startDetect->setEnabled(false);
     is_DetectCenter = true;
 
 
 }
-
-
-
 

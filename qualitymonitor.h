@@ -202,6 +202,7 @@ private:
     bool overAper_L, overAper_R;
     bool overCV_per_L, overCV_per_R;
 
+    float onePulseLength;
     QTimer *timer;
 
     bool eventFilter(QObject *,QEvent *);

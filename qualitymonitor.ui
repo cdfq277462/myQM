@@ -985,12 +985,70 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>70</y>
-      <width>681</width>
-      <height>311</height>
+      <y>120</y>
+      <width>781</width>
+      <height>261</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout">
+     <item row="4" column="1">
+      <widget class="QLabel" name="trig_count">
+       <property name="text">
+        <string>GPIO / ISR</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QLabel" name="label_24">
+       <property name="text">
+        <string>GPIO</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="4">
+      <spacer name="horizontalSpacer_24">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_9">
+       <property name="font">
+        <font>
+         <family>微軟正黑體</family>
+         <pointsize>12</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>S1</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="4">
+      <widget class="QLabel" name="label_57">
+       <property name="text">
+        <string>OUTPUT</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
      <item row="2" column="1">
       <widget class="QLabel" name="test_inputL">
        <property name="text">
@@ -1001,13 +1059,70 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="3">
-      <widget class="QLabel" name="label_57">
-       <property name="text">
-        <string>OUTPUT</string>
+     <item row="0" column="2">
+      <spacer name="horizontalSpacer_23">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
        </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_55">
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Speed</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="font">
+        <font>
+         <family>微軟正黑體</family>
+         <pointsize>12</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>CH_L</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="label_25">
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Stop</string>
        </property>
       </widget>
      </item>
@@ -1029,6 +1144,48 @@
        </property>
       </widget>
      </item>
+     <item row="2" column="4">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="4">
+      <widget class="QLabel" name="label_stopFlag">
+       <property name="text">
+        <string>GPIO</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_8">
+       <property name="font">
+        <font>
+         <family>微軟正黑體</family>
+         <pointsize>12</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Run</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QLabel" name="label_Binary_L">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="1">
       <widget class="QLabel" name="label_7">
        <property name="font">
@@ -1047,59 +1204,6 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="3">
-      <spacer name="horizontalSpacer_24">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="7" column="3">
-      <widget class="QLabel" name="label_stopFlag">
-       <property name="text">
-        <string>GPIO</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_6">
-       <property name="font">
-        <font>
-         <family>微軟正黑體</family>
-         <pointsize>12</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>CH_L</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="label_9">
-       <property name="font">
-        <font>
-         <family>微軟正黑體</family>
-         <pointsize>12</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>S1</string>
-       </property>
-      </widget>
-     </item>
      <item row="3" column="0">
       <widget class="QLabel" name="label_5">
        <property name="font">
@@ -1112,93 +1216,6 @@
        </property>
        <property name="text">
         <string>CH_R</string>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="0">
-      <widget class="QLabel" name="label_25">
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Stop</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="1">
-      <widget class="QLabel" name="trig_count">
-       <property name="text">
-        <string>GPIO / ISR</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="2">
-      <spacer name="horizontalSpacer_23">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="0" column="1">
-      <spacer name="horizontalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="2" column="2">
-      <widget class="QLabel" name="label_Binary_L">
-       <property name="text">
-        <string>TextLabel</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="6" column="0">
-      <widget class="QLabel" name="label_8">
-       <property name="font">
-        <font>
-         <family>微軟正黑體</family>
-         <pointsize>12</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Run</string>
        </property>
       </widget>
      </item>
@@ -1222,29 +1239,6 @@
        </property>
       </widget>
      </item>
-     <item row="6" column="1">
-      <widget class="QLabel" name="label_24">
-       <property name="text">
-        <string>GPIO</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="0">
-      <widget class="QLabel" name="label_55">
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Speed</string>
-       </property>
-      </widget>
-     </item>
      <item row="5" column="1">
       <widget class="QLabel" name="label_testframe_speed">
        <property name="text">
@@ -1255,10 +1249,53 @@
        </property>
       </widget>
      </item>
+     <item row="0" column="1">
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="0" column="3">
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
      <item row="2" column="3">
-      <widget class="QLabel" name="label_2">
+      <widget class="QLabel" name="label_testTranscodeL">
        <property name="text">
         <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="3">
+      <widget class="QLabel" name="label_testTranscodeR">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="QLabel" name="label_64">
+       <property name="text">
+        <string>TRANS CODE</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
        </property>
       </widget>
      </item>
@@ -1283,6 +1320,10 @@
     <zorder>label_55</zorder>
     <zorder>label_testframe_speed</zorder>
     <zorder>label_2</zorder>
+    <zorder>horizontalSpacer_3</zorder>
+    <zorder>label_testTranscodeL</zorder>
+    <zorder>label_testTranscodeR</zorder>
+    <zorder>label_64</zorder>
    </widget>
    <widget class="QWidget" name="gridLayoutWidget_2">
     <property name="geometry">
@@ -1706,13 +1747,6 @@
        <widget class="QPushButton" name="EEtestbutt">
         <property name="text">
          <string>EEtestbutt</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="pushButton_4">
-        <property name="text">
-         <string>PushButton</string>
         </property>
        </widget>
       </item>
@@ -2499,6 +2533,9 @@
        <property name="calendarPopup">
         <bool>true</bool>
        </property>
+       <property name="timeSpec">
+        <enum>Qt::LocalTime</enum>
+       </property>
       </widget>
      </item>
      <item row="3" column="1">
@@ -2568,9 +2605,20 @@
      <string>Save</string>
     </property>
    </widget>
+   <widget class="QDial" name="dial">
+    <property name="geometry">
+     <rect>
+      <x>540</x>
+      <y>170</y>
+      <width>101</width>
+      <height>101</height>
+     </rect>
+    </property>
+   </widget>
    <zorder>layoutWidget</zorder>
    <zorder>label_22</zorder>
    <zorder>pushButton_SettingSave</zorder>
+   <zorder>dial</zorder>
   </widget>
   <widget class="QPushButton" name="pushButton_ErrorSig">
    <property name="geometry">
@@ -2847,9 +2895,9 @@
    <widget class="QPushButton" name="pushButton_startDetect">
     <property name="geometry">
      <rect>
-      <x>30</x>
+      <x>10</x>
       <y>410</y>
-      <width>101</width>
+      <width>121</width>
       <height>61</height>
      </rect>
     </property>
@@ -2872,9 +2920,9 @@
    <widget class="QPushButton" name="pushButton_centerConfirm">
     <property name="geometry">
      <rect>
-      <x>680</x>
+      <x>670</x>
       <y>410</y>
-      <width>101</width>
+      <width>121</width>
       <height>61</height>
      </rect>
     </property>
@@ -3288,14 +3336,14 @@
   <zorder>lvdt</zorder>
   <zorder>pushButton_5</zorder>
   <zorder>frame_SPG</zorder>
-  <zorder>MenuFrame</zorder>
   <zorder>index</zorder>
   <zorder>frame_search</zorder>
-  <zorder>SettingFrame</zorder>
-  <zorder>frameOutputCenter</zorder>
-  <zorder>prameter</zorder>
   <zorder>runframe</zorder>
+  <zorder>prameter</zorder>
+  <zorder>frameOutputCenter</zorder>
+  <zorder>SettingFrame</zorder>
   <zorder>test</zorder>
+  <zorder>MenuFrame</zorder>
  </widget>
  <customwidgets>
   <customwidget>
