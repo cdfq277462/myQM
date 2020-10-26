@@ -44,6 +44,7 @@
 //parameter read index
 #define  normalParameter    1
 #define  EEParameter        2
+#define  ShiftSchedule      3
 
 //data index
 #define LeftSide      0
@@ -100,20 +101,24 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     RunDateTime = QDate::currentDate().toString("yyyy-MM-dd");
 
 //setup parameter
+    setup_shiftSchedule();
     setupParameter();
     SetErrorTable();
+
 //set runframe on toplevel
     ui->runframe->raise();
     ui->Dateframe->raise();
-    //qDebug() << "main: " << QThread::currentThread();
+
     Setup_History();
     set_listview_historyFile();
 
     AlarmFlag = 0;
     AlarmFlagofCV = 0;
 
+
     on_pushButton_Search_clicked();
     on_pushButton_historysearch_clicked();
+
 //Setup_Graphics;
     Set_Graphics_L();
     Set_Graphics_R();
@@ -151,6 +156,7 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     mAD = new ADread;
     //connect(mAD, SIGNAL(emit_AD_value(int)), this, SLOT(on_Receive_ADval(int)));
     connect(this, SIGNAL(emit_adc_enable()), mAD, SLOT(ADC_enable()));
+    mAD->AD7606_RST();
     mAD->start();
     timeid_GUI_ADC_Value = startTimer(300);
     // init AD value array
@@ -286,10 +292,10 @@ bool qualitymonitor::eventFilter(QObject *watched,QEvent *event)
 void qualitymonitor::on_Receive_ADval()
 {
     int AD_value = mAD->readADCvalue();
-    uint AD_value_L = (AD_value >> 16 & 0x7fff) << 1;
-    uint AD_value_R = (AD_value & 0x00007fff) << 1;
-    ui->out1_pos->setText(QString::number(AD_value_L));
-    ui->out2_pos->setText(QString::number(AD_value_R));
+    uint AD_value_L = (AD_value >> 16 & 0x7fff);
+    uint AD_value_R = (AD_value & 0x00007fff);
+    ui->out1_pos->setText(QString::number(AD_value_L * 0.152, 'f', 0));
+    ui->out2_pos->setText(QString::number(AD_value_R * 0.152, 'f', 0));
 
     //set LVDT button color & enable
     if(ui->out1_pos->text().toInt() > 1200 && ui->out1_pos->text().toInt() < 2000)
@@ -314,17 +320,18 @@ void qualitymonitor::on_Receive_ADval()
         ui->pushButton_out2offset->setEnabled(false);
     }
 
-    //set testframe ADC value
+    // set testframe ADC value
     // AD7606 each LSB = 0.000152 uV
-    ui->test_inputL->setText(QString::number(AD_value_L* 0.000152, 'f', 3) + "\t V");
-    ui->test_inputR->setText(QString::number(AD_value_R* 0.000152, 'f', 3) + "\t V");
+    // add LVDT offset (201026)
+    ui->test_inputL->setText(QString::number(AD_value_L * 0.152 -outputOffset_L, 'f', 0) + "\t mV");
+    ui->test_inputR->setText(QString::number(AD_value_R * 0.152 -outputOffset_R, 'f', 0) + "\t mV");
 
     //AD_L = QString().setNum(AD_L.toInt());
-    ui->label_Binary_L->setText(QString("%1").arg(int(AD_value_L), 16, 2, QLatin1Char('0')));
-    ui->label_Binary_R->setText(QString("%1").arg(int(AD_value_R), 16, 2, QLatin1Char('0')));
+    ui->label_Binary_L->setText(QString("%1").arg(int(AD_value_L -outputOffset_L /0.152), 16, 2, QLatin1Char('0')));
+    ui->label_Binary_R->setText(QString("%1").arg(int(AD_value_R -outputOffset_R /0.152), 16, 2, QLatin1Char('0')));
 
-    ui->label_testTranscodeL->setText(QString::number(AD_value_L));
-    ui->label_testTranscodeR->setText(QString::number(AD_value_R));
+    ui->label_testTranscodeL->setText(QString::number(AD_value_L -outputOffset_L /0.152));
+    ui->label_testTranscodeR->setText(QString::number(AD_value_R -outputOffset_R /0.152));
 
     //ui->test_inputL->setText(QString::number(AD_value_L* 3.093* 2/ 4096, 'f',2));
     //ui->test_inputR->setText(QString::number(AD_value_R* 3.093* 2/ 4096, 'f',2));
@@ -352,7 +359,7 @@ void qualitymonitor::RunFrame_Display(float AD_value_L, float AD_value_R, float 
             ui->label_L_A_per->setStyleSheet("color : red ; font-size : 15px");
         else
             ui->label_L_A_per->setStyleSheet("color : yellow ; font-size : 15px");
-    }
+    } // end if
     else
         ui->label_L_A_per->setStyleSheet("color : green ; font-size : 15px");
 
@@ -365,6 +372,25 @@ void qualitymonitor::RunFrame_Display(float AD_value_L, float AD_value_R, float 
     }
     else
         ui->label_R_A_per->setStyleSheet("color : green ; font-size : 15px");
+}
+
+void qualitymonitor::updateAllconfig()
+{
+    // config LVDT output offset
+    outputOffset_L = ui->L_outputoffset->text().toInt();
+    outputOffset_R = ui->R_outputoffset->text().toInt();
+
+    // config adjust rate
+    adjustRate_L = ui->L_adjustrate->text().toFloat() / 100;
+    adjustRate_R = ui->R_adjustrate->text().toFloat() / 100;
+
+    //qDebug() << adjustRate_L;
+
+    LowPassC = (ui->Filter_2->text().toFloat() +1)/ 1000;
+
+    //
+    onePulseLength = ui->PulseLength->text().toFloat();
+
 }
 void qualitymonitor::slot()
 {
@@ -382,16 +408,24 @@ void qualitymonitor::slot()
     org_ADC_value[1] = org_ADC_value[0];
     org_ADC_value[0] = AD_value;
 
-    float LowPassC = ui->Filter_2->text().toFloat();
-
     output_ADC_value_L[2] = output_ADC_value_L[1];
     output_ADC_value_L[1] = output_ADC_value_L[0];
-    output_ADC_value_L[0] = LowPassC * ((org_ADC_value[0] >> 16 & 0x7fff) << 1) + (1 - LowPassC) * output_ADC_value_L[1];
-    //output_ADC_value[0] = org_ADC_value[0];
+    //output_ADC_value_L[0] = LowPassC * ((org_ADC_value[0] >> 16 & 0x7fff)) + (1 - LowPassC) * output_ADC_value_L[1];
+    // low-pass filter, and trans output to mV
+    // add LVDT offset
+    float noneFilterInput_L = (((org_ADC_value[0] >> 16) & 0x7fff) * 0.152) - outputOffset_L;
+    // add adjust rate
+    noneFilterInput_L = (noneFilterInput_L - Feedoutcenter_L) *adjustRate_L + Feedoutcenter_L;
+    output_ADC_value_L[0] = ((noneFilterInput_L - output_ADC_value_L[1]) * LowPassC + output_ADC_value_L[1]);
 
     output_ADC_value_R[2] = output_ADC_value_R[1];
     output_ADC_value_R[1] = output_ADC_value_R[0];
-    output_ADC_value_R[0] = LowPassC * ((org_ADC_value[0]& 0x00007fff) << 1) + (1 - LowPassC) * output_ADC_value_R[1];
+    // low-pass filter, and trans output to mV
+    // add LVDT offset
+    float noneFilterInput_R = (org_ADC_value[0] & 0x7fff) * 0.152 - outputOffset_R;
+    // add adjust rate
+    noneFilterInput_R = (noneFilterInput_R - Feedoutcenter_R) *adjustRate_R + Feedoutcenter_R;
+    output_ADC_value_R[0] = ((noneFilterInput_R - output_ADC_value_R[1]) * LowPassC + output_ADC_value_R[1]);
 
 
     //float AD_value_L = AD_value >> 16 & 0x7fff;
@@ -441,8 +475,8 @@ void qualitymonitor::slot()
         OneCentimeterSampleTimes =  10 / onePulseLength; //unit = mm // (how many sample times / 1cm)
 
     //GUI_SampleLength = 100cm
-    //GUI A% update every 10m
-    //GUI CV1m update every 10m
+    //GUI A% update every 50m
+    //GUI CV1m update every 50m
     int GUI_SampleLength = 100 ;
 
     //Datawrite_SampleLength = 100m
@@ -522,10 +556,10 @@ void qualitymonitor::slot()
                 ui->label_center_L_test->setText(QString::number((avg_DetectCenter_L / DetectCenter_Length)));
                 ui->label_center_R_test->setText(QString::number((avg_DetectCenter_R / DetectCenter_Length)));
 
-                ui->Chart_DetectCenter_L->yAxis->rescale();
-                ui->Chart_DetectCenter_R->yAxis->rescale();
-                ui->Chart_DetectCenter_L->replot();
-                ui->Chart_DetectCenter_R->replot();
+                //ui->Chart_DetectCenter_L->yAxis->rescale();
+                //ui->Chart_DetectCenter_R->yAxis->rescale();
+                //ui->Chart_DetectCenter_L->replot();
+                //ui->Chart_DetectCenter_R->replot();
                 // clear chart
                 ui->Chart_DetectCenter_L->graph(0)->data()->clear();
                 ui->Chart_DetectCenter_R->graph(0)->data()->clear();
@@ -541,7 +575,7 @@ void qualitymonitor::slot()
                 ui->pushButton_startDetect->setText("Done!");
 
                 // kill timer for detect center
-                //this->killTimer(timeid_DetectCenter);
+                this->killTimer(timeid_DetectCenter);
                 is_DetectCenter = false;
             }
         }
@@ -606,11 +640,10 @@ void qualitymonitor::slot()
             avg_CV1m_R += SD_R/100;
 
             /************test******************/
-            ui->label_test2->setNum(avg_AD_value_forGUI);
-            ui->label_test2R->setNum(avg_AD_value_forGUI_R);
+            ui->label_test2->setText(QString::number(avg_AD_value_forGUI, 'f', 0));
+            ui->label_test2R->setText(QString::number(avg_AD_value_forGUI_R, 'f', 0));
             /**********************************/
-            RunFrame_Display(AD_value_L, AD_value_R \
-                             , SD, SD_R);
+
 
             //Over A% limit more than 3s, emit STOP sig.
             overAper_L = qAbs(A_per) >= ui->L_limit_Aper->text().toFloat();
@@ -669,13 +702,16 @@ void qualitymonitor::slot()
 
                 //set Data to be Writed, and to be plot
                 /************test******************/
-                ui->label_test3->setNum(avg_AD_value_forWrite);
-                ui->label_test3R->setNum(avg_AD_value_forWrite_R);
+                ui->label_test3->setText(QString::number(avg_AD_value_forWrite, 'f', 0));
+                ui->label_test3R->setText(QString::number(avg_AD_value_forWrite_R, 'f', 0));
                 /**********************************/
 
                 //datalenght unit is meter
                 datalenght_L += Datawrite_SampleLength / 100;
                 datalenght_R += Datawrite_SampleLength / 100;
+
+                RunFrame_Display(AD_value_L, AD_value_R \
+                                 , SD, SD_R);
 
 
                 ui->Chart_L->graph(0)->addData(datalenght_L, A_per);
@@ -916,9 +952,6 @@ void qualitymonitor::deleteOldHistoryData()
 }
 void qualitymonitor::Write_newData(int index)
 {
-    /*******************************************************
-     * Right side need to modify
-     * ****************************************************/
 
     deleteOldHistoryData();
 
@@ -1028,10 +1061,6 @@ void qualitymonitor::Set_Graphics_L()
 
     datalenght_L = axixX_L.length()*100;        //axixX_L's unit is cm, need to transfer to m.
     //qDebug() << datalenght_L;
-    //clear array, release memory
-    oldData_Aper_L.clear();
-    oldData_CV_L.clear();
-    axixX_L.clear();
 
     //set CV yAxis visible
     ui->Chart_L->yAxis2->setVisible(true);
@@ -1065,8 +1094,8 @@ void qualitymonitor::Set_Graphics_L()
     ui->Chart_L->xAxis->setTickLabelFont(xAxis_TickLabelFont);
 
     // set axes ranges:
-    if(datalenght >= 30000){
-        ui->Chart_L->xAxis->setRange(datalenght-30000, datalenght +1000);
+    if(datalenght_L >= 30000){
+        ui->Chart_L->xAxis->setRange(datalenght_L -30000, datalenght_L +1000);
         //ui->Chart_L->xAxis2->setRange(datalenght-30000, datalenght);
     }
     else{
@@ -1079,6 +1108,11 @@ void qualitymonitor::Set_Graphics_L()
 
     ui->Chart_L->yAxis->setRange(-L_Aper_Limit, L_Aper_Limit);
     ui->Chart_L->yAxis2->setRange(-0.5, CV_per_Limit);
+
+    //clear array, release memory
+    oldData_Aper_L.clear();
+    oldData_CV_L.clear();
+    axixX_L.clear();
 
     ui->Chart_L->replot();
 }
@@ -1099,10 +1133,7 @@ void qualitymonitor::Set_Graphics_R()
 
     datalenght_R = axixX_R.length()*100;        //axixX_L's unit is cm, need to transfer to m.
     //qDebug() << datalenght_L;
-    //clear array, release memory
-    oldData_Aper_R.clear();
-    oldData_CV_R.clear();
-    axixX_R.clear();
+
     //ui->Chart_R->graph(0)->setData(axixX_R, mData_R);
 
     //set CV yAxis visible
@@ -1138,8 +1169,8 @@ void qualitymonitor::Set_Graphics_R()
     ui->Chart_R->xAxis->setTickLabelFont(xAxis_TickLabelFont);
 
     // set axes ranges:
-    if(datalenght >= 30000){
-        ui->Chart_R->xAxis->setRange(datalenght-30000, datalenght +1000);
+    if(datalenght_R >= 30000){
+        ui->Chart_R->xAxis->setRange(datalenght_R -30000, datalenght_R +1000);
         //ui->Chart_R->xAxis2->setRange(datalenght-30000, datalenght);
     }
     else{
@@ -1152,6 +1183,11 @@ void qualitymonitor::Set_Graphics_R()
 
     ui->Chart_R->yAxis->setRange(-R_Aper_Limit, R_Aper_Limit);
     ui->Chart_R->yAxis2->setRange(-0.5, CV_per_Limit);
+
+    //clear array, release memory
+    oldData_Aper_R.clear();
+    oldData_CV_R.clear();
+    axixX_R.clear();
 
     ui->Chart_R->replot();
 }
@@ -1495,14 +1531,49 @@ void qualitymonitor::DateTimeSlot()
     ui->Date -> setText(Date);
     ui->Time -> setText(Time);
     //qDebug() << QThread::currentThread();
+
+    int currentHour = DateTime.time().hour();
+    whichShift(currentHour);
+
+
+}
+void qualitymonitor::whichShift(int currentHour)
+{
+    bool isshift_1 = (currentHour >= startshift1) && (currentHour < endshift1);
+    bool isshift_2 = (currentHour >= startshift2) && (currentHour < endshift2);
+    bool isshift_3 = (currentHour >= startshift3) && (currentHour < endshift3);
+    bool isshift_4 = (currentHour >= startshift4) && (currentHour < endshift4);
+
+    if(isshift_1)
+        ui->label_whichShift->setText("班別 1");
+
+    else if(isshift_2)
+        ui->label_whichShift->setText("班別 2");
+
+    else if(isshift_3){
+        if((ui->comboBox_shifts->currentText() != "3") || (ui->comboBox_shifts->currentText() == "4"))
+            ui->label_whichShift->setText("Recheck Shift Schedule");
+        else
+            ui->label_whichShift->setText("班別 3");
+    }
+    else if(isshift_4){
+        if(ui->comboBox_shifts->currentText() != "4")
+            ui->label_whichShift->setText("Recheck Shift Schedule");
+
+        else
+            ui->label_whichShift->setText("班別 4");
+    }
+    else
+        ui->label_whichShift->setText("Recheck Shift Schedule");
+
 }
 
 void qualitymonitor::count_ISR_times()
 {
     float pulselength = ui->PulseLength->text().toFloat();
-    ui->label_speed->setText("Speed: " + QString::number(isr_count_tick *pulselength *60 /1000, 'f' , 1) + "\t m/min");
+    ui->label_speed->setText("Speed: " + QString::number(isr_count_tick *pulselength *60 /1000, 'f' , 0) + "\t m/min");
     // show speed in test frame
-    ui->label_testframe_speed->setText(QString::number(isr_count_tick *pulselength *60 /1000, 'f' , 1) + "\t m/min");
+    ui->label_testframe_speed->setText(QString::number(isr_count_tick *pulselength *60 /1000, 'f' , 0) + "\t m/min");
     ui->trig_count->setText(QString::number(isr_count_tick) + "\t times/sec");
     isr_count_tick = 0; //
     //qDebug() << "count";
@@ -1563,11 +1634,11 @@ void qualitymonitor::setupParameter()
     ui->BiasAdjust  ->setText(BiasAdjust);
 
     //set LVDT offset
-    QString outputL_offset = QString::number(initParameter.Out1_Offset());
-    QString outputR_offset = QString::number(initParameter.Out2_Offset());
+    //QString outputL_offset = QString::number(initParameter.Out1_Offset());
+    //QString outputR_offset = QString::number(initParameter.Out2_Offset());
 
-    ui->out1_offset->setText(outputL_offset);
-    ui->out2_offset->setText(outputR_offset);
+    ui->out1_offset->setText(L_outputoffset);
+    ui->out2_offset->setText(R_outputoffset);
 
     QString password = initParameter.Password();
 
@@ -1578,7 +1649,6 @@ void qualitymonitor::setupParameter()
     ui->label_CurrentCenter_L->setText(ui->L_feedoutcenter->text());
     ui->label_CurrentCenter_R->setText(ui->R_feedoutcenter->text());
 
-    onePulseLength = ui->PulseLength->text().toFloat();
 
 /*
     QFile password(":/password");
@@ -1587,6 +1657,29 @@ void qualitymonitor::setupParameter()
     QTextStream readSavedPassword(&password);
     ui->->setText(readSavedPassword.readAll());
     */
+
+    QStringList shiftschedule = initParameter.shiftschedule().split("\n");
+    ui->comboBox_shifts->setCurrentText(shiftschedule.at(0));
+    ui->label_startShift_1->setNum(shiftschedule.at(1).toInt());
+    ui->label_endShift_1->setNum(shiftschedule.at(2).toInt());
+    ui->label_startShift_2->setNum(shiftschedule.at(3).toInt());
+    ui->label_endShift_2->setNum(shiftschedule.at(4).toInt());
+    ui->label_startShift_3->setNum(shiftschedule.at(5).toInt());
+    ui->label_endShift_3->setNum(shiftschedule.at(6).toInt());
+    ui->label_startShift_4->setNum(shiftschedule.at(7).toInt());
+    ui->label_endShift_4->setNum(shiftschedule.at(8).toInt());
+
+    startshift1 = ui->label_startShift_1->text().toInt();
+    endshift1 = ui->label_endShift_1->text().toInt();
+    startshift2 = ui->label_startShift_2->text().toInt();
+    endshift2 = ui->label_endShift_2->text().toInt();
+    startshift3 = ui->label_startShift_3->text().toInt();
+    endshift3 = ui->label_endShift_3->text().toInt();
+    startshift4 = ui->label_startShift_4->text().toInt();
+    endshift4 = ui->label_endShift_4->text().toInt();
+
+    updateAllconfig();
+
 }
 
 
@@ -1681,82 +1774,103 @@ void qualitymonitor::on_pushButton_Search_clicked()
         }
 }
 
-void qualitymonitor::toSaveDate(int indx){
+void qualitymonitor::toSaveData(int indx){
     parameter writeParameter;
     Feedoutcenter_L = ui->L_feedoutcenter->text().toInt();
     Feedoutcenter_R = ui->R_feedoutcenter->text().toInt();
     switch (indx) {
-        case normalParameter :
-        {
-            QString saveData;
-            QString L_feedoutcenter = writeParameter.TrantoNumberType(ui->L_feedoutcenter->text());
-            QString L_outputoffset  = writeParameter.TrantoNumberType(ui->L_outputoffset->text());
-            QString L_adjustrate    = writeParameter.TrantoNumberType(ui->L_adjustrate->text());
-            QString L_outputweight  = writeParameter.TrantoNumberType(ui->L_outputweight->text());
-            QString L_limit_Aper    = writeParameter.TrantoNumberType(ui->L_limit_Aper->text());
-            QString L_limit_CVper   = writeParameter.TrantoNumberType(ui->L_limit_CVper->text());
+    case normalParameter :
+    {
+        QString saveData;
+        QString L_feedoutcenter = writeParameter.TrantoNumberType(ui->L_feedoutcenter->text());
+        QString L_outputoffset  = writeParameter.TrantoNumberType(ui->L_outputoffset->text());
+        QString L_adjustrate    = writeParameter.TrantoNumberType(ui->L_adjustrate->text());
+        QString L_outputweight  = writeParameter.TrantoNumberType(ui->L_outputweight->text());
+        QString L_limit_Aper    = writeParameter.TrantoNumberType(ui->L_limit_Aper->text());
+        QString L_limit_CVper   = writeParameter.TrantoNumberType(ui->L_limit_CVper->text());
 
-            QString R_feedoutcenter = writeParameter.TrantoNumberType(ui->R_feedoutcenter->text());
-            QString R_outputoffset  = writeParameter.TrantoNumberType(ui->R_outputoffset->text());
-            QString R_adjustrate    = writeParameter.TrantoNumberType(ui->R_adjustrate->text());
-            QString R_outputweight  = writeParameter.TrantoNumberType(ui->R_outputweight->text());
-            QString R_limit_Aper    = writeParameter.TrantoNumberType(ui->R_limit_Aper->text());
-            QString R_limit_CVper   = writeParameter.TrantoNumberType(ui->R_limit_CVper->text());
+        QString R_feedoutcenter = writeParameter.TrantoNumberType(ui->R_feedoutcenter->text());
+        QString R_outputoffset  = writeParameter.TrantoNumberType(ui->R_outputoffset->text());
+        QString R_adjustrate    = writeParameter.TrantoNumberType(ui->R_adjustrate->text());
+        QString R_outputweight  = writeParameter.TrantoNumberType(ui->R_outputweight->text());
+        QString R_limit_Aper    = writeParameter.TrantoNumberType(ui->R_limit_Aper->text());
+        QString R_limit_CVper   = writeParameter.TrantoNumberType(ui->R_limit_CVper->text());
 
 
-            saveData = (L_feedoutcenter     + "\n");
-            saveData.append(L_outputoffset  + "\n");
-            saveData.append(L_adjustrate    + "\n");
-            saveData.append(L_outputweight  + "\n");
-            saveData.append(L_limit_Aper    + "\n");
-            saveData.append(L_limit_CVper   + "\n");
-            saveData.append(R_feedoutcenter + "\n");
-            saveData.append(R_outputoffset  + "\n");
-            saveData.append(R_adjustrate    + "\n");
-            saveData.append(R_outputweight  + "\n");
-            saveData.append(R_limit_Aper    + "\n");
-            saveData.append(R_limit_CVper         );
+        saveData = (L_feedoutcenter     + "\n");
+        saveData.append(L_outputoffset  + "\n");
+        saveData.append(L_adjustrate    + "\n");
+        saveData.append(L_outputweight  + "\n");
+        saveData.append(L_limit_Aper    + "\n");
+        saveData.append(L_limit_CVper   + "\n");
+        saveData.append(R_feedoutcenter + "\n");
+        saveData.append(R_outputoffset  + "\n");
+        saveData.append(R_adjustrate    + "\n");
+        saveData.append(R_outputweight  + "\n");
+        saveData.append(R_limit_Aper    + "\n");
+        saveData.append(R_limit_CVper         );
 
-            //qDebug() << saveData;
-            writeParameter.Write(QDir().currentPath() + "/config", saveData);
+        //qDebug() << saveData;
+        writeParameter.Write(QDir().currentPath() + "/config", saveData);
 
-            // set current center in test frame
-            ui->label_CurrentCenter_L->setText(ui->L_feedoutcenter->text());
-            ui->label_CurrentCenter_R->setText(ui->R_feedoutcenter->text());
+        // set current center in test frame
+        ui->label_CurrentCenter_L->setText(ui->L_feedoutcenter->text());
+        ui->label_CurrentCenter_R->setText(ui->R_feedoutcenter->text());
 
-            break;
-        }
-        case EEParameter :{
-            QString saveData;
-            QString PulseLength = writeParameter.TrantoNumberType(ui->PulseLength->text());
-            QString Filter_1    = writeParameter.TrantoNumberType(ui->Filter_1->text());
-            QString Filter_2    = writeParameter.TrantoNumberType(ui->Filter_2->text());
-            QString BiasAdjust  = writeParameter.TrantoNumberType(ui->BiasAdjust->text());
-            QString outputL_offset = writeParameter.TrantoNumberType(ui->out1_offset->text());
-            QString outputR_offset = writeParameter.TrantoNumberType(ui->out2_offset->text());
-            QString password    = ui->lineEdit_password->text();
-
-            saveData = (PulseLength         + "\n");
-            saveData.append(Filter_1        + "\n");
-            saveData.append(Filter_2        + "\n");
-            saveData.append(BiasAdjust      + "\n");
-            saveData.append(outputL_offset  + "\n");
-            saveData.append(outputR_offset  + "\n");
-            saveData.append(password              );
-            writeParameter.Write(QDir().currentPath() + "/EEconfig", saveData);
-
-            onePulseLength = ui->PulseLength->text().toFloat();
-            break;
-        }
+        break;
     }
+    case EEParameter :{
+        QString saveData;
+        QString PulseLength = writeParameter.TrantoNumberType(ui->PulseLength->text());
+        QString Filter_1    = writeParameter.TrantoNumberType(ui->Filter_1->text());
+        QString Filter_2    = writeParameter.TrantoNumberType(ui->Filter_2->text());
+        QString BiasAdjust  = writeParameter.TrantoNumberType(ui->BiasAdjust->text());
+        QString password    = ui->lineEdit_password->text();
+
+        saveData = (PulseLength         + "\n");
+        saveData.append(Filter_1        + "\n");
+        saveData.append(Filter_2        + "\n");
+        saveData.append(BiasAdjust      + "\n");
+        saveData.append(password              );
+        writeParameter.Write(QDir().currentPath() + "/EEconfig", saveData);
+
+        onePulseLength = ui->PulseLength->text().toFloat();
+        break;
+        }
+
+    case ShiftSchedule:{
+        QString saveData;
+
+        QString Shifts = ui->comboBox_shifts->currentText();
+
+        QString startShift1 = ui->label_startShift_1->text();
+        QString endShift1 = ui->label_endShift_1->text();
+        QString startShift2 = ui->label_startShift_2->text();
+        QString endShift2 = ui->label_endShift_2->text();
+        QString startShift3 = ui->label_startShift_3->text();
+        QString endShift3 = ui->label_endShift_3->text();
+        QString startShift4 = ui->label_startShift_4->text();
+        QString endShift4 = ui->label_endShift_4->text();
+
+        saveData = QString("%1\n%2\n%3\n%4\n%5\n%6\n%7\n%8\n%9")        \
+                .arg(Shifts).arg(startShift1).arg(endShift1)            \
+                .arg(startShift2).arg(endShift2)                        \
+                .arg(startShift3).arg(endShift3)                        \
+                .arg(startShift4).arg(endShift4);
+        writeParameter.Write(QDir().currentPath() + "/ShiftSchedule", saveData);
+        break;
+    }
+    }
+
+    updateAllconfig();
 }
 void qualitymonitor::on_saveButton_clicked()
 {
-    toSaveDate(normalParameter);
+    toSaveData(normalParameter);
 }
 void qualitymonitor::on_saveEEpraButton_clicked()
 {
-    toSaveDate(EEParameter);
+    toSaveData(EEParameter);
 }
 
 //frame switch
@@ -1782,13 +1896,20 @@ void qualitymonitor::on_parameter_Button_clicked()
         ui->Dateframe->raise();
         ui->MenuFrame->raise();
     }
+    // set pre & next button
+    ui->pushButton_parameter_nextpage->setEnabled(true);
+    ui->pushButton_parameter_prepage->setEnabled(false);
+
+    setupParameter();
 }
 void qualitymonitor::on_test_Button_clicked()
 {
+    ui->test->raise();
     if(!ui->Dateframe->isTopLevel()){
         ui->Dateframe->raise();
         ui->MenuFrame->raise();
     }
+
 }
 void qualitymonitor::on_errorfram_Button_clicked()
 {
@@ -1802,6 +1923,7 @@ void qualitymonitor::on_EEtestbutt_clicked()
 {  //add type password
     ui->frame_password->show();
     whichFrameRequestPassword = 1;
+
     QPoint pt;
     QRect frame_passwordRect = ui->frame_password->geometry();
     QRect GlobalRect = QWidget::geometry();
@@ -1809,11 +1931,13 @@ void qualitymonitor::on_EEtestbutt_clicked()
     pt.setY(GlobalRect.y() + (GlobalRect.height() - frame_passwordRect.height()) / 2);
 
     ui->frame_password->move(pt);
+
 }
 void qualitymonitor::on_pushButton_Settiing_clicked()
 {
     ui->frame_password->show();
     whichFrameRequestPassword = 2;
+
     QPoint pt;
     QRect frame_passwordRect = ui->frame_password->geometry();
     QRect GlobalRect = QWidget::geometry();
@@ -1821,6 +1945,7 @@ void qualitymonitor::on_pushButton_Settiing_clicked()
     pt.setY(GlobalRect.y() + (GlobalRect.height() - frame_passwordRect.height()) / 2);
 
     ui->frame_password->move(pt);
+
 }
 
 void qualitymonitor::on_pushButton_3_clicked()
@@ -1831,6 +1956,95 @@ void qualitymonitor::on_pushButton_3_clicked()
         ui->Dateframe->raise();
         ui->MenuFrame->raise();
     }
+}
+
+void qualitymonitor::on_pushButton_shift_clicked()
+{
+    // shift frame
+    ui->frame_setshift->raise();
+    if(!ui->Dateframe->isTopLevel()){
+        ui->Dateframe->raise();
+        ui->MenuFrame->raise();
+    }
+    int HowManyShift = ui->comboBox_shifts->currentText().toInt();
+    switch(HowManyShift)
+    {
+    case 2:
+        ui->pushButton_startminu_2->setEnabled(true);
+        ui->pushButton_startplus_2->setEnabled(true);
+        ui->pushButton_startminu_3->setEnabled(false);
+        ui->pushButton_startplus_3->setEnabled(false);
+        ui->pushButton_startminu_4->setEnabled(false);
+        ui->pushButton_startplus_4->setEnabled(false);
+
+        ui->pushButton_endminu_2->setEnabled(true);
+        ui->pushButton_endplus_2->setEnabled(true);
+        ui->pushButton_endminu_3->setEnabled(false);
+        ui->pushButton_endplus_3->setEnabled(false);
+        ui->pushButton_endminu_4->setEnabled(false);
+        ui->pushButton_endplus_4->setEnabled(false);
+
+        ui->label_startShift_3->setNum(0);
+        ui->label_endShift_3->setNum(0);
+        ui->label_startShift_4->setNum(0);
+        ui->label_endShift_4->setNum(0);
+
+        ui->label_startShift_3->setStyleSheet("background-color : gray; font-size : 12pt");
+        ui->label_endShift_3->setStyleSheet("background-color : gray; font-size : 12pt");
+        ui->label_startShift_4->setStyleSheet("background-color : gray; font-size : 12pt");
+        ui->label_endShift_4->setStyleSheet("background-color : gray; font-size : 12pt");
+        break;
+
+    case 3:
+        ui->pushButton_startminu_2->setEnabled(true);
+        ui->pushButton_startplus_2->setEnabled(true);
+        ui->pushButton_startminu_3->setEnabled(true);
+        ui->pushButton_startplus_3->setEnabled(true);
+        ui->pushButton_startminu_4->setEnabled(false);
+        ui->pushButton_startplus_4->setEnabled(false);
+
+        ui->pushButton_endminu_2->setEnabled(true);
+        ui->pushButton_endplus_2->setEnabled(true);
+        ui->pushButton_endminu_3->setEnabled(true);
+        ui->pushButton_endplus_3->setEnabled(true);
+        ui->pushButton_endminu_4->setEnabled(false);
+        ui->pushButton_endplus_4->setEnabled(false);
+
+        ui->label_startShift_3->setStyleSheet("background-color : none; font-size : 12pt");
+        ui->label_endShift_3->setStyleSheet("background-color : none; font-size : 12pt");
+        ui->label_startShift_4->setStyleSheet("background-color : gray; font-size : 12pt");
+        ui->label_endShift_4->setStyleSheet("background-color : gray; font-size : 12pt");
+
+        break;
+    case 4:
+        ui->pushButton_startminu_2->setEnabled(true);
+        ui->pushButton_startplus_2->setEnabled(true);
+        ui->pushButton_startminu_3->setEnabled(true);
+        ui->pushButton_startplus_3->setEnabled(true);
+        ui->pushButton_startminu_4->setEnabled(true);
+        ui->pushButton_startplus_4->setEnabled(true);
+
+        ui->pushButton_endminu_2->setEnabled(true);
+        ui->pushButton_endplus_2->setEnabled(true);
+        ui->pushButton_endminu_3->setEnabled(true);
+        ui->pushButton_endplus_3->setEnabled(true);
+        ui->pushButton_endminu_4->setEnabled(true);
+        ui->pushButton_endplus_4->setEnabled(true);
+
+        ui->label_startShift_4->setNum(0);
+        ui->label_endShift_4->setNum(0);
+
+        ui->label_startShift_3->setStyleSheet("background-color : none; font-size : 12pt");
+        ui->label_endShift_3->setStyleSheet("background-color : none; font-size : 12pt");
+        ui->label_startShift_4->setStyleSheet("background-color : none; font-size : 12pt");
+        ui->label_endShift_4->setStyleSheet("background-color : none; font-size : 12pt");
+
+
+        break;
+    }
+
+    setupParameter();
+
 }
 void qualitymonitor::on_pushButton_OutputCenter_clicked()
 {
@@ -1850,8 +2064,8 @@ void qualitymonitor::on_pushButton_OutputCenter_clicked()
 
     ui->Chart_DetectCenter_L->xAxis->setTickLabels(false);
     ui->Chart_DetectCenter_R->xAxis->setTickLabels(false);
-    ui->Chart_DetectCenter_L->yAxis->setTickLabels(false);
-    ui->Chart_DetectCenter_R->yAxis->setTickLabels(false);
+    //ui->Chart_DetectCenter_L->yAxis->setTickLabels(false);
+    //ui->Chart_DetectCenter_R->yAxis->setTickLabels(false);
 
     ui->Chart_DetectCenter_L->replot();
     ui->Chart_DetectCenter_R->replot();
@@ -1918,6 +2132,8 @@ void qualitymonitor::on_pushButton_6_clicked()
     //exit button
     emit emit_adc_enable();
     killTimer(timeid_DateTime);
+    killTimer(timeid_TrigCount);
+    killTimer(timeid_GUI_ADC_Value);
 
     //exit(EXIT_FAILURE);
     //QApplication::closeAllWindows();
@@ -1925,15 +2141,19 @@ void qualitymonitor::on_pushButton_6_clicked()
 //set lvdt offset
 void qualitymonitor::on_pushButton_out1offset_clicked()
 {
-    QString Out1_offset = QString::number(QString(ui->out1_pos->text()).toInt() -1000);
-    ui->out1_offset->setText(Out1_offset);
-    toSaveDate(EEParameter);
+    //QString Out1_offset = QString::number(QString(ui->out1_pos->text()).toInt() -1000);
+    int Out1_offset = ui->out1_pos->text().toInt() -1000;
+    ui->out1_offset->setNum(Out1_offset);
+    ui->L_outputoffset->setText(QString::number(Out1_offset));
+    toSaveData(normalParameter);
 }
 void qualitymonitor::on_pushButton_out2offset_clicked()
 {
-    QString Out2_offset = QString::number(QString(ui->out2_pos->text()).toInt() -1000);
-    ui->out2_offset->setText(Out2_offset);
-    toSaveDate(EEParameter);
+    //QString Out2_offset = QString::number(QString(ui->out2_pos->text()).toInt() -1000);
+    int Out2_offset = ui->out2_pos->text().toInt() -1000;
+    ui->out2_offset->setNum(Out2_offset);
+    ui->R_outputoffset->setText(QString::number(Out2_offset));
+    toSaveData(normalParameter);
 }//end set lvdt offset
 
 
@@ -2107,11 +2327,6 @@ void qualitymonitor::timerEvent(QTimerEvent *event)
         //qDebug() << mAD->readADCvalue();
     }
 
-    //replot SPG
-    else if(event->timerId() == timeid_replotSPG)
-    {
-        set_SPG_Chart();
-    }
     if(event->timerId() == timeid_GUI_ADC_Value)
     {
         on_Receive_ADval();
@@ -2244,10 +2459,11 @@ void qualitymonitor::on_pushButton_PasswordOK_clicked()
         switch (whichFrameRequestPassword) {
             case 1:
             // raise EEparameter frame
-                ui->EEprameter->raise();
+                ui->EEparameter->raise();
                 if(!ui->Dateframe->isTopLevel()){
                     ui->Dateframe->raise();
                     ui->MenuFrame->raise();
+                    setupParameter();
                 }
             break;
             case 2:
@@ -2257,6 +2473,7 @@ void qualitymonitor::on_pushButton_PasswordOK_clicked()
                     ui->Dateframe->raise();
                     ui->MenuFrame->raise();
                 }
+                setupParameter();
             break;
         }
 
@@ -2281,7 +2498,7 @@ void qualitymonitor::on_pushButton_PasswordOK_clicked()
 void qualitymonitor::on_pushButton_SettingSave_clicked()
 {
     //save setting frame data
-    toSaveDate(EEParameter);
+    toSaveData(EEParameter);
 }
 
 void qualitymonitor::on_pushButton_centerConfirm_clicked()
@@ -2344,7 +2561,10 @@ void qualitymonitor::on_pushButton_centerConfirm_clicked()
             //ui->label_center_L_test->text().clear();
             //ui->label_center_L_test->text().clear();
 
-            toSaveDate(normalParameter);
+            toSaveData(normalParameter);
+
+            ui->pushButton_startDetect->setEnabled(true);
+            ui->pushButton_startDetect->setText("Start");
         }
         ui->lineEdit_LeftCenter->text().clear();
         ui->lineEdit_LeftCenter->text().clear();
@@ -2376,11 +2596,309 @@ void qualitymonitor::on_pushButton_startDetect_clicked()
     ui->Chart_DetectCenter_R->replot();
 
     // set detect flag to true
-    //timeid_DetectCenter = startTimer(500);
+    timeid_DetectCenter = startTimer(50);
     ui->pushButton_startDetect->setText("Detecting...");
     ui->pushButton_startDetect->setEnabled(false);
     is_DetectCenter = true;
-
-
 }
 
+void qualitymonitor::setup_shiftSchedule()
+{
+    QFile config(QDir().currentPath() + "/ShiftSchedule");
+    if(!config.exists())
+    {
+        // defalut shifts = 3
+        ui->comboBox_shifts->setCurrentText("3");
+        // set shift 4 to unable
+        ui->pushButton_startminu_2->setEnabled(true);
+        ui->pushButton_startplus_2->setEnabled(true);
+        ui->pushButton_startminu_3->setEnabled(true);
+        ui->pushButton_startplus_3->setEnabled(true);
+        ui->pushButton_startminu_4->setEnabled(false);
+        ui->pushButton_startplus_4->setEnabled(false);
+
+        ui->pushButton_endminu_2->setEnabled(true);
+        ui->pushButton_endminu_2->setEnabled(true);
+        ui->pushButton_endminu_3->setEnabled(true);
+        ui->pushButton_endminu_3->setEnabled(true);
+        ui->pushButton_endminu_4->setEnabled(false);
+        ui->pushButton_endplus_4->setEnabled(false);
+
+        ui->label_startShift_3->setStyleSheet("background-color : none; font-size : 12pt");
+        ui->label_endShift_3->setStyleSheet("background-color : none; font-size : 12pt");
+        ui->label_startShift_4->setStyleSheet("background-color : gray; font-size : 12pt");
+        ui->label_endShift_4->setStyleSheet("background-color : gray; font-size : 12pt");
+
+        // list all shift schedule combobox in frame_shift
+        /*
+        QList<QComboBox*> AllshiftCombobox = this->findChildren<QComboBox*>();
+        //qDebug() << AllshiftCombobox;
+        foreach(QComboBox* itm, AllshiftCombobox)
+        {
+            // if combobox's object name has "startshift" or "endshift", then set item to 0 to 23
+            if(itm->objectName().contains("startShift") || itm->objectName().contains("endShift"))
+                for(int i = 0; i < 24; i++)
+                    itm->addItem(QString::number(i));
+        }
+    */
+    }
+}
+
+
+void qualitymonitor::on_comboBox_shifts_currentIndexChanged(const QString &arg1)
+{
+    switch(arg1.toInt())
+    {
+    case 2:
+        ui->pushButton_startminu_2->setEnabled(true);
+        ui->pushButton_startplus_2->setEnabled(true);
+        ui->pushButton_startminu_3->setEnabled(false);
+        ui->pushButton_startplus_3->setEnabled(false);
+        ui->pushButton_startminu_4->setEnabled(false);
+        ui->pushButton_startplus_4->setEnabled(false);
+
+        ui->pushButton_endminu_2->setEnabled(true);
+        ui->pushButton_endplus_2->setEnabled(true);
+        ui->pushButton_endminu_3->setEnabled(false);
+        ui->pushButton_endplus_3->setEnabled(false);
+        ui->pushButton_endminu_4->setEnabled(false);
+        ui->pushButton_endplus_4->setEnabled(false);
+
+        ui->label_startShift_3->setNum(0);
+        ui->label_endShift_3->setNum(0);
+        ui->label_startShift_4->setNum(0);
+        ui->label_endShift_4->setNum(0);
+
+        ui->label_startShift_3->setStyleSheet("background-color : gray; font-size : 12pt");
+        ui->label_endShift_3->setStyleSheet("background-color : gray; font-size : 12pt");
+        ui->label_startShift_4->setStyleSheet("background-color : gray; font-size : 12pt");
+        ui->label_endShift_4->setStyleSheet("background-color : gray; font-size : 12pt");
+        break;
+
+    case 3:
+        ui->pushButton_startminu_2->setEnabled(true);
+        ui->pushButton_startplus_2->setEnabled(true);
+        ui->pushButton_startminu_3->setEnabled(true);
+        ui->pushButton_startplus_3->setEnabled(true);
+        ui->pushButton_startminu_4->setEnabled(false);
+        ui->pushButton_startplus_4->setEnabled(false);
+
+        ui->pushButton_endminu_2->setEnabled(true);
+        ui->pushButton_endplus_2->setEnabled(true);
+        ui->pushButton_endminu_3->setEnabled(true);
+        ui->pushButton_endplus_3->setEnabled(true);
+        ui->pushButton_endminu_4->setEnabled(false);
+        ui->pushButton_endplus_4->setEnabled(false);
+
+        ui->label_startShift_3->setStyleSheet("background-color : none; font-size : 12pt");
+        ui->label_endShift_3->setStyleSheet("background-color : none; font-size : 12pt");
+        ui->label_startShift_4->setStyleSheet("background-color : gray; font-size : 12pt");
+        ui->label_endShift_4->setStyleSheet("background-color : gray; font-size : 12pt");
+
+        break;
+    case 4:
+        ui->pushButton_startminu_2->setEnabled(true);
+        ui->pushButton_startplus_2->setEnabled(true);
+        ui->pushButton_startminu_3->setEnabled(true);
+        ui->pushButton_startplus_3->setEnabled(true);
+        ui->pushButton_startminu_4->setEnabled(true);
+        ui->pushButton_startplus_4->setEnabled(true);
+
+        ui->pushButton_endminu_2->setEnabled(true);
+        ui->pushButton_endplus_2->setEnabled(true);
+        ui->pushButton_endminu_3->setEnabled(true);
+        ui->pushButton_endplus_3->setEnabled(true);
+        ui->pushButton_endminu_4->setEnabled(true);
+        ui->pushButton_endplus_4->setEnabled(true);
+
+        ui->label_startShift_4->setNum(0);
+        ui->label_endShift_4->setNum(0);
+
+        ui->label_startShift_3->setStyleSheet("background-color : none; font-size : 12pt");
+        ui->label_endShift_3->setStyleSheet("background-color : none; font-size : 12pt");
+        ui->label_startShift_4->setStyleSheet("background-color : none; font-size : 12pt");
+        ui->label_endShift_4->setStyleSheet("background-color : none; font-size : 12pt");
+
+
+        break;
+    }
+}
+
+
+
+
+void qualitymonitor::on_pushButton_saveShiftSchedule_clicked()
+{
+    toSaveData(ShiftSchedule);
+
+    startshift1 = ui->label_startShift_1->text().toInt();
+    endshift1 = ui->label_endShift_1->text().toInt();
+    startshift2 = ui->label_startShift_2->text().toInt();
+    endshift2 = ui->label_endShift_2->text().toInt();
+    startshift3 = ui->label_startShift_3->text().toInt();
+    endshift3 = ui->label_endShift_3->text().toInt();
+    startshift4 = ui->label_startShift_4->text().toInt();
+    endshift4 = ui->label_endShift_4->text().toInt();
+}
+
+void qualitymonitor::on_pushButton_startminu_1_clicked()
+{
+    int hour = ui->label_startShift_1->text().toInt();
+    hour--;
+    if(hour < 0)
+        hour = 23;
+    ui->label_startShift_1->setNum(hour);
+}
+
+void qualitymonitor::on_pushButton_startplus_1_clicked()
+{
+    int hour = ui->label_startShift_1->text().toInt();
+    hour++;
+    if(hour > 23)
+        hour = 0;
+    ui->label_startShift_1->setNum(hour);
+}
+
+void qualitymonitor::on_pushButton_endminu_1_clicked()
+{
+    int hour = ui->label_endShift_1->text().toInt();
+    hour--;
+    if(hour < 0)
+        hour = 23;
+    ui->label_endShift_1->setNum(hour);
+}
+
+void qualitymonitor::on_pushButton_endplus_1_clicked()
+{
+    int hour = ui->label_endShift_1->text().toInt();
+    hour++;
+    if(hour > 23)
+        hour = 0;
+    ui->label_endShift_1->setNum(hour);
+}
+
+void qualitymonitor::on_pushButton_startminu_2_clicked()
+{
+    int hour = ui->label_startShift_2->text().toInt();
+    hour--;
+    if(hour < 0)
+        hour = 23;
+    ui->label_startShift_2->setNum(hour);
+}
+
+void qualitymonitor::on_pushButton_startplus_2_clicked()
+{
+    int hour = ui->label_startShift_2->text().toInt();
+    hour++;
+    if(hour > 23)
+        hour = 0;
+    ui->label_startShift_2->setNum(hour);
+}
+
+void qualitymonitor::on_pushButton_endminu_2_clicked()
+{
+    int hour = ui->label_endShift_2->text().toInt();
+    hour--;
+    if(hour < 0)
+        hour = 23;
+    ui->label_endShift_2->setNum(hour);
+}
+
+void qualitymonitor::on_pushButton_endplus_2_clicked()
+{
+    int hour = ui->label_endShift_2->text().toInt();
+    hour++;
+    if(hour > 23)
+        hour = 0;
+    ui->label_endShift_2->setNum(hour);
+}
+
+void qualitymonitor::on_pushButton_endminu_3_clicked()
+{
+    int hour = ui->label_endShift_3->text().toInt();
+    hour--;
+    if(hour < 0)
+        hour = 23;
+    ui->label_endShift_3->setNum(hour);
+}
+
+void qualitymonitor::on_pushButton_endplus_3_clicked()
+{
+    int hour = ui->label_endShift_3->text().toInt();
+    hour++;
+    if(hour > 23)
+        hour = 0;
+    ui->label_endShift_3->setNum(hour);
+}
+
+void qualitymonitor::on_pushButton_startminu_3_clicked()
+{
+    int hour = ui->label_startShift_3->text().toInt();
+    hour--;
+    if(hour < 0)
+        hour = 23;
+    ui->label_startShift_3->setNum(hour);
+}
+
+void qualitymonitor::on_pushButton_startplus_3_clicked()
+{
+    int hour = ui->label_startShift_3->text().toInt();
+    hour++;
+    if(hour > 23)
+        hour = 0;
+    ui->label_startShift_3->setNum(hour);
+}
+
+void qualitymonitor::on_pushButton_startminu_4_clicked()
+{
+    int hour = ui->label_startShift_4->text().toInt();
+    hour--;
+    if(hour < 0)
+        hour = 23;
+    ui->label_startShift_4->setNum(hour);
+}
+
+void qualitymonitor::on_pushButton_startplus_4_clicked()
+{
+    int hour = ui->label_startShift_4->text().toInt();
+    hour++;
+    if(hour > 23)
+        hour = 0;
+    ui->label_startShift_4->setNum(hour);
+}
+
+void qualitymonitor::on_pushButton_endminu_4_clicked()
+{
+    int hour = ui->label_endShift_4->text().toInt();
+    hour--;
+    if(hour < 0)
+        hour = 23;
+    ui->label_endShift_4->setNum(hour);
+}
+
+void qualitymonitor::on_pushButton_endplus_4_clicked()
+{
+    int hour = ui->label_endShift_4->text().toInt();
+    hour++;
+    if(hour > 23)
+        hour = 0;
+    ui->label_endShift_4->setNum(hour);
+}
+
+
+
+void qualitymonitor::on_pushButton_parameter_nextpage_clicked()
+{
+    ui->frame_parameter_2->raise();
+    // set pre & next button
+    ui->pushButton_parameter_nextpage->setEnabled(false);
+    ui->pushButton_parameter_prepage->setEnabled(true);
+}
+
+void qualitymonitor::on_pushButton_parameter_prepage_clicked()
+{
+    ui->frame_parameter_2->lower();
+    // set pre & next button
+    ui->pushButton_parameter_nextpage->setEnabled(true);
+    ui->pushButton_parameter_prepage->setEnabled(false);
+}

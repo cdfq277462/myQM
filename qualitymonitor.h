@@ -25,7 +25,7 @@ public:
 
     static qualitymonitor *ISR_excute_ptr; //qualitymonitor::qualitymonitor ptr
     void setupParameter();
-    void toSaveDate(int);
+    void toSaveData(int);
     ~qualitymonitor();
 
     mathtools Mymathtool;
@@ -130,6 +130,8 @@ private slots:
 
     void RunFrame_Display(float, float, float, float);
 
+    void updateAllconfig();
+
 
 
 
@@ -160,6 +162,52 @@ private slots:
     void on_pushButton_7_clicked();
 
     void deleteOldHistoryData();
+
+    void setup_shiftSchedule();
+
+    void on_comboBox_shifts_currentIndexChanged(const QString &arg1);
+
+    void on_pushButton_shift_clicked();
+
+    void on_pushButton_saveShiftSchedule_clicked();
+
+    void whichShift(int);
+
+    void on_pushButton_startminu_1_clicked();
+
+    void on_pushButton_startplus_1_clicked();
+
+    void on_pushButton_endminu_1_clicked();
+
+    void on_pushButton_endplus_1_clicked();
+
+    void on_pushButton_startminu_2_clicked();
+
+    void on_pushButton_startplus_2_clicked();
+
+    void on_pushButton_endminu_2_clicked();
+
+    void on_pushButton_endplus_2_clicked();
+
+    void on_pushButton_endminu_3_clicked();
+
+    void on_pushButton_endplus_3_clicked();
+
+    void on_pushButton_startminu_3_clicked();
+
+    void on_pushButton_startplus_3_clicked();
+
+    void on_pushButton_endminu_4_clicked();
+
+    void on_pushButton_endplus_4_clicked();
+
+    void on_pushButton_startminu_4_clicked();
+
+    void on_pushButton_startplus_4_clicked();
+
+    void on_pushButton_parameter_nextpage_clicked();
+
+    void on_pushButton_parameter_prepage_clicked();
 
 public slots:
     void timerEvent(QTimerEvent *event);
@@ -198,6 +246,11 @@ private:
     int timeid_GUI_ADC_Value, timeid_DetectCenter;
     int AlarmFlag, AlarmFlagofCV;
 
+    int outputOffset_L, outputOffset_R;
+    float adjustRate_L, adjustRate_R;
+
+    float LowPassC;
+
 
     bool overAper_L, overAper_R;
     bool overCV_per_L, overCV_per_R;
@@ -207,6 +260,7 @@ private:
 
     bool eventFilter(QObject *,QEvent *);
 
+    int startshift1, endshift1, startshift2, endshift2, startshift3, endshift3, startshift4, endshift4;
 
 };
 

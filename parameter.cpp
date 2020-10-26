@@ -23,15 +23,13 @@
 #define  Filter_1_EE        2
 #define  Filter_2_EE        3
 #define  BiasAdjust_EE      4
-#define  Out1_Offset_pos    5
-#define  Out2_Offset_pos    6
-#define  setUTC             8
-#define  setPassword        7
+#define  setPassword        5
 
 
 
 QString mfilename  = QDir().currentPath() + "/config";
 QString EEfilename = QDir().currentPath() + "/EEconfig";
+QString ShiftSchedule = QDir().currentPath() + "/ShiftSchedule";
 
 parameter::parameter()
 {
@@ -94,6 +92,7 @@ int  parameter::L_feedoutcenter(){
     return getdata;
 }
 int  parameter::L_outputoffset(){
+    // LVDT
     int getdata = Read(mfilename, outputoffset).toInt();
     return getdata;
 }
@@ -124,6 +123,7 @@ int parameter::R_feedoutcenter(){
     return getdata;
 }
 int parameter::R_outputoffset(){
+    // LVDT
     int getdata = Read(mfilename, R_side + outputoffset).toInt();
     return getdata;
 }
@@ -165,26 +165,30 @@ int parameter::BiasAdjust(){
 //end EE Parameter
 
 
-//LVDT Offset
-int parameter::Out1_Offset()
-{
-    int getdata = Read(EEfilename, Out1_Offset_pos).toInt();
-    return getdata;
-}
-int parameter::Out2_Offset()
-{
-    int getdata = Read(EEfilename, Out2_Offset_pos).toInt();
-    return getdata;
-}
+
 
 //Setting
-int parameter::UTC()
-{
-    int getdata = Read(EEfilename, setUTC).toInt();
-    return getdata;
-}
+
 QString parameter::Password()
 {
     QString getdata = Read(EEfilename, setPassword);
     return getdata;
 }
+
+QString parameter::shiftschedule()
+{
+    QFile config(ShiftSchedule);
+
+    if(!config.open(QFile::ReadOnly | QFile::Text)){
+        qDebug() << "Cannot initialize parameter!";
+    }
+    QTextStream in(&config);
+    QString para;
+    para = in.readAll();
+    config.close();
+    //qDebug() << para;
+    return  para;
+
+}
+
+

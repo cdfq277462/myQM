@@ -37,9 +37,12 @@ public:
     int UTC();
     QString Password();
 
+    QString shiftschedule();
+
 
     QString   Read(QString Filename, int);
     void    Write(QString Filename, QString);
+
 };
 
 #endif // PARAMETER_H
