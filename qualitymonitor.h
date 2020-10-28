@@ -171,7 +171,7 @@ private slots:
 
     void on_pushButton_saveShiftSchedule_clicked();
 
-    void whichShift(int);
+    void whichShift();
 
     void on_pushButton_startminu_1_clicked();
 
@@ -208,6 +208,14 @@ private slots:
     void on_pushButton_parameter_nextpage_clicked();
 
     void on_pushButton_parameter_prepage_clicked();
+
+    void on_pushButton_hh_plus_clicked();
+
+    void on_pushButton_hh_minus_clicked();
+
+    void on_pushButton_mm_plus_clicked();
+
+    void on_pushButton_mm_minus_clicked();
 
 public slots:
     void timerEvent(QTimerEvent *event);
@@ -247,9 +255,14 @@ private:
     int AlarmFlag, AlarmFlagofCV;
 
     int outputOffset_L, outputOffset_R;
+    // 調整率
     float adjustRate_L, adjustRate_R;
+    // 偏移調整
+    float offsetAdjust;
 
     float LowPassC;
+
+    int set_timeHour, set_timeMinu;
 
 
     bool overAper_L, overAper_R;

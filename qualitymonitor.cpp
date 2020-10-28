@@ -99,6 +99,10 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     timeid_DateTime = startTimer(500);
     //initial RunDateTime
     RunDateTime = QDate::currentDate().toString("yyyy-MM-dd");
+    ui->dateEdit->setDate(QDate().currentDate());
+    set_timeHour = 0;
+    set_timeMinu = 0;
+    system("timedatectl set-ntp no");
 
 //setup parameter
     setup_shiftSchedule();
@@ -384,6 +388,8 @@ void qualitymonitor::updateAllconfig()
     adjustRate_L = ui->L_adjustrate->text().toFloat() / 100;
     adjustRate_R = ui->R_adjustrate->text().toFloat() / 100;
 
+    offsetAdjust = (ui->OffsetAdjust->text().toFloat() +1) / 100;
+
     //qDebug() << adjustRate_L;
 
     LowPassC = (ui->Filter_2->text().toFloat() +1)/ 1000;
@@ -415,7 +421,9 @@ void qualitymonitor::slot()
     // add LVDT offset
     float noneFilterInput_L = (((org_ADC_value[0] >> 16) & 0x7fff) * 0.152) - outputOffset_L;
     // add adjust rate
-    noneFilterInput_L = (noneFilterInput_L - Feedoutcenter_L) *adjustRate_L + Feedoutcenter_L;
+    noneFilterInput_L = noneFilterInput_L * adjustRate_L;
+    // add offset adjust
+    noneFilterInput_L = (noneFilterInput_L - Feedoutcenter_L) *offsetAdjust + Feedoutcenter_L;
     output_ADC_value_L[0] = ((noneFilterInput_L - output_ADC_value_L[1]) * LowPassC + output_ADC_value_L[1]);
 
     output_ADC_value_R[2] = output_ADC_value_R[1];
@@ -424,7 +432,9 @@ void qualitymonitor::slot()
     // add LVDT offset
     float noneFilterInput_R = (org_ADC_value[0] & 0x7fff) * 0.152 - outputOffset_R;
     // add adjust rate
-    noneFilterInput_R = (noneFilterInput_R - Feedoutcenter_R) *adjustRate_R + Feedoutcenter_R;
+    noneFilterInput_R = noneFilterInput_R * adjustRate_R;
+    // add offset adjust
+    noneFilterInput_R = (noneFilterInput_R - Feedoutcenter_R) *offsetAdjust + Feedoutcenter_R;
     output_ADC_value_R[0] = ((noneFilterInput_R - output_ADC_value_R[1]) * LowPassC + output_ADC_value_R[1]);
 
 
@@ -1530,39 +1540,110 @@ void qualitymonitor::DateTimeSlot()
     QString Time = DateTime.toString("hh:mm:ss");
     ui->Date -> setText(Date);
     ui->Time -> setText(Time);
+
     //qDebug() << QThread::currentThread();
 
-    int currentHour = DateTime.time().hour();
-    whichShift(currentHour);
+    whichShift();
 
-
+    QTime time = QTime(DateTime.time().hour(), DateTime.time().minute()).addSecs(set_timeHour *3600 + set_timeMinu *60);
+    ui->label_hh->setNum(time.hour());
+    ui->label_mm->setNum(time.minute());
+    ui->label_ss->setNum(DateTime.time().second());
 }
-void qualitymonitor::whichShift(int currentHour)
+void qualitymonitor::whichShift()
 {
-    bool isshift_1 = (currentHour >= startshift1) && (currentHour < endshift1);
-    bool isshift_2 = (currentHour >= startshift2) && (currentHour < endshift2);
-    bool isshift_3 = (currentHour >= startshift3) && (currentHour < endshift3);
-    bool isshift_4 = (currentHour >= startshift4) && (currentHour < endshift4);
+    QDate currentDate = QDate().currentDate();
+    QDateTime currentDateTime = QDateTime().currentDateTime();
+    QDateTime DateTime_start_shift1 = QDateTime(currentDate, QTime(startshift1, 0));
 
+    if(currentDateTime.time() < DateTime_start_shift1.time())
+    {
+        // if currentDateTime less than first shift, means current was counted yesterday.
+        currentDate = currentDate.addDays(-1);
+    }// end if
+
+    QDate shift_OneDay = currentDate.addDays(1);
+
+    DateTime_start_shift1 = QDateTime(currentDate, QTime(startshift1, 0));
+    QDateTime DateTime_start_shift2 = QDateTime(currentDate, QTime(startshift2, 0));
+    QDateTime DateTime_start_shift3 = QDateTime(currentDate, QTime(startshift3, 0));
+    QDateTime DateTime_start_shift4 = QDateTime(currentDate, QTime(startshift4, 0));
+    QDateTime DateTime_end_shift1, DateTime_end_shift2, DateTime_end_shift3, DateTime_end_shift4;
+
+    DateTime_end_shift1 = QDateTime(currentDate, QTime(endshift1, 0));
+    DateTime_end_shift2 = QDateTime(currentDate, QTime(endshift2, 0));
+    DateTime_end_shift3 = QDateTime(currentDate, QTime(endshift3, 0));
+    DateTime_end_shift4 = QDateTime(currentDate, QTime(endshift4, 0));
+
+
+    if((startshift1 == 0) || (endshift1 <= startshift1)){
+        // if first shift cross day, and shift others shifts 1 day.
+        DateTime_end_shift1 = QDateTime(shift_OneDay, QTime(endshift1, 0));
+
+        DateTime_start_shift2 = QDateTime(shift_OneDay, QTime(startshift2, 0));
+        DateTime_start_shift3 = QDateTime(shift_OneDay, QTime(startshift3, 0));
+        DateTime_start_shift4 = QDateTime(shift_OneDay, QTime(startshift4, 0));
+        DateTime_end_shift2 = QDateTime(shift_OneDay, QTime(endshift2, 0));
+        DateTime_end_shift3 = QDateTime(shift_OneDay, QTime(endshift3, 0));
+        DateTime_end_shift4 = QDateTime(shift_OneDay, QTime(endshift4, 0));
+    }// end if
+    else if((startshift2 == 0) ||(endshift2 <= startshift2)){
+        DateTime_end_shift2 = QDateTime(shift_OneDay, QTime(endshift2, 0));
+
+        DateTime_start_shift3 = QDateTime(shift_OneDay, QTime(startshift3, 0));
+        DateTime_start_shift4 = QDateTime(shift_OneDay, QTime(startshift4, 0));
+        DateTime_end_shift3 = QDateTime(shift_OneDay, QTime(endshift3, 0));
+        DateTime_end_shift4 = QDateTime(shift_OneDay, QTime(endshift4, 0));
+    }
+    else if((startshift3 == 0) || (endshift3 <= startshift3)){
+        DateTime_end_shift3 = QDateTime(shift_OneDay, QTime(endshift3, 0));
+
+        DateTime_start_shift4 = QDateTime(shift_OneDay, QTime(startshift4, 0));
+        DateTime_end_shift4 = QDateTime(shift_OneDay, QTime(endshift4, 0));
+    }
+    else if((startshift4 == 0) || (endshift4 <= startshift4)){
+        DateTime_end_shift4 = QDateTime(shift_OneDay, QTime(endshift4, 0));
+    }
+
+
+
+    bool isshift_1 = (QDateTime().currentDateTime() >= DateTime_start_shift1) && (QDateTime().currentDateTime() <= DateTime_end_shift1);
+    bool isshift_2 = (QDateTime().currentDateTime() >= DateTime_start_shift2) && (QDateTime().currentDateTime() <= DateTime_end_shift2);
+    bool isshift_3 = (QDateTime().currentDateTime() >= DateTime_start_shift3) && (QDateTime().currentDateTime() <= DateTime_end_shift3);
+    bool isshift_4 = (QDateTime().currentDateTime() >= DateTime_start_shift4) && (QDateTime().currentDateTime() <= DateTime_end_shift4);
+
+    /*******************************************
+    // debug schedule
+    qDebug() << currentDate;
+    qDebug() << DateTime_start_shift1 << DateTime_end_shift1;
+    qDebug() << DateTime_start_shift2 << DateTime_end_shift2;
+    qDebug() << DateTime_start_shift3 << DateTime_end_shift3;
+    qDebug() << DateTime_start_shift4 << DateTime_end_shift4;
+    ********************************************/
     if(isshift_1)
         ui->label_whichShift->setText("班別 1");
 
     else if(isshift_2)
         ui->label_whichShift->setText("班別 2");
-
+    else if(isshift_3)
+        ui->label_whichShift->setText("班別 3");
+    else if(isshift_4)
+        ui->label_whichShift->setText("班別 4");
+/*
     else if(isshift_3){
         if((ui->comboBox_shifts->currentText() != "3") || (ui->comboBox_shifts->currentText() == "4"))
             ui->label_whichShift->setText("Recheck Shift Schedule");
         else
             ui->label_whichShift->setText("班別 3");
-    }
+    }// end else if
     else if(isshift_4){
         if(ui->comboBox_shifts->currentText() != "4")
             ui->label_whichShift->setText("Recheck Shift Schedule");
 
         else
             ui->label_whichShift->setText("班別 4");
-    }
+    }// end else if
+*/
     else
         ui->label_whichShift->setText("Recheck Shift Schedule");
 
@@ -1626,12 +1707,12 @@ void qualitymonitor::setupParameter()
     QString PulseLength = QString::number(initParameter.PulseLength());
     QString Filter_1    = QString::number(initParameter.Filter_1());
     QString Filter_2    = QString::number(initParameter.Filter_2());
-    QString BiasAdjust  = QString::number(initParameter.BiasAdjust());
+    QString OffsetAdjust  = QString::number(initParameter.OffsetAdjust());
 
     ui->PulseLength ->setText(PulseLength);
     ui->Filter_1    ->setText(Filter_1);
     ui->Filter_2    ->setText(Filter_2);
-    ui->BiasAdjust  ->setText(BiasAdjust);
+    ui->OffsetAdjust->setText(OffsetAdjust);
 
     //set LVDT offset
     //QString outputL_offset = QString::number(initParameter.Out1_Offset());
@@ -1824,13 +1905,13 @@ void qualitymonitor::toSaveData(int indx){
         QString PulseLength = writeParameter.TrantoNumberType(ui->PulseLength->text());
         QString Filter_1    = writeParameter.TrantoNumberType(ui->Filter_1->text());
         QString Filter_2    = writeParameter.TrantoNumberType(ui->Filter_2->text());
-        QString BiasAdjust  = writeParameter.TrantoNumberType(ui->BiasAdjust->text());
+        QString OffsetAdjust  = writeParameter.TrantoNumberType(ui->OffsetAdjust->text());
         QString password    = ui->lineEdit_password->text();
 
         saveData = (PulseLength         + "\n");
         saveData.append(Filter_1        + "\n");
         saveData.append(Filter_2        + "\n");
-        saveData.append(BiasAdjust      + "\n");
+        saveData.append(OffsetAdjust      + "\n");
         saveData.append(password              );
         writeParameter.Write(QDir().currentPath() + "/EEconfig", saveData);
 
@@ -2497,8 +2578,36 @@ void qualitymonitor::on_pushButton_PasswordOK_clicked()
 
 void qualitymonitor::on_pushButton_SettingSave_clicked()
 {
-    //save setting frame data
-    toSaveData(EEParameter);
+    set_timeHour = 0;
+    set_timeMinu = 0;
+    QMessageBox warning;
+    QString warningInfo;
+    warningInfo = QString("<pre align='center' style='font-family:Arial' style='font-size:16pt'>"   \
+                          "If changing Date or Time < br>might ERASE all of history or error record!!</pre>");
+    warning.setText(warningInfo);
+    warning.setStandardButtons(QMessageBox::Save | QMessageBox::Discard);
+
+    warning.setCursor(Qt::BlankCursor);
+    warning.setIcon(QMessageBox::Warning);
+    warning.setWindowFlags(Qt::FramelessWindowHint |   \
+                                     Qt::WindowStaysOnTopHint | Qt::Tool | Qt::X11BypassWindowManagerHint);
+    if(warning.exec() == QMessageBox::Save)
+    {
+        //save setting frame data
+        toSaveData(EEParameter);
+
+        // set time to system time
+        QDate Date = ui->dateEdit->date();
+        QTime time = QTime(ui->label_hh->text().toInt(), ui->label_mm->text().toInt());
+
+        QString set_time = QString("timedatectl set-time '%1'").arg(Date.toString("yyyy-MM-dd ") + time.toString("hh:mm:ss"));
+
+        char* cmd = set_time.toLocal8Bit().data();
+        system(cmd);
+        // rst time adjust
+        set_timeHour = 0;
+        set_timeMinu = 0;
+    }
 }
 
 void qualitymonitor::on_pushButton_centerConfirm_clicked()
@@ -2673,6 +2782,11 @@ void qualitymonitor::on_comboBox_shifts_currentIndexChanged(const QString &arg1)
         ui->label_endShift_3->setStyleSheet("background-color : gray; font-size : 12pt");
         ui->label_startShift_4->setStyleSheet("background-color : gray; font-size : 12pt");
         ui->label_endShift_4->setStyleSheet("background-color : gray; font-size : 12pt");
+
+        ui->label_startShift_3->setNum(0);
+        ui->label_endShift_3->setNum(0);
+        ui->label_startShift_4->setNum(0);
+        ui->label_endShift_4->setNum(0);
         break;
 
     case 3:
@@ -2695,6 +2809,8 @@ void qualitymonitor::on_comboBox_shifts_currentIndexChanged(const QString &arg1)
         ui->label_startShift_4->setStyleSheet("background-color : gray; font-size : 12pt");
         ui->label_endShift_4->setStyleSheet("background-color : gray; font-size : 12pt");
 
+        ui->label_startShift_4->setNum(0);
+        ui->label_endShift_4->setNum(0);
         break;
     case 4:
         ui->pushButton_startminu_2->setEnabled(true);
@@ -2901,4 +3017,37 @@ void qualitymonitor::on_pushButton_parameter_prepage_clicked()
     // set pre & next button
     ui->pushButton_parameter_nextpage->setEnabled(true);
     ui->pushButton_parameter_prepage->setEnabled(false);
+}
+
+void qualitymonitor::on_pushButton_hh_plus_clicked()
+{
+    // set-time hour ++
+    set_timeHour++;
+    // call back slot to update time
+    DateTimeSlot();
+}
+
+void qualitymonitor::on_pushButton_hh_minus_clicked()
+{
+    // set-time hour --
+    set_timeHour--;
+    // call back slot to update time
+    DateTimeSlot();
+}
+
+void qualitymonitor::on_pushButton_mm_plus_clicked()
+{
+    // set-time min ++
+    set_timeMinu++;
+    // call back slot to update time
+    DateTimeSlot();
+
+}
+
+void qualitymonitor::on_pushButton_mm_minus_clicked()
+{
+    // set-time min --
+    set_timeMinu--;
+    // call back slot to update time
+    DateTimeSlot();
 }

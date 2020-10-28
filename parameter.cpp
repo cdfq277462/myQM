@@ -22,7 +22,7 @@
 #define  PulseLength_EE     1
 #define  Filter_1_EE        2
 #define  Filter_2_EE        3
-#define  BiasAdjust_EE      4
+#define  OffsetAdjust_EE      4
 #define  setPassword        5
 
 
@@ -158,8 +158,8 @@ float parameter::Filter_2(){
     float getdata = Read(EEfilename, Filter_2_EE).toFloat();
     return getdata;
 }
-int parameter::BiasAdjust(){
-    int getdata = Read(EEfilename, BiasAdjust_EE).toInt();
+int parameter::OffsetAdjust(){
+    int getdata = Read(EEfilename, OffsetAdjust_EE).toInt();
     return getdata;
 }
 //end EE Parameter
