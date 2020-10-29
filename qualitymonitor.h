@@ -217,6 +217,11 @@ private slots:
 
     void on_pushButton_mm_minus_clicked();
 
+
+    void on_pushButton_on_runframe_setoutputcenter_pressed();
+
+    void on_pushButton_on_runframe_setoutputcenter_pressed_3s();
+
 public slots:
     void timerEvent(QTimerEvent *event);
 
@@ -253,6 +258,7 @@ private:
     int timeid_DateTime, timeid_TrigCount, timeid_AlarmofCV, timeid_Alarm, timeid_replotSPG, timeid_AlarmofCV_R, timeid_Alarm_R;
     int timeid_GUI_ADC_Value, timeid_DetectCenter;
     int AlarmFlag, AlarmFlagofCV;
+    int timeid_pressed_toStart;
 
     int outputOffset_L, outputOffset_R;
     // 調整率
@@ -260,9 +266,11 @@ private:
     // 偏移調整
     float offsetAdjust;
 
-    float LowPassC;
+    float Filter1, Filter2;
 
     int set_timeHour, set_timeMinu;
+
+    int on_RunFrame_Set_OutputCenter_L, on_RunFrame_Set_OutputCenter_R;
 
 
     bool overAper_L, overAper_R;

@@ -158,31 +158,6 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>70</y>
-      <width>371</width>
-      <height>30</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="horizontalLayout_15">
-     <item>
-      <widget class="QLabel" name="label_speed">
-       <property name="font">
-        <font>
-         <family>Arial</family>
-         <pointsize>15</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>Speed :</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
       <y>130</y>
       <width>781</width>
       <height>341</height>
@@ -201,7 +176,7 @@
     <property name="geometry">
      <rect>
       <x>390</x>
-      <y>34</y>
+      <y>40</y>
       <width>51</width>
       <height>31</height>
      </rect>
@@ -239,9 +214,9 @@
    <widget class="QPushButton" name="pushButton_SPG">
     <property name="geometry">
      <rect>
-      <x>450</x>
+      <x>479</x>
       <y>20</y>
-      <width>100</width>
+      <width>91</width>
       <height>41</height>
      </rect>
     </property>
@@ -321,6 +296,38 @@
     </property>
     <property name="text">
      <string>-</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_speed">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>70</y>
+      <width>231</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Arial</family>
+      <pointsize>15</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Speed :</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_on_runframe_setoutputcenter">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>80</y>
+      <width>91</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Set</string>
     </property>
    </widget>
   </widget>
@@ -1428,7 +1435,7 @@
      <item row="1" column="2">
       <widget class="QLabel" name="label_61">
        <property name="text">
-        <string>100cm Avg</string>
+        <string>50cm Avg</string>
        </property>
       </widget>
      </item>
@@ -1519,10 +1526,10 @@
     <zorder>label_test3</zorder>
     <zorder>label_test2</zorder>
     <zorder>label_60</zorder>
-    <zorder>label_62</zorder>
     <zorder>label_CurrentCenter_L</zorder>
     <zorder>label_CurrentCenter_R</zorder>
     <zorder>label_61</zorder>
+    <zorder>label_62</zorder>
    </widget>
    <widget class="QPushButton" name="pushButton_test_frame_return_EE">
     <property name="geometry">
@@ -3551,6 +3558,12 @@
         </item>
         <item>
          <widget class="QPushButton" name="pushButton_Passwordcancel">
+          <property name="minimumSize">
+           <size>
+            <width>99</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="font">
            <font>
             <pointsize>18</pointsize>
@@ -4308,17 +4321,17 @@
   <zorder>frame_search</zorder>
   <zorder>MenuFrame</zorder>
   <zorder>frame_password</zorder>
-  <zorder>runframe</zorder>
   <zorder>lvdt</zorder>
-  <zorder>test</zorder>
   <zorder>index</zorder>
   <zorder>frame_parameter_2</zorder>
   <zorder>frameOutputCenter</zorder>
   <zorder>errorhistory</zorder>
   <zorder>parameter</zorder>
-  <zorder>EEparameter</zorder>
   <zorder>frame_setshift</zorder>
   <zorder>SettingFrame</zorder>
+  <zorder>test</zorder>
+  <zorder>EEparameter</zorder>
+  <zorder>runframe</zorder>
  </widget>
  <customwidgets>
   <customwidget>

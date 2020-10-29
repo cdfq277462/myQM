@@ -327,15 +327,15 @@ void qualitymonitor::on_Receive_ADval()
     // set testframe ADC value
     // AD7606 each LSB = 0.000152 uV
     // add LVDT offset (201026)
-    ui->test_inputL->setText(QString::number(AD_value_L * 0.152 -outputOffset_L, 'f', 0) + "\t mV");
-    ui->test_inputR->setText(QString::number(AD_value_R * 0.152 -outputOffset_R, 'f', 0) + "\t mV");
+    ui->test_inputL->setText(QString::number(AD_value_L * 0.152 * adjustRate_L -outputOffset_L, 'f', 0) + "\t mV");
+    ui->test_inputR->setText(QString::number(AD_value_R * 0.152 * adjustRate_R -outputOffset_R, 'f', 0) + "\t mV");
 
     //AD_L = QString().setNum(AD_L.toInt());
-    ui->label_Binary_L->setText(QString("%1").arg(int(AD_value_L -outputOffset_L /0.152), 16, 2, QLatin1Char('0')));
-    ui->label_Binary_R->setText(QString("%1").arg(int(AD_value_R -outputOffset_R /0.152), 16, 2, QLatin1Char('0')));
+    ui->label_Binary_L->setText(QString("%1").arg(int(AD_value_L -outputOffset_L /0.152 /adjustRate_L), 16, 2, QLatin1Char('0')));
+    ui->label_Binary_R->setText(QString("%1").arg(int(AD_value_R -outputOffset_R /0.152 /adjustRate_R), 16, 2, QLatin1Char('0')));
 
-    ui->label_testTranscodeL->setText(QString::number(AD_value_L -outputOffset_L /0.152));
-    ui->label_testTranscodeR->setText(QString::number(AD_value_R -outputOffset_R /0.152));
+    ui->label_testTranscodeL->setText(QString::number(int(AD_value_L -outputOffset_L /0.152 /adjustRate_L)));
+    ui->label_testTranscodeR->setText(QString::number(int(AD_value_R -outputOffset_R /0.152 /adjustRate_R)));
 
     //ui->test_inputL->setText(QString::number(AD_value_L* 3.093* 2/ 4096, 'f',2));
     //ui->test_inputR->setText(QString::number(AD_value_R* 3.093* 2/ 4096, 'f',2));
@@ -392,7 +392,7 @@ void qualitymonitor::updateAllconfig()
 
     //qDebug() << adjustRate_L;
 
-    LowPassC = (ui->Filter_2->text().toFloat() +1)/ 1000;
+    Filter2 = (ui->Filter_2->text().toFloat() +1)/ 1000;
 
     //
     onePulseLength = ui->PulseLength->text().toFloat();
@@ -416,26 +416,26 @@ void qualitymonitor::slot()
 
     output_ADC_value_L[2] = output_ADC_value_L[1];
     output_ADC_value_L[1] = output_ADC_value_L[0];
-    //output_ADC_value_L[0] = LowPassC * ((org_ADC_value[0] >> 16 & 0x7fff)) + (1 - LowPassC) * output_ADC_value_L[1];
+    //output_ADC_value_L[0] = Filter2 * ((org_ADC_value[0] >> 16 & 0x7fff)) + (1 - Filter2) * output_ADC_value_L[1];
     // low-pass filter, and trans output to mV
-    // add LVDT offset
-    float noneFilterInput_L = (((org_ADC_value[0] >> 16) & 0x7fff) * 0.152) - outputOffset_L;
     // add adjust rate
-    noneFilterInput_L = noneFilterInput_L * adjustRate_L;
+    float noneFilterInput_L = (((org_ADC_value[0] >> 16) & 0x7fff) * 0.152) * adjustRate_L;
+    // add LVDT offset
+    noneFilterInput_L = noneFilterInput_L - outputOffset_L;
     // add offset adjust
     noneFilterInput_L = (noneFilterInput_L - Feedoutcenter_L) *offsetAdjust + Feedoutcenter_L;
-    output_ADC_value_L[0] = ((noneFilterInput_L - output_ADC_value_L[1]) * LowPassC + output_ADC_value_L[1]);
+    output_ADC_value_L[0] = ((noneFilterInput_L - output_ADC_value_L[1]) * Filter2 + output_ADC_value_L[1]);
 
     output_ADC_value_R[2] = output_ADC_value_R[1];
     output_ADC_value_R[1] = output_ADC_value_R[0];
     // low-pass filter, and trans output to mV
-    // add LVDT offset
-    float noneFilterInput_R = (org_ADC_value[0] & 0x7fff) * 0.152 - outputOffset_R;
     // add adjust rate
-    noneFilterInput_R = noneFilterInput_R * adjustRate_R;
+    float noneFilterInput_R = (org_ADC_value[0] & 0x7fff) * 0.152 * adjustRate_R;
+    // add LVDT offset
+    noneFilterInput_R = noneFilterInput_R - outputOffset_R;
     // add offset adjust
     noneFilterInput_R = (noneFilterInput_R - Feedoutcenter_R) *offsetAdjust + Feedoutcenter_R;
-    output_ADC_value_R[0] = ((noneFilterInput_R - output_ADC_value_R[1]) * LowPassC + output_ADC_value_R[1]);
+    output_ADC_value_R[0] = ((noneFilterInput_R - output_ADC_value_R[1]) * Filter2 + output_ADC_value_R[1]);
 
 
     //float AD_value_L = AD_value >> 16 & 0x7fff;
@@ -485,9 +485,9 @@ void qualitymonitor::slot()
         OneCentimeterSampleTimes =  10 / onePulseLength; //unit = mm // (how many sample times / 1cm)
 
     //GUI_SampleLength = 100cm
-    //GUI A% update every 50m
-    //GUI CV1m update every 50m
-    int GUI_SampleLength = 100 ;
+    //GUI A% update every 50cm
+    //GUI CV1m update every 50cm
+    int GUI_SampleLength = 50 ;
 
     //Datawrite_SampleLength = 100m
     int Datawrite_SampleLength = 10000 ;
@@ -525,12 +525,12 @@ void qualitymonitor::slot()
     if(SPG_Data.length() >= SPG_SampleLength){
         SPG_Data.removeFirst();
         DataWrite_SPG.removeFirst();
-        //Write_newData(Write_SPG);
+        // Write_newData(Write_SPG);
     }
     if(SPG_Data_R.length() >= SPG_SampleLength){
         SPG_Data_R.removeFirst();
         DataWrite_SPG_R.removeFirst();
-        //Write_newData(Write_SPG);
+        // Write_newData(Write_SPG);
     }
 
     if(SPG_Flag)
@@ -602,8 +602,7 @@ void qualitymonitor::slot()
         DataWrite_SPG.append(QString::number(avg_AD_value_1cm));
         DataWrite_SPG_R.append(QString::number(avg_AD_value_1cm_R));
 
-        CV_1m.append(avg_AD_value_1cm);
-        CV_1m_R.append(avg_AD_value_1cm_R);
+
 
         /************test******************/
         ui->label_test1->setNum(avg_AD_value_1cm);
@@ -624,30 +623,51 @@ void qualitymonitor::slot()
 
         if(GUI_Flag)
         {
-            //every 100cm do once
+            //every 50cm do once
             float A_per = (avg_AD_value_forGUI - Feedoutcenter_L) / Feedoutcenter_L *100;
             float A_per_R = (avg_AD_value_forGUI_R - Feedoutcenter_R) / Feedoutcenter_R *100;
 
+            CV_1m.append(avg_AD_value_forGUI);
+            CV_1m_R.append(avg_AD_value_forGUI_R);
+
+            static float avg_AD_value_forCV = 0;
+            static float avg_AD_value_forCV_R = 0;
+            avg_AD_value_forCV += avg_AD_value_forGUI /50;
+            avg_AD_value_forCV_R += avg_AD_value_forGUI_R /50;
+
             //qDebug() << A_per;
-            //ui->label->setText(QString::number(A_per, 'f', 2)+" %");                //remove later; used to debug
             //qDebug() << CV_1m.length();
             float SD = 0;
             float SD_R = 0;
+            if(CV_1m.length() == 50 && CV_1m_R.length() == 50)
+            {
 
-            foreach(double CV_number, CV_1m)
-                SD += pow(CV_number - avg_AD_value_forGUI , 2);
+                foreach(double CV_number, CV_1m)
+                    SD += pow(CV_number - avg_AD_value_forCV , 2);
 
-            foreach(double CV_number, CV_1m_R)
-                SD_R += pow(CV_number - avg_AD_value_forGUI_R , 2);
-            /*
-            for (int i = 0; i < GUI_SampleLength; i++)
-                SD += pow(CV_1m.at(GUI_SampleLength - i) - avg_AD_value_forGUI, 2);
-            */
-            SD = sqrt(SD / (CV_1m.length() - 1)) / avg_AD_value_forGUI *100;
-            SD_R = sqrt(SD_R / (CV_1m_R.length() - 1)) / avg_AD_value_forGUI_R *100;
+                foreach(double CV_number, CV_1m_R)
+                    SD_R += pow(CV_number - avg_AD_value_forCV_R , 2);
 
-            avg_CV1m += SD/100;
-            avg_CV1m_R += SD_R/100;
+
+
+                SD = sqrt(SD / (CV_1m.length() - 1)) / avg_AD_value_forCV *100;
+                SD_R = sqrt(SD_R / (CV_1m_R.length() - 1)) / avg_AD_value_forCV_R *100;
+
+                RunFrame_Display(AD_value_L, AD_value_R \
+                                 , SD, SD_R);
+
+                CV_1m.clear();
+                CV_1m_R.clear();
+
+                avg_AD_value_forCV = 0;
+                avg_AD_value_forCV_R = 0;
+
+                // for data write CV
+                avg_CV1m += SD /20;
+                avg_CV1m_R += SD_R /20;
+            }
+
+
 
             /************test******************/
             ui->label_test2->setText(QString::number(avg_AD_value_forGUI, 'f', 0));
@@ -660,10 +680,10 @@ void qualitymonitor::slot()
             overAper_R = qAbs(A_per_R) >= ui->R_limit_Aper->text().toFloat();
 
             //qDebug() << overAper;
-            if(overAper_L | overAper_R)
+            if(overAper_L || overAper_R)
                 if(AlarmFlag == 0)
                 {
-                    timeid_Alarm = startTimer(3000);
+                    timeid_Alarm = startTimer(10000);
                     AlarmFlag = 1;
                     //qDebug() << "alarm";
                 }
@@ -680,10 +700,10 @@ void qualitymonitor::slot()
             overCV_per_L = SD > ui->L_limit_CVper->text().toFloat();
             overCV_per_R = SD_R > ui->R_limit_CVper->text().toFloat();
 
-            if(overCV_per_L | overCV_per_R)
+            if(overCV_per_L || overCV_per_R)
                 if(AlarmFlagofCV == 0)
                 {
-                    timeid_AlarmofCV = startTimer(5000);
+                    timeid_AlarmofCV = startTimer(10000);
                     AlarmFlagofCV = 1;
                 }
             /*
@@ -694,9 +714,6 @@ void qualitymonitor::slot()
                     AlarmFlagofCV = 1;
                 }
             */
-
-            CV_1m.clear();
-            CV_1m_R.clear();
 
             avg_AD_value_forGUI = 0;    //clear avg_AD_value_forGUI
             avg_AD_value_forGUI_R = 0;    //clear avg_AD_value_forGUI
@@ -710,6 +727,8 @@ void qualitymonitor::slot()
                 A_per = (avg_AD_value_forWrite - Feedoutcenter_L) / Feedoutcenter_L *100;
                 A_per_R = (avg_AD_value_forWrite_R - Feedoutcenter_R) / Feedoutcenter_R *100;
 
+                on_RunFrame_Set_OutputCenter_L = avg_AD_value_forWrite;
+                on_RunFrame_Set_OutputCenter_R = avg_AD_value_forWrite_R;
                 //set Data to be Writed, and to be plot
                 /************test******************/
                 ui->label_test3->setText(QString::number(avg_AD_value_forWrite, 'f', 0));
@@ -720,8 +739,7 @@ void qualitymonitor::slot()
                 datalenght_L += Datawrite_SampleLength / 100;
                 datalenght_R += Datawrite_SampleLength / 100;
 
-                RunFrame_Display(AD_value_L, AD_value_R \
-                                 , SD, SD_R);
+
 
 
                 ui->Chart_L->graph(0)->addData(datalenght_L, A_per);
@@ -1652,10 +1670,17 @@ void qualitymonitor::whichShift()
 void qualitymonitor::count_ISR_times()
 {
     float pulselength = ui->PulseLength->text().toFloat();
-    ui->label_speed->setText("Speed: " + QString::number(isr_count_tick *pulselength *60 /1000, 'f' , 0) + "\t m/min");
+
+    static int ISR_counter[3] = {0};
+    // lowpass filter
+    ISR_counter[2] = ISR_counter[1];
+    ISR_counter[1] = ISR_counter[0];
+    //ISR_counter[0] = (isr_count_tick - ISR_counter[1]) * Filter2 + ISR_counter[1];
+    ISR_counter[0] = (isr_count_tick + ISR_counter[1]) /2;
+    ui->label_speed->setText("Speed: " + QString::number(ISR_counter[0] *pulselength *60 /1000, 'f' , 0) + "\t m/min");
     // show speed in test frame
-    ui->label_testframe_speed->setText(QString::number(isr_count_tick *pulselength *60 /1000, 'f' , 0) + "\t m/min");
-    ui->trig_count->setText(QString::number(isr_count_tick) + "\t times/sec");
+    ui->label_testframe_speed->setText(QString::number(ISR_counter[0] *pulselength *60 /1000, 'f' , 0) + "\t m/min");
+    ui->trig_count->setText(QString::number(ISR_counter[0]) + "\t times/sec");
     isr_count_tick = 0; //
     //qDebug() << "count";
 }
@@ -1951,6 +1976,12 @@ void qualitymonitor::on_saveButton_clicked()
 }
 void qualitymonitor::on_saveEEpraButton_clicked()
 {
+    if(ui->Filter_1->text().toInt() > 99)
+        ui->Filter_1->setText("99");
+    if(ui->Filter_2->text().toInt() > 999)
+        ui->Filter_2->setText("999");
+    if(ui->OffsetAdjust->text().toInt() > 99)
+        ui->OffsetAdjust->setText("99");
     toSaveData(EEParameter);
 }
 
@@ -2145,8 +2176,8 @@ void qualitymonitor::on_pushButton_OutputCenter_clicked()
 
     ui->Chart_DetectCenter_L->xAxis->setTickLabels(false);
     ui->Chart_DetectCenter_R->xAxis->setTickLabels(false);
-    //ui->Chart_DetectCenter_L->yAxis->setTickLabels(false);
-    //ui->Chart_DetectCenter_R->yAxis->setTickLabels(false);
+    ui->Chart_DetectCenter_L->yAxis->setTickLabels(false);
+    ui->Chart_DetectCenter_R->yAxis->setTickLabels(false);
 
     ui->Chart_DetectCenter_L->replot();
     ui->Chart_DetectCenter_R->replot();
@@ -2421,6 +2452,11 @@ void qualitymonitor::timerEvent(QTimerEvent *event)
         ui->Chart_DetectCenter_R->replot();
     }
 
+    if(event->timerId() == timeid_pressed_toStart)
+        if(ui->pushButton_on_runframe_setoutputcenter->isDown())
+            on_pushButton_on_runframe_setoutputcenter_pressed_3s();
+
+
 }
 
 
@@ -2578,20 +2614,19 @@ void qualitymonitor::on_pushButton_PasswordOK_clicked()
 
 void qualitymonitor::on_pushButton_SettingSave_clicked()
 {
-    set_timeHour = 0;
-    set_timeMinu = 0;
+
     QMessageBox warning;
     QString warningInfo;
-    warningInfo = QString("<pre align='center' style='font-family:Arial' style='font-size:16pt'>"   \
+    warningInfo = QString("<pre align='center' style='font-family:Arial' style='font-size:20pt'>"   \
                           "If changing Date or Time < br>might ERASE all of history or error record!!</pre>");
     warning.setText(warningInfo);
-    warning.setStandardButtons(QMessageBox::Save | QMessageBox::Discard);
+    warning.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
 
     warning.setCursor(Qt::BlankCursor);
     warning.setIcon(QMessageBox::Warning);
     warning.setWindowFlags(Qt::FramelessWindowHint |   \
                                      Qt::WindowStaysOnTopHint | Qt::Tool | Qt::X11BypassWindowManagerHint);
-    if(warning.exec() == QMessageBox::Save)
+    if(warning.exec() == QMessageBox::Yes)
     {
         //save setting frame data
         toSaveData(EEParameter);
@@ -2634,22 +2669,22 @@ void qualitymonitor::on_pushButton_centerConfirm_clicked()
 
         QMessageBox CheckChangeCenter;
         CheckChangeCenter.setIcon(QMessageBox::Warning);
-        CheckChangeCenter.setStandardButtons(QMessageBox::Discard | QMessageBox::Save);
-        CheckChangeCenter.setDefaultButton(QMessageBox::Save);
+        CheckChangeCenter.setStandardButtons(QMessageBox::No | QMessageBox::Yes);
+        CheckChangeCenter.setDefaultButton(QMessageBox::Yes);
 
         CheckChangeCenter.setCursor(Qt::BlankCursor);
         CheckChangeCenter.setWindowFlags(Qt::FramelessWindowHint |   \
                                          Qt::WindowStaysOnTopHint | Qt::Tool | Qt::X11BypassWindowManagerHint);
 
         QString ChangeInfo;
-        ChangeInfo = QString("<pre align='center' style='font-family:Arial'><p style='font-size:14pt'>"
+        ChangeInfo = QString("<pre align='center' style='font-family:Arial'><p style='font-size:20pt'>"
                              "<b> Left &#9; Right</b></p>"
 
-                             "<p style='font-size:12pt'>"
+                             "<p style='font-size:16pt'>"
                              "%1 &#9; %2<br>"
                              "↓ &#9; ↓</p>"
 
-                             "<p style='color:red' style='font-size:12pt'>"
+                             "<p style='color:red' style='font-size:16pt'>"
                              "%3 &#9; %4</p></pre>").arg(savedCenter_L).arg(savedCenter_R).arg(newCenter_L).arg(newCenter_R);
 
         CheckChangeCenter.setText(ChangeInfo);
@@ -2663,7 +2698,7 @@ void qualitymonitor::on_pushButton_centerConfirm_clicked()
          *     ↓         ↓
          *  changed   changed
          * *************************************/
-        if(CheckChangeCenter.exec() == QMessageBox::Save)
+        if(CheckChangeCenter.exec() == QMessageBox::Yes)
         {
             ui->L_feedoutcenter->setText(QString::number(newCenter_L));
             ui->R_feedoutcenter->setText(QString::number(newCenter_R));
@@ -3050,4 +3085,64 @@ void qualitymonitor::on_pushButton_mm_minus_clicked()
     set_timeMinu--;
     // call back slot to update time
     DateTimeSlot();
+}
+
+
+
+void qualitymonitor::on_pushButton_on_runframe_setoutputcenter_pressed()
+{
+    timeid_pressed_toStart = startTimer(3000);
+}
+
+void qualitymonitor::on_pushButton_on_runframe_setoutputcenter_pressed_3s()
+{
+    int savedCenter_L     = ui->L_feedoutcenter->text().toFloat();
+    int savedCenter_R     = ui->R_feedoutcenter->text().toFloat();
+
+    int newCenter_L = on_RunFrame_Set_OutputCenter_L;
+    int newCenter_R = on_RunFrame_Set_OutputCenter_R;
+
+    QMessageBox CheckChangeCenter;
+    CheckChangeCenter.setIcon(QMessageBox::Warning);
+    CheckChangeCenter.setStandardButtons(QMessageBox::No | QMessageBox::Yes);
+    CheckChangeCenter.setDefaultButton(QMessageBox::Yes);
+
+    CheckChangeCenter.setCursor(Qt::BlankCursor);
+    CheckChangeCenter.setWindowFlags(Qt::FramelessWindowHint |   \
+                                     Qt::WindowStaysOnTopHint | Qt::Tool | Qt::X11BypassWindowManagerHint);
+
+    QString ChangeInfo;
+    ChangeInfo = QString("<pre align='center' style='font-family:Arial'><p style='font-size:20pt'>"
+                         "<b> Left &#9; Right</b></p>"
+
+                         "<p style='font-size:16pt'>"
+                         "%1 &#9; %2<br>"
+                         "↓ &#9; ↓</p>"
+
+                         "<p style='color:red' style='font-size:16pt'>"
+                         "%3 &#9; %4</p></pre>").arg(savedCenter_L).arg(savedCenter_R).arg(newCenter_L).arg(newCenter_R);
+
+    CheckChangeCenter.setText(ChangeInfo);
+
+    //CheckChangeCenter.exec();
+    /***************************************
+     * ChangeInfo is used html to write:
+     *
+     *    Left     Right
+     *  current   current
+     *     ↓         ↓
+     *  changed   changed
+     * *************************************/
+    if(CheckChangeCenter.exec() == QMessageBox::Yes)
+    {
+        ui->L_feedoutcenter->setText(QString::number(newCenter_L));
+        ui->R_feedoutcenter->setText(QString::number(newCenter_R));
+        //ui->label_center_L_test->text().clear();
+        //ui->label_center_L_test->text().clear();
+
+        toSaveData(normalParameter);
+
+        ui->pushButton_startDetect->setEnabled(true);
+        ui->pushButton_startDetect->setText("Start");
+    }
 }
