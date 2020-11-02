@@ -139,6 +139,7 @@ void ADread::run()
 
             ADC_value = ((rxBuf[0] & 0x7f) << 8) | rxBuf[1];
             ADC_value_R = ((rxBuf[2] & 0x7f) << 8) | rxBuf[3];
+
             //qDebug() << real_val;
             //AD7606_startConv();
             //emit emit_AD_value(real_val);
@@ -228,7 +229,5 @@ void ADread::AD7606_startConv()
 uint ADread::readADCvalue()
 {
     // combine L & R value
-
-
     return (ADC_value << 16) | ADC_value_R;
 }

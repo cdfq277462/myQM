@@ -61,6 +61,7 @@ public:
 
     int org_ADC_value[3];
     float output_ADC_value_L[3], output_ADC_value_R[3];
+    float display_ADC_value_L[3], display_ADC_value_R[3];
 
 private slots:
     void on_saveButton_clicked();
@@ -270,7 +271,7 @@ private:
 
     int set_timeHour, set_timeMinu;
 
-    int on_RunFrame_Set_OutputCenter_L, on_RunFrame_Set_OutputCenter_R;
+    QVector<int> on_RunFrame_Set_OutputCenter_L, on_RunFrame_Set_OutputCenter_R;
 
 
     bool overAper_L, overAper_R;

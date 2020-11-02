@@ -26,7 +26,7 @@ public:
 
     QString TrantoNumberType(QString);
 
-    float   PulseLength();
+    int     MachineType();
     int     Filter_1();
     float   Filter_2();
     int     OffsetAdjust();

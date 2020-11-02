@@ -19,7 +19,7 @@
 #define  R_side         6
 
 
-#define  PulseLength_EE     1
+#define  MachineType_EE     1
 #define  Filter_1_EE        2
 #define  Filter_2_EE        3
 #define  OffsetAdjust_EE      4
@@ -146,9 +146,10 @@ float parameter::R_limit_CVper(){
 //end Normal Parameter
 
 //EE Parameter
-float parameter::PulseLength(){
-    float getdata = Read(EEfilename, PulseLength_EE).toFloat();
-    return getdata;
+int parameter::MachineType(){
+    // return MachineType combobox index
+    int index = Read(EEfilename, MachineType_EE).toInt();
+    return index;
 }
 int parameter::Filter_1(){
     int getdata = Read(EEfilename, Filter_1_EE).toInt();
