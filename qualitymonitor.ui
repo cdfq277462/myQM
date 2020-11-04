@@ -612,109 +612,257 @@
      <rect>
       <x>10</x>
       <y>134</y>
-      <width>781</width>
+      <width>641</width>
       <height>331</height>
      </rect>
     </property>
    </widget>
-   <widget class="QWidget" name="layoutWidget">
+   <widget class="QFrame" name="frame">
+    <property name="geometry">
+     <rect>
+      <x>670</x>
+      <y>340</y>
+      <width>118</width>
+      <height>111</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_18">
+     <item>
+      <widget class="QCheckBox" name="checkBox_errorAper">
+       <property name="font">
+        <font>
+         <pointsize>15</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string> A%</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkBox_errorCVper">
+       <property name="font">
+        <font>
+         <pointsize>15</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string> CV%</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QFrame" name="frame_2">
+    <property name="geometry">
+     <rect>
+      <x>670</x>
+      <y>130</y>
+      <width>121</width>
+      <height>191</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_17">
+     <item>
+      <widget class="QCheckBox" name="checkBox_shift_1">
+       <property name="font">
+        <font>
+         <pointsize>15</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string> 班別  1</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkBox_shift_2">
+       <property name="font">
+        <font>
+         <pointsize>15</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string> 班別  2</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkBox_shift_3">
+       <property name="font">
+        <font>
+         <pointsize>15</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string> 班別  3</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkBox_shift_4">
+       <property name="font">
+        <font>
+         <pointsize>15</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string> 班別  4</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QLabel" name="label_errorCounter">
+    <property name="geometry">
+     <rect>
+      <x>450</x>
+      <y>110</y>
+      <width>201</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>15</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Total : </string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_21">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>10</y>
-      <width>585</width>
-      <height>96</height>
+      <y>0</y>
+      <width>192</width>
+      <height>70</height>
      </rect>
     </property>
-    <layout class="QHBoxLayout" name="horizontalLayout_4">
-     <item>
-      <widget class="QLabel" name="label_21">
+    <property name="font">
+     <font>
+      <family>微軟正黑體</family>
+      <pointsize>36</pointsize>
+     </font>
+    </property>
+    <property name="toolTipDuration">
+     <number>1</number>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="lineWidth">
+     <number>4</number>
+    </property>
+    <property name="text">
+     <string>異常紀錄</string>
+    </property>
+   </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>250</x>
+      <y>20</y>
+      <width>194</width>
+      <height>74</height>
+     </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="0" column="1">
+      <widget class="QDateEdit" name="dateEdit_StartDate">
        <property name="font">
         <font>
-         <family>微軟正黑體</family>
-         <pointsize>36</pointsize>
+         <pointsize>15</pointsize>
         </font>
-       </property>
-       <property name="toolTipDuration">
-        <number>1</number>
-       </property>
-       <property name="autoFillBackground">
-        <bool>false</bool>
-       </property>
-       <property name="lineWidth">
-        <number>4</number>
-       </property>
-       <property name="text">
-        <string>異常紀錄</string>
        </property>
       </widget>
      </item>
-     <item>
-      <spacer name="horizontalSpacer_13">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <layout class="QGridLayout" name="gridLayout_2">
-       <item row="0" column="1">
-        <widget class="QDateEdit" name="dateEdit_StartDate"/>
-       </item>
-       <item row="1" column="1">
-        <widget class="QDateEdit" name="dateEdit_EndDate"/>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_4">
-         <property name="text">
-          <string>From :</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_14">
-         <property name="text">
-          <string>To :</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButton_Search">
+     <item row="1" column="1">
+      <widget class="QDateEdit" name="dateEdit_EndDate">
        <property name="font">
         <font>
-         <family>Arial</family>
-         <pointsize>12</pointsize>
+         <pointsize>15</pointsize>
         </font>
-       </property>
-       <property name="text">
-        <string>Search</string>
        </property>
       </widget>
      </item>
-     <item>
-      <spacer name="horizontalSpacer_14">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="font">
+        <font>
+         <pointsize>15</pointsize>
+        </font>
        </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
+       <property name="text">
+        <string>From :</string>
        </property>
-      </spacer>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_14">
+       <property name="font">
+        <font>
+         <pointsize>15</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>To :</string>
+       </property>
+      </widget>
      </item>
     </layout>
-    <zorder>pushButton_Search</zorder>
-    <zorder>label_21</zorder>
+   </widget>
+   <widget class="QPushButton" name="pushButton_Search">
+    <property name="geometry">
+     <rect>
+      <x>460</x>
+      <y>60</y>
+      <width>80</width>
+      <height>27</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Arial</family>
+      <pointsize>15</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Search</string>
+    </property>
    </widget>
   </widget>
   <widget class="QFrame" name="EEparameter">
@@ -4322,7 +4470,6 @@
   <zorder>lvdt</zorder>
   <zorder>frame_parameter_2</zorder>
   <zorder>frameOutputCenter</zorder>
-  <zorder>errorhistory</zorder>
   <zorder>parameter</zorder>
   <zorder>frame_setshift</zorder>
   <zorder>SettingFrame</zorder>
@@ -4331,6 +4478,7 @@
   <zorder>frame_search</zorder>
   <zorder>EEparameter</zorder>
   <zorder>test</zorder>
+  <zorder>errorhistory</zorder>
  </widget>
  <customwidgets>
   <customwidget>

@@ -223,6 +223,20 @@ private slots:
 
     void on_pushButton_on_runframe_setoutputcenter_pressed_3s();
 
+
+
+    void on_checkBox_shift_1_clicked();
+
+    void on_checkBox_errorCVper_clicked();
+
+    void on_checkBox_shift_2_clicked();
+
+    void on_checkBox_shift_3_clicked();
+
+    void on_checkBox_shift_4_clicked();
+
+    void on_checkBox_errorAper_clicked();
+
 public slots:
     void timerEvent(QTimerEvent *event);
 
@@ -255,6 +269,7 @@ private:
     QFileSystemModel *History_filemodel;
 
     QString RunDateTime;
+    bool isRunning;
 
     int timeid_DateTime, timeid_TrigCount, timeid_AlarmofCV, timeid_Alarm, timeid_replotSPG, timeid_AlarmofCV_R, timeid_Alarm_R;
     int timeid_GUI_ADC_Value, timeid_DetectCenter;

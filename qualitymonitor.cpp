@@ -193,6 +193,8 @@ void qualitymonitor::Running(int gpio, int level, uint32_t tick)
         //change to low (a falling edge)
         //stop
         qDebug() << "stop";
+        ISR_excute_ptr->isRunning = false;
+
     }
     else if(level == 1)
     {
@@ -200,11 +202,14 @@ void qualitymonitor::Running(int gpio, int level, uint32_t tick)
         //run
         qDebug() << "run";
         ISR_excute_ptr->RunDateTime = QDateTime().currentDateTime().toString("yyyy-MM-dd");
+        ISR_excute_ptr->isRunning = true;
         //qDebug() << ISR_excute_ptr->RunDateTime;
 
     }
     //qDebug() << gpio;
 }
+
+
 void qualitymonitor::ADtrig_ISR(int gpio, int level, uint32_t tick)
 {
 
@@ -1900,6 +1905,10 @@ void qualitymonitor::on_pushButton_Search_clicked()
     QDate EndDate   = ui->dateEdit_EndDate  ->date();
     //qDebug() << StartDate <<"\n"<< EndDate <<"\n";
     int RowCount = ui->tableWidget->rowCount();
+    QString isShift1, isShift2, isShift3, isShift4;
+    QString isOverA, isOverCV;
+
+    int howManyError = 0;
 
     //search
     if(StartDate.operator>(EndDate))
@@ -1909,15 +1918,55 @@ void qualitymonitor::on_pushButton_Search_clicked()
         {
             QString rowData;
             rowData = ui->tableWidget->item(row, 0)->text();
+            bool isShift1 = ui->tableWidget->item(row, 2)->text().contains("班別 1");
+            bool isShift2 = ui->tableWidget->item(row, 2)->text().contains("班別 2");
+            bool isShift3 = ui->tableWidget->item(row, 2)->text().contains("班別 3");
+            bool isShift4 = ui->tableWidget->item(row, 2)->text().contains("班別 4");
+
+            bool isAper = ui->tableWidget->item(row, 3)->text().contains("A%");
+            bool isCVper = ui->tableWidget->item(row, 3)->text().contains("CV%");
+
+
+
             //search depend on Date
             QDate HappendedDate = QDate::fromString(rowData, Qt::ISODate);
-        //show & hide row
+            //show & hide row
             if(HappendedDate.operator<=(EndDate) && HappendedDate.operator>=(StartDate))
                 ui->tableWidget->showRow(row);
-
             else
                 ui->tableWidget->hideRow(row);
+
+            if(!ui->tableWidget->isRowHidden(row))
+            {
+                if(ui->checkBox_shift_1->isChecked() && isShift1)
+                    ui->tableWidget->showRow(row);
+
+                else if(ui->checkBox_shift_2->isChecked() && isShift2)
+                    ui->tableWidget->showRow(row);
+
+                else if(ui->checkBox_shift_3->isChecked() && isShift3)
+                    ui->tableWidget->showRow(row);
+
+                else if(ui->checkBox_shift_4->isChecked() && isShift4)
+                    ui->tableWidget->showRow(row);
+                else
+                    ui->tableWidget->hideRow(row);
+
+                if(!ui->tableWidget->isRowHidden(row))
+                {
+                    if(ui->checkBox_errorAper->isChecked() && isAper)
+                        ui->tableWidget->showRow(row);
+                    else if(ui->checkBox_errorCVper->isChecked() && isCVper)
+                        ui->tableWidget->showRow(row);
+                    else
+                        ui->tableWidget->hideRow(row);
+                }
+                if(!ui->tableWidget->isRowHidden(row))
+                    howManyError++;
+            }
+
         }
+    ui->label_errorCounter->setText("Total : \t" + QString::number(howManyError));
 }
 
 void qualitymonitor::toSaveData(int indx){
@@ -3195,4 +3244,34 @@ void qualitymonitor::on_pushButton_on_runframe_setoutputcenter_pressed_3s()
         ui->pushButton_startDetect->setEnabled(true);
         ui->pushButton_startDetect->setText("Start");
     }
+}
+
+void qualitymonitor::on_checkBox_shift_1_clicked()
+{
+    on_pushButton_Search_clicked();
+}
+
+void qualitymonitor::on_checkBox_errorCVper_clicked()
+{
+    on_pushButton_Search_clicked();
+}
+
+void qualitymonitor::on_checkBox_shift_2_clicked()
+{
+    on_pushButton_Search_clicked();
+}
+
+void qualitymonitor::on_checkBox_shift_3_clicked()
+{
+    on_pushButton_Search_clicked();
+}
+
+void qualitymonitor::on_checkBox_shift_4_clicked()
+{
+    on_pushButton_Search_clicked();
+}
+
+void qualitymonitor::on_checkBox_errorAper_clicked()
+{
+    on_pushButton_Search_clicked();
 }
