@@ -62,9 +62,13 @@
 
 //sample length
 //unit = cm
-#define SPG_SampleLength    4096
+#define SPG_SampleLength    8192
 
 #define DetectCenter_Length 10000
+
+#ifndef FFT_N
+#define FFT_N  8192
+#endif // FFT_N
 
 /*
 //combobox index
@@ -99,9 +103,11 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     timeid_DateTime = startTimer(500);
     //initial RunDateTime
     RunDateTime = QDate::currentDate().toString("yyyy-MM-dd");
-    ui->dateEdit->setDate(QDate().currentDate());
     set_timeHour = 0;
     set_timeMinu = 0;
+    set_dateYear = 0;
+    set_dateMon = 0;
+    set_dateDay = 0;
     system("timedatectl set-ntp no");
 
 //setup parameter
@@ -133,7 +139,7 @@ qualitymonitor::qualitymonitor(QWidget *parent)
     ui->frame_SPG->setCursor(Qt::BlankCursor);
 //GPIO setup
     gpioInitialise();
-    gpioSetMode(trig_pin, PI_INPUT);            //ISR pin
+    gpioSetMode(trig_pin, PI_INPUT);                //ISR pin
     gpioSetMode(run_signal, PI_INPUT);            //Run ISR pin
     gpioSetPullUpDown(trig_pin, PI_PUD_DOWN);
     gpioSetPullUpDown(run_signal, PI_PUD_DOWN);
@@ -192,7 +198,7 @@ void qualitymonitor::Running(int gpio, int level, uint32_t tick)
     {
         //change to low (a falling edge)
         //stop
-        qDebug() << "stop";
+        //qDebug() << "stop";
         ISR_excute_ptr->isRunning = false;
 
     }
@@ -200,7 +206,7 @@ void qualitymonitor::Running(int gpio, int level, uint32_t tick)
     {
         //change to high (a rising edge)
         //run
-        qDebug() << "run";
+        //qDebug() << "run";
         ISR_excute_ptr->RunDateTime = QDateTime().currentDateTime().toString("yyyy-MM-dd");
         ISR_excute_ptr->isRunning = true;
         //qDebug() << ISR_excute_ptr->RunDateTime;
@@ -212,17 +218,14 @@ void qualitymonitor::Running(int gpio, int level, uint32_t tick)
 
 void qualitymonitor::ADtrig_ISR(int gpio, int level, uint32_t tick)
 {
+    // ensure frequency trig is falling edge
+    if(level == 0){
+        //gpioDelay(10);
+        isr_count_tick++;
 
-    //flag ++;
-    isr_count_tick++;
-    //read AD
-    emit ISR_excute_ptr->sig();
-/*
-    if(flag == 5){
-        //AD start to read
-        flag = 0;
+        //read AD
+        emit ISR_excute_ptr->sig();
     }
-*/
 }
 
 qualitymonitor::~qualitymonitor()
@@ -346,15 +349,10 @@ void qualitymonitor::on_Receive_ADval()
     //ui->test_inputR->setText(QString::number(AD_value_R* 3.093* 2/ 4096, 'f',2));
 
 }
-void qualitymonitor::on_Receive_Trig()
-{   //prepare to delete
-    //Set_GraphicsView();
-    //qDebug() << "on_Receive_Trig :" << thread()->currentThreadId();
-}
 
 void qualitymonitor::RunFrame_Display(float AD_value_L, float AD_value_R, float SD_L, float SD_R)
 {
-
+    mathtools Mymathtool;
     //set runframe A%
     ui->label_L_A_per->setText("A%: "+QString::number(Mymathtool.A_per(Feedoutcenter_L, AD_value_L), 'f', 2)+" %");
     ui->label_R_A_per->setText("A%: "+QString::number(Mymathtool.A_per(Feedoutcenter_R, AD_value_R), 'f', 2)+" %");
@@ -403,14 +401,24 @@ void qualitymonitor::updateAllconfig()
     //onePulseLength = ui->PulseLength->text().toFloat();
 
 
+    // @DT9 = 55pi() *36 /28 /100 = 2.221554
+    // @DV2 =
+    // @961 =
+
     QString MachineType = ui->comboBox_machineType->currentText();
     if(MachineType == "DV2")
-        onePulseLength = 5.00692;
+        onePulseLength = 5.006913;
     else if(MachineType == "HSD - 961")
-        onePulseLength = 2.00692;
+        onePulseLength = 5.006913;
+    else if(MachineType == "DT9")
+        onePulseLength = 5.081988;
+    else if(MachineType == "DT9A")
+        onePulseLength = 2.221554;
+
 
     //qDebug() << onePulseLength;
 }
+
 void qualitymonitor::slot()
 {
     //each trig do once
@@ -609,7 +617,7 @@ void qualitymonitor::slot()
 
         //every 1cm store AD_value
         SPG_Data.append(avg_AD_value_1cm);
-        SPG_Data_R.append(avg_AD_value_1cm_R);        
+        SPG_Data_R.append(avg_AD_value_1cm_R);
 
 
 
@@ -688,7 +696,7 @@ void qualitymonitor::slot()
             /**********************************/
 
 
-            //Over A% limit more than 3s, emit STOP sig.
+            //Over A% limit more than 10s, emit STOP sig.
             overAper_L = qAbs(A_per) >= ui->L_limit_Aper->text().toFloat();
             overAper_R = qAbs(A_per_R) >= ui->R_limit_Aper->text().toFloat();
 
@@ -709,7 +717,7 @@ void qualitymonitor::slot()
                     //qDebug() << "alarm";
                 }
             */
-            //Over 1mCV% limit more than 5s, emit STOP sig.
+            //Over 1mCV% limit more than 10s, emit STOP sig.
             overCV_per_L = SD > ui->L_limit_CVper->text().toFloat();
             overCV_per_R = SD_R > ui->R_limit_CVper->text().toFloat();
 
@@ -784,26 +792,34 @@ void qualitymonitor::slot()
                 Write_newData(RightSide);
                 Write_newData(RightSide_CV);
 
-                //Write_newData(Write_R);
 
-                //display xAxis to 30000m
-                if(datalenght_L >= 30){
-                    ui->Chart_L->xAxis->setRange(datalenght_L-30, datalenght_L + 1);
-                    //ui->Chart_L->xAxis2->setRange(datalenght_L-30000, datalenght_L);
-                }
-                else{
-                    ui->Chart_L->xAxis->setRange(0, 31);
-                    //ui->Chart_L->xAxis2->setRange(0, 30000);
-                }
+                ui->Chart_L->xAxis->setRange(datalenght_L-300, datalenght_L + 10);
+                ui->Chart_R->xAxis->setRange(datalenght_R-300, datalenght_R + 10);
 
-                if(datalenght_R >= 30){
-                    ui->Chart_R->xAxis->setRange(datalenght_R-30, datalenght_R + 1);
-                    //ui->Chart_R->xAxis2->setRange(datalenght_R-30000, datalenght_R);
-                }
-                else{
-                    ui->Chart_R->xAxis->setRange(0, 31);
-                    //ui->Chart_R->xAxis2->setRange(0, 30000);
-                }
+                QCPRange boundRange_L = ui->Chart_L->xAxis->range();
+                QSharedPointer<QCPAxisTickerText> fixedX_axis_L(new QCPAxisTickerText);
+
+                QVector<double> Key_L;
+                QVector<QString> FixValue_L;
+
+                Key_L << boundRange_L.lower+300 << boundRange_L.lower +250 << boundRange_L.lower +200 << boundRange_L.lower +150 << boundRange_L.lower +100 << boundRange_L.lower +50 << boundRange_L.lower;
+                FixValue_L << "0" << "5" << "10" << "15" << "20" << "25" <<"30";
+                fixedX_axis_L->setSubTickCount(4);
+                fixedX_axis_L->addTicks(Key_L, FixValue_L);
+                ui->Chart_L->xAxis->setTicker(fixedX_axis_L);
+
+
+                QCPRange boundRange_R = ui->Chart_R->xAxis->range();
+                QSharedPointer<QCPAxisTickerText> fixedX_axis_R(new QCPAxisTickerText);
+
+                QVector<double> Key_R;
+                QVector<QString> FixValue_R;
+
+                Key_R << boundRange_R.lower+300 << boundRange_R.lower +250 << boundRange_R.lower +200 << boundRange_R.lower +150 << boundRange_R.lower +100 << boundRange_R.lower +50 << boundRange_R.lower;
+                FixValue_R << "0" << "5" << "10" << "15" << "20" << "25" <<"30";
+                fixedX_axis_R->setSubTickCount(4);
+                fixedX_axis_R->addTicks(Key_R, FixValue_R);
+                ui->Chart_R->xAxis->setTicker(fixedX_axis_R);
 
 
 
@@ -966,6 +982,25 @@ void qualitymonitor::Read_oldData(int index)
             }
             break;
         }
+        case LeftSide_SPG:
+        {
+            QString Filename = QDir().currentPath() + "/SPG_data_L";
+            QFile readSPG(Filename);
+            QStringList tmp;
+            if(!readSPG.open(QFile::ReadOnly | QFile::Text))
+            {
+                qDebug() << "Cannot read old data";
+            }
+            QTextStream in(&readSPG);
+            tmp = in.readAll().split('\n');
+            tmp.removeLast();
+
+            readSPG.close();
+            foreach(QString data, tmp)
+                SPG_Data.append(data.toDouble());
+        break;
+        }
+
     }
 }
 
@@ -1097,7 +1132,6 @@ void qualitymonitor::Write_newData(int index)
 
 void qualitymonitor::Set_Graphics_L()
 {
-    static double datalenght = 0;
     //Read_oldData();
     Read_oldData(LeftSide);
     Read_oldData(LeftSide_CV);
@@ -1108,6 +1142,7 @@ void qualitymonitor::Set_Graphics_L()
     ui->Chart_L->graph(0)->setData(axixX_L, oldData_Aper_L);
     ui->Chart_L->graph(1)->setData(axixX_L, oldData_CV_L);
 
+    //ui->Chart_L->xAxis->setLabel("(km)");
 
     datalenght_L = axixX_L.length()*0.1;        //axixX_L's unit is cm, need to transfer to m.
     //qDebug() << datalenght_L;
@@ -1143,15 +1178,26 @@ void qualitymonitor::Set_Graphics_L()
     xAxis_TickLabelFont.setPointSize(8);
     ui->Chart_L->xAxis->setTickLabelFont(xAxis_TickLabelFont);
 
+    ui->Chart_L->xAxis->setRangeReversed(true);
+
     // set axes ranges:
-    if(datalenght_L >= 30){
-        ui->Chart_L->xAxis->setRange(datalenght_L -30, datalenght_L +1);
-        //ui->Chart_L->xAxis2->setRange(datalenght-30000, datalenght);
-    }
-    else{
-        ui->Chart_L->xAxis->setRange(0, 31);
-        //ui->Chart_L->xAxis2->setRange(0, 30000);
-    }
+    //if(datalenght_L >= 300){
+        ui->Chart_L->xAxis->setRange(datalenght_L -300, datalenght_L +10);
+    //}
+    //else{
+        //ui->Chart_L->xAxis->setRange(0, 310);
+    //}
+    QCPRange boundRange_L = ui->Chart_L->xAxis->range();
+    QSharedPointer<QCPAxisTickerText> fixedX_axis_L(new QCPAxisTickerText);
+
+    QVector<double> Key_L;
+    QVector<QString> FixValue_L;
+
+    Key_L << boundRange_L.lower+300 << boundRange_L.lower +250 << boundRange_L.lower +200 << boundRange_L.lower +150 << boundRange_L.lower +100 << boundRange_L.lower +50 << boundRange_L.lower;
+    FixValue_L << "0" << "5" << "10" << "15" << "20" << "25" <<"30";
+    fixedX_axis_L->setSubTickCount(4);
+    fixedX_axis_L->addTicks(Key_L, FixValue_L);
+    ui->Chart_L->xAxis->setTicker(fixedX_axis_L);
 
     float L_Aper_Limit = ui->L_limit_Aper->text().toFloat() * 1.5;
     float CV_per_Limit = ui->L_limit_CVper->text().toFloat() * 1.5;
@@ -1169,8 +1215,6 @@ void qualitymonitor::Set_Graphics_L()
 
 void qualitymonitor::Set_Graphics_R()
 {
-    static double datalenght = 0;
-
     Read_oldData(RightSide);
     Read_oldData(RightSide_CV);
 
@@ -1180,6 +1224,7 @@ void qualitymonitor::Set_Graphics_R()
     ui->Chart_R->graph(0)->setData(axixX_R, oldData_Aper_R);
     ui->Chart_R->graph(1)->setData(axixX_R, oldData_CV_R);
 
+    //ui->Chart_R->xAxis->setLabel("(km)");
 
     datalenght_R = axixX_R.length()*0.1;        //axixX_L's unit is cm, need to transfer to m.
     //qDebug() << datalenght_L;
@@ -1218,16 +1263,25 @@ void qualitymonitor::Set_Graphics_R()
     xAxis_TickLabelFont.setPointSize(8);
     ui->Chart_R->xAxis->setTickLabelFont(xAxis_TickLabelFont);
 
+    ui->Chart_R->xAxis->setRangeReversed(true);
     // set axes ranges:
-    if(datalenght_R >= 30){
-        ui->Chart_R->xAxis->setRange(datalenght_R -30, datalenght_R +1);
-        //ui->Chart_R->xAxis2->setRange(datalenght-30000, datalenght);
-    }
-    else{
-        ui->Chart_R->xAxis->setRange(0, 31);
-        //ui->Chart_R->xAxis2->setRange(0, 30000);
-    }
+    //if(datalenght_R >= 300){
+        ui->Chart_R->xAxis->setRange(datalenght_R -300, datalenght_R +10);
+    //}
+    //else{
+        //ui->Chart_R->xAxis->setRange(0, 310);
+    //}
 
+    QCPRange boundRange_R = ui->Chart_R->xAxis->range();
+    QSharedPointer<QCPAxisTickerText> fixedX_axis_R(new QCPAxisTickerText);
+    QVector<double> Key_R;
+    QVector<QString> FixValue_R;
+
+    Key_R << boundRange_R.lower+300 << boundRange_R.lower +250 << boundRange_R.lower +200 << boundRange_R.lower +150 << boundRange_R.lower +100 << boundRange_R.lower +50 << boundRange_R.lower;
+    FixValue_R << "0" << "5" << "10" << "15" << "20" << "25" <<"30";
+    fixedX_axis_R->setSubTickCount(4);
+    fixedX_axis_R->addTicks(Key_R, FixValue_R);
+    ui->Chart_R->xAxis->setTicker(fixedX_axis_R);
     float R_Aper_Limit = ui->R_limit_Aper->text().toFloat() * 1.5;
     float CV_per_Limit = ui->R_limit_CVper->text().toFloat() * 1.5;
 
@@ -1297,43 +1351,59 @@ void qualitymonitor::Setup_HistoryChart()
 
 void qualitymonitor::set_SPG_Chart()
 {
+    // create spg function
+    mathtools Mymathtool;
     ui->SPG_Chart->addGraph();
     ui->SPG_Chart2->addGraph();
+    QVector<double> SPG;
+    QVector<double> SPG_R;
+    SPG = Mymathtool.SPG(SPG_Data);
+    SPG_R = Mymathtool.SPG(SPG_Data_R);
 
     //QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog);
     //ui->SPG_Chart->xAxis->setTicker(logTicker);
 
     QSharedPointer<QCPAxisTickerText> TransTologTicker(new QCPAxisTickerText);
+
+    QVector<double> Doubleticks;
+    QVector<QString> LogTicks;
+    Doubleticks << log2(2)*5-5 << log2(5)*5-5 << log2(10)*5-5 << log2(20)*5-5 << log2(50)*5-5 << log2(100)*5-5 << log2(200)*5-5 << log2(500)*5-5 << log2(1000)*5-5 << log2(2000)*5-5 << log2(5000)*5-5;
+    LogTicks << "2" << "5" << "10" << "20" << "50" << "100" << "200" << "500" << "1000" << "2000" << "5000";
+    TransTologTicker->addTicks(Doubleticks, LogTicks);
+
+
     ui->SPG_Chart->xAxis->setTicker(TransTologTicker);
     ui->SPG_Chart2->xAxis->setTicker(TransTologTicker);
 
+    ui->SPG_Chart->yAxis->setTickLabels(true);
+    ui->SPG_Chart2->yAxis->setTickLabels(true);
+
+    QCPBars *SPG_Bar = new QCPBars(ui->SPG_Chart->xAxis, ui->SPG_Chart->yAxis);
+    QCPBars *SPG_Bar_R = new QCPBars(ui->SPG_Chart2->xAxis, ui->SPG_Chart2->yAxis);
+
+
+
     //ui->SPG_Chart->xAxis->setScaleType(QCPAxis::stLogarithmic);
-
-    ui->SPG_Chart->xAxis->setRange(1, 10000);
-    ui->SPG_Chart->yAxis->setRange(-0.5, 10);
-
-    ui->SPG_Chart2->xAxis->setRange(1, 10000);
-    ui->SPG_Chart2->yAxis->setRange(-0.5, 10);
-
-    QVector<double> SPG = Mymathtool.SPG(SPG_Data);
-    QVector<double> SPG_R = Mymathtool.SPG(SPG_Data_R);
 
     //QVector<double> interval(SPG.length());
     QVector<QString> interval(SPG.length());
     QVector<double> x(SPG.length());
-
+    for(int i = 0; i < SPG.length(); i++)
+    {
+        x[i] = i;
+    }
 
     //clear data when work done
-    int chw = 5 * log2(4096 / 4) - 4;
+    int chw = 5 * log2(FFT_N / 4);
 /*
-    for(int i= 0; i <= chw; i++){                //set how many chs
+    for(int i= 0; i < chw; i++){                //set how many chs
         interval[i] = pow(2 , 0.2*(i+5));       //pow()用來求 x 的 y 次方
         //printf("%f\n", interval[i]);
     }
-*/
-    for(int i= 0; i <= chw; i++){                //set how many chs
+    for(int i= 0; i < chw; i++){                //set how many chs
         interval[i] = QString::number(pow(2 , 0.2*(i+5)), 'f', 0);       //pow()用來求 x 的 y 次方
         //printf("%f\n", interval[i]);
+        //x.append(i);
     }
     for(int i= 0; i < SPG.length(); i++){
         x[i] = i+1;
@@ -1341,11 +1411,7 @@ void qualitymonitor::set_SPG_Chart()
         if(i % 5 == 0)
             TransTologTicker->addTick(i, interval[i]);
     }
-
-
-
-    QCPBars *SPG_Bar = new QCPBars(ui->SPG_Chart->xAxis, ui->SPG_Chart->yAxis);
-    QCPBars *SPG_Bar_R = new QCPBars(ui->SPG_Chart2->xAxis, ui->SPG_Chart2->yAxis);
+*/
 
     //setData to Bar Chart
     //SPG_Bar->setData(interval, SPG);
@@ -1357,10 +1423,10 @@ void qualitymonitor::set_SPG_Chart()
     SPG_Bar_R->setWidth(1);
 
     //setRange
-    ui->SPG_Chart->xAxis->setRange(1, 50);
+    ui->SPG_Chart->xAxis->setRange(0, chw +2);
     ui->SPG_Chart->yAxis->rescale();
 
-    ui->SPG_Chart2->xAxis->setRange(1, 50);
+    ui->SPG_Chart2->xAxis->setRange(0, chw +2);
     ui->SPG_Chart2->yAxis->rescale();
 
 
@@ -1574,18 +1640,16 @@ void qualitymonitor::on_pushButton_ErrorSig_clicked(QString reasons)
     }/
     qDebug() << result;*/
     ErrorRecord.Write(QDir().currentPath() + "/errorhistory" , beWrite);
+    on_pushButton_Search_clicked();
 }
 void qualitymonitor::DateTimeSlot()
-{   //label_14
+{
     QDateTime DateTime = QDateTime::currentDateTime();
-    //int toUTC = QString(ui->lineEdit_UTC->text()).toInt();
 
     QString Date = DateTime.toString("yyyy/MM/dd");
     QString Time = DateTime.toString("hh:mm:ss");
     ui->Date -> setText(Date);
     ui->Time -> setText(Time);
-
-    //qDebug() << QThread::currentThread();
 
     whichShift();
 
@@ -1593,6 +1657,11 @@ void qualitymonitor::DateTimeSlot()
     ui->label_hh->setNum(time.hour());
     ui->label_mm->setNum(time.minute());
     ui->label_ss->setNum(DateTime.time().second());
+
+    QDate Changedate = DateTime.date().addYears(set_dateYear).addMonths(set_dateMon).addDays(set_dateDay);
+    ui->label_yy->setNum(Changedate.year());
+    ui->label_MM->setNum(Changedate.month());
+    ui->label_dd->setNum(Changedate.day());
 }
 void qualitymonitor::whichShift()
 {
@@ -1701,7 +1770,7 @@ void qualitymonitor::count_ISR_times()
     ISR_counter[2] = ISR_counter[1];
     ISR_counter[1] = ISR_counter[0];
     //ISR_counter[0] = (isr_count_tick - ISR_counter[1]) * Filter1 + ISR_counter[1];
-    if(isr_count_tick > 2000)
+    if(isr_count_tick > 800)
         ISR_counter[0] = (isr_count_tick + ISR_counter[1]) /2;
     else
         ISR_counter[0] = isr_count_tick;
@@ -1846,7 +1915,7 @@ void qualitymonitor::SetErrorTable()
     ui->dateEdit_EndDate    ->setMaximumDate(QDate::currentDate());
     ui->dateEdit_EndDate    ->setMinimumDate(QDate::currentDate().addDays(-14));
 
-    QFile recordFile(QDir().currentPath()+"/errorhistory");
+    QFile recordFile(QDir().currentPath() + "/errorhistory");
     if(!recordFile.exists())
     {
         // if record file does not exist
@@ -1891,12 +1960,7 @@ void qualitymonitor::SetErrorTable()
     ui->tableWidget->setHorizontalHeaderLabels(labels);
     ui->tableWidget->verticalHeader()->setVisible(false);
 }
-void qualitymonitor::on_pushButton_2_clicked()
-{   //thread stop
-    //mThread->start();
-    //mThread->Stop = true;
 
-}
 
 void qualitymonitor::on_pushButton_Search_clicked()
 {
@@ -2150,8 +2214,8 @@ void qualitymonitor::on_pushButton_Settiing_clicked()
 
 void qualitymonitor::on_pushButton_3_clicked()
 {
-    //pushbutton frame_search
-    ui->frame_search->raise();
+    //pushbutton frame_History
+    ui->frame_History->raise();
     if(!ui->Dateframe->isTopLevel()){
         ui->Dateframe->raise();
         ui->MenuFrame->raise();
@@ -2337,6 +2401,9 @@ void qualitymonitor::on_pushButton_6_clicked()
     killTimer(timeid_DateTime);
     killTimer(timeid_TrigCount);
     killTimer(timeid_GUI_ADC_Value);
+
+    killTimer(timeid_Alarm);
+    killTimer(timeid_AlarmofCV);
 
     //exit(EXIT_FAILURE);
     //QApplication::closeAllWindows();
@@ -2723,7 +2790,8 @@ void qualitymonitor::on_pushButton_SettingSave_clicked()
         toSaveData(EEParameter);
 
         // set time to system time
-        QDate Date = ui->dateEdit->date();
+        QString DateStr = ui->label_yy->text() + "-" + ui->label_MM->text() + "-" + ui->label_dd->text();
+        QDate Date = QDate().fromString(DateStr, Qt::ISODate);
         QTime time = QTime(ui->label_hh->text().toInt(), ui->label_mm->text().toInt());
 
         QString set_time = QString("timedatectl set-time '%1'").arg(Date.toString("yyyy-MM-dd ") + time.toString("hh:mm:ss"));
@@ -2733,6 +2801,9 @@ void qualitymonitor::on_pushButton_SettingSave_clicked()
         // rst time adjust
         set_timeHour = 0;
         set_timeMinu = 0;
+        set_dateYear = 0;
+        set_dateMon = 0;
+        set_dateDay = 0;
     }
 }
 
@@ -3182,7 +3253,7 @@ void qualitymonitor::on_pushButton_mm_minus_clicked()
 
 void qualitymonitor::on_pushButton_on_runframe_setoutputcenter_pressed()
 {
-    timeid_pressed_toStart = startTimer(3000);
+    timeid_pressed_toStart = startTimer(2000);
 }
 
 void qualitymonitor::on_pushButton_on_runframe_setoutputcenter_pressed_3s()
@@ -3274,4 +3345,40 @@ void qualitymonitor::on_checkBox_shift_4_clicked()
 void qualitymonitor::on_checkBox_errorAper_clicked()
 {
     on_pushButton_Search_clicked();
+}
+
+void qualitymonitor::on_pushButton_yy_plus_clicked()
+{
+    set_dateYear++;
+    DateTimeSlot();
+}
+
+void qualitymonitor::on_pushButton_yy_minus_clicked()
+{
+    set_dateYear--;
+    DateTimeSlot();
+}
+
+void qualitymonitor::on_pushButton_MM_plus_clicked()
+{
+    set_dateMon++;
+    DateTimeSlot();
+}
+
+void qualitymonitor::on_pushButton_MM_minus_clicked()
+{
+    set_dateMon--;
+    DateTimeSlot();
+}
+
+void qualitymonitor::on_pushButton_dd_plus_clicked()
+{
+    set_dateDay++;
+    DateTimeSlot();
+}
+
+void qualitymonitor::on_pushButton_dd_minus_clicked()
+{
+    set_dateDay--;
+    DateTimeSlot();
 }

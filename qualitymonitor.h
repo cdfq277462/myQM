@@ -28,8 +28,6 @@ public:
     void toSaveData(int);
     ~qualitymonitor();
 
-    mathtools Mymathtool;
-
     ADread *mAD;
 
     keyboard *mKeyboard;
@@ -79,9 +77,6 @@ private slots:
     void on_EEtestbutt_clicked();
 
     void on_saveEEpraButton_clicked();
-
-    void on_pushButton_2_clicked();
-
 
     void on_pushButton_Search_clicked();
 
@@ -237,14 +232,24 @@ private slots:
 
     void on_checkBox_errorAper_clicked();
 
+    void on_pushButton_yy_plus_clicked();
+
+    void on_pushButton_yy_minus_clicked();
+
+    void on_pushButton_MM_plus_clicked();
+
+    void on_pushButton_MM_minus_clicked();
+
+    void on_pushButton_dd_plus_clicked();
+
+    void on_pushButton_dd_minus_clicked();
+
 public slots:
     void timerEvent(QTimerEvent *event);
 
     void DateTimeSlot();
 
     void on_Receive_ADval();
-
-    void on_Receive_Trig();
 
     void Set_Graphics_L();
     void Set_Graphics_R();
@@ -285,6 +290,8 @@ private:
     float Filter1, Filter2;
 
     int set_timeHour, set_timeMinu;
+    int set_dateYear, set_dateMon, set_dateDay;
+    int startshift1, endshift1, startshift2, endshift2, startshift3, endshift3, startshift4, endshift4;
 
     QVector<int> on_RunFrame_Set_OutputCenter_L, on_RunFrame_Set_OutputCenter_R;
 
@@ -296,9 +303,6 @@ private:
     QTimer *timer;
 
     bool eventFilter(QObject *,QEvent *);
-
-    int startshift1, endshift1, startshift2, endshift2, startshift3, endshift3, startshift4, endshift4;
-
 };
 
 #endif // QUALITYMONITOR_H

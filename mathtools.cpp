@@ -3,7 +3,7 @@
 #define SAMPLE_LENGTH 500
 
 #ifndef FFT_N
-#define FFT_N  4096
+#define FFT_N  8192
 #endif // FFT_N
 
 #ifndef PI
@@ -93,12 +93,13 @@ float mathtools:: A_per(int current_feedOut_Center, float DataIn)
 }
 QVector<double> mathtools::SPG(QVector<double> datainput)
 {
-    QVector<double> y(FFT_N);
 
     float mean_s = 0;				                                            //mean of s[].real
-    float interval[51] = {0};
+    float interval[55] = {0};
     float sn[FFT_N/2] = {0};
-    int chw = 5*log2(FFT_N/4)-4;
+    int chs = 5*log2(FFT_N/4);
+    QVector<double> y(chs);
+
 //set channel
 
 for(int i = 0; i < FFT_N; i++)											//給結構體賦值
@@ -124,11 +125,11 @@ for(int i = 0; i < FFT_N; i++)											//給結構體賦值
         s[i].real = sqrt(s[i].real * s[i].real + s[i].imag * s[i].imag) ;    //求變換後結果，存入復數的實部部分
 //x_axis degree
         float tp = (i + 1);
-        x_ticks[FFT_N/2 - i] = (FFT_N / tp);                          // length(x_ticks[i]) = FFT_N/2 - 1 ; x_ticks[FFT_N/2 -1] = 0
+        x_ticks[FFT_N/2 -1 - i] = (FFT_N / tp);                          // length(x_ticks[i]) = FFT_N/2 - 1 ; x_ticks[FFT_N/2 -1] = 0
 
 //inverse s[i] to sn[i]
         float tmp = s[i].real / FFT_N *2;
-        sn[FFT_N/2 - i] = tmp;
+        sn[FFT_N/2 -1 - i] = tmp;
     }
 
     //for(int i = 0; i < FFT_N/2; i++)
@@ -137,13 +138,13 @@ for(int i = 0; i < FFT_N; i++)											//給結構體賦值
         //printf("%d %1f\n",i , sn[i]);
 
 //set channel
-    for(int i= 0; i <= chw; i++){                //set how many chs
+    for(int i= 0; i < chs; i++){                //set how many chs
         interval[i] = pow(2 , 0.2*(i+5));       //pow()用來求 x 的 y 次方
         //printf("%f\n", interval[i]);
     }
 
     int j = 0;
-    for(int i= 1; i <= chw; i++)
+    for(int i= 0; i < chs; i++)
     {
         float max = 0;
         //find max btw interval[i] from interval[i + 1]
@@ -162,31 +163,3 @@ for(int i = 0; i < FFT_N; i++)											//給結構體賦值
     }
     return y;
 }
-/*
-float mathtools::CV_per(int *DataIn, float avg)
-{
-    //each 5m do it
-
-    float SD = 0;
-    for(int i = 0; i < SAMPLE_LENGTH; i++)
-        avg = avg + DataIn[i] / SAMPLE_LENGTH;
-
-    for(int i = 0; i < SAMPLE_LENGTH; i++)
-        SD += sqrt(pow(DataIn[i] - avg, 2));
-
-    return SD / SAMPLE_LENGTH;
-
-}
-
-float mathtools::CV_per1m(int *DataIn, QString)
-{
-    float avg, SD;
-    for(int i = 0; i < (SAMPLE_LENGTH / 5); i++)
-        avg = avg + DataIn[i] / (SAMPLE_LENGTH / 5);
-
-    for(int i = 0; i < (SAMPLE_LENGTH / 5); i++)
-        SD = sqrt(pow(DataIn[i] - avg, 2));
-
-    return SD / (SAMPLE_LENGTH / 5);
-}
-*/

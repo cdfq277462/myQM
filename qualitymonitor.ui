@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1044</width>
+    <width>1431</width>
     <height>960</height>
    </rect>
   </property>
@@ -171,6 +171,8 @@
       <widget class="QCustomPlot" name="Chart_R" native="true"/>
      </item>
     </layout>
+    <zorder>Chart_R</zorder>
+    <zorder>Chart_L</zorder>
    </widget>
    <widget class="QPushButton" name="reset">
     <property name="geometry">
@@ -330,6 +332,17 @@
      <string>Set</string>
     </property>
    </widget>
+   <zorder>label_15</zorder>
+   <zorder>layoutWidget</zorder>
+   <zorder>pushButton_6</zorder>
+   <zorder>layoutWidget</zorder>
+   <zorder>reset</zorder>
+   <zorder>layoutWidget</zorder>
+   <zorder>layoutWidget</zorder>
+   <zorder>label_whichShift</zorder>
+   <zorder>label_speed</zorder>
+   <zorder>pushButton_on_runframe_setoutputcenter</zorder>
+   <zorder>pushButton_SPG</zorder>
   </widget>
   <widget class="QFrame" name="lvdt">
    <property name="geometry">
@@ -791,7 +804,7 @@
      <string>異常紀錄</string>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>250</x>
@@ -1036,6 +1049,16 @@
          </property>
          <item>
           <property name="text">
+           <string>DT9</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>DT9A</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
            <string>DV2</string>
           </property>
          </item>
@@ -1136,8 +1159,8 @@
    <widget class="QPushButton" name="test_Button">
     <property name="geometry">
      <rect>
-      <x>460</x>
-      <y>10</y>
+      <x>400</x>
+      <y>20</y>
       <width>100</width>
       <height>100</height>
      </rect>
@@ -2640,19 +2663,6 @@
     </property>
    </widget>
   </widget>
-  <widget class="QPushButton" name="pushButton_2">
-   <property name="geometry">
-    <rect>
-     <x>890</x>
-     <y>260</y>
-     <width>251</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>QTHread test</string>
-   </property>
-  </widget>
   <widget class="QFrame" name="MenuFrame">
    <property name="geometry">
     <rect>
@@ -2759,15 +2769,21 @@
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>130</y>
-      <width>371</width>
-      <height>271</height>
+      <x>120</x>
+      <y>90</y>
+      <width>468</width>
+      <height>343</height>
      </rect>
     </property>
     <layout class="QFormLayout" name="formLayout_3">
      <item row="0" column="0">
-      <widget class="QLabel" name="label_51">
+      <widget class="QLabel" name="label_81">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>75</height>
+        </size>
+       </property>
        <property name="font">
         <font>
          <family>Arial</family>
@@ -2780,20 +2796,227 @@
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QDateEdit" name="dateEdit">
-       <property name="font">
-        <font>
-         <family>Arial</family>
-         <pointsize>15</pointsize>
-        </font>
+      <layout class="QHBoxLayout" name="horizontalLayout_36">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_16">
+         <item>
+          <widget class="QPushButton" name="pushButton_yy_plus">
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>35</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>+</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_yy">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>2020</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_yy_minus">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>35</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>-</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_42">
+         <property name="minimumSize">
+          <size>
+           <width>20</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>20</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>/</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_19">
+         <item>
+          <widget class="QPushButton" name="pushButton_MM_plus">
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>35</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>+</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_MM">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>01</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_MM_minus">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>35</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>-</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_80">
+         <property name="minimumSize">
+          <size>
+           <width>20</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>20</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>/</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_20">
+         <item>
+          <widget class="QPushButton" name="pushButton_dd_plus">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>35</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>+</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_dd">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>01</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_dd_minus">
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>35</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>-</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+     <item row="1" column="0">
+      <spacer name="verticalSpacer_6">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
        </property>
-       <property name="displayFormat">
-        <string>yyyy  /  M  /  d</string>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
        </property>
-       <property name="calendarPopup">
-        <bool>true</bool>
-       </property>
-      </widget>
+      </spacer>
      </item>
      <item row="2" column="0">
       <widget class="QLabel" name="label_52">
@@ -2814,55 +3037,6 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="label_13">
-       <property name="font">
-        <font>
-         <family>Arial</family>
-         <pointsize>15</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>Password</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="1">
-      <widget class="QLineEdit" name="lineEdit_password">
-       <property name="font">
-        <font>
-         <family>Arial</family>
-         <pointsize>15</pointsize>
-        </font>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0">
-      <spacer name="verticalSpacer_5">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="1" column="0">
-      <spacer name="verticalSpacer_6">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
      <item row="2" column="1">
       <layout class="QHBoxLayout" name="horizontalLayout_35">
        <item>
@@ -2873,6 +3047,12 @@
             <size>
              <width>0</width>
              <height>35</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
             </size>
            </property>
            <property name="text">
@@ -2886,6 +3066,12 @@
             <size>
              <width>0</width>
              <height>25</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
             </size>
            </property>
            <property name="text">
@@ -2902,6 +3088,12 @@
             <size>
              <width>0</width>
              <height>35</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
             </size>
            </property>
            <property name="text">
@@ -2937,6 +3129,12 @@
              <height>35</height>
             </size>
            </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
            <property name="text">
             <string>+</string>
            </property>
@@ -2948,6 +3146,12 @@
             <size>
              <width>0</width>
              <height>25</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
             </size>
            </property>
            <property name="text">
@@ -2964,6 +3168,12 @@
             <size>
              <width>0</width>
              <height>35</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
             </size>
            </property>
            <property name="text">
@@ -2991,9 +3201,15 @@
        </item>
        <item>
         <widget class="QLabel" name="label_ss">
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="maximumSize">
           <size>
-           <width>40</width>
+           <width>100</width>
            <height>16777215</height>
           </size>
          </property>
@@ -3001,11 +3217,47 @@
           <string>0</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignCenter</set>
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
       </layout>
+     </item>
+     <item row="3" column="0">
+      <spacer name="verticalSpacer_5">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_13">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>15</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Password</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QLineEdit" name="lineEdit_password">
+       <property name="font">
+        <font>
+         <family>Arial</family>
+         <pointsize>15</pointsize>
+        </font>
+       </property>
+      </widget>
      </item>
     </layout>
    </widget>
@@ -3028,24 +3280,11 @@
      <string>Save</string>
     </property>
    </widget>
-   <zorder>label_22</zorder>
    <zorder>pushButton_SettingSave</zorder>
    <zorder>layoutWidget</zorder>
+   <zorder>label_22</zorder>
   </widget>
-  <widget class="QPushButton" name="pushButton_ErrorSig">
-   <property name="geometry">
-    <rect>
-     <x>890</x>
-     <y>160</y>
-     <width>251</width>
-     <height>24</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Error sig send</string>
-   </property>
-  </widget>
-  <widget class="QFrame" name="frame_search">
+  <widget class="QFrame" name="frame_History">
    <property name="geometry">
     <rect>
      <x>0</x>
@@ -3525,6 +3764,11 @@
       </item>
       <item>
        <widget class="QPushButton" name="pushButton_replot">
+        <property name="font">
+         <font>
+          <pointsize>15</pointsize>
+         </font>
+        </property>
         <property name="text">
          <string>Replot</string>
         </property>
@@ -3545,8 +3789,13 @@
       </item>
       <item>
        <widget class="QPushButton" name="pushButton_7">
+        <property name="font">
+         <font>
+          <pointsize>15</pointsize>
+         </font>
+        </property>
         <property name="text">
-         <string>close</string>
+         <string>Close</string>
         </property>
        </widget>
       </item>
@@ -3557,8 +3806,8 @@
   <widget class="QFrame" name="frame_password">
    <property name="geometry">
     <rect>
-     <x>660</x>
-     <y>360</y>
+     <x>10</x>
+     <y>480</y>
      <width>291</width>
      <height>171</height>
     </rect>
@@ -3739,19 +3988,6 @@
      </layout>
     </item>
    </layout>
-  </widget>
-  <widget class="QPushButton" name="pushButton_5">
-   <property name="geometry">
-    <rect>
-     <x>940</x>
-     <y>100</y>
-     <width>111</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Number</string>
-   </property>
   </widget>
   <widget class="QFrame" name="frame_setshift">
    <property name="geometry">
@@ -4460,10 +4696,46 @@
     <enum>QFrame::Raised</enum>
    </property>
   </widget>
-  <zorder>pushButton_2</zorder>
-  <zorder>pushButton_ErrorSig</zorder>
+  <widget class="QPushButton" name="pushButton_ErrorSig">
+   <property name="geometry">
+    <rect>
+     <x>360</x>
+     <y>520</y>
+     <width>251</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Error sig send</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton_5">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>560</y>
+     <width>111</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Number</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton_2">
+   <property name="geometry">
+    <rect>
+     <x>860</x>
+     <y>440</y>
+     <width>89</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>PushButton</string>
+   </property>
+  </widget>
   <zorder>Dateframe</zorder>
-  <zorder>pushButton_5</zorder>
   <zorder>frame_SPG</zorder>
   <zorder>MenuFrame</zorder>
   <zorder>frame_password</zorder>
@@ -4472,13 +4744,16 @@
   <zorder>frameOutputCenter</zorder>
   <zorder>parameter</zorder>
   <zorder>frame_setshift</zorder>
-  <zorder>SettingFrame</zorder>
-  <zorder>runframe</zorder>
   <zorder>index</zorder>
-  <zorder>frame_search</zorder>
-  <zorder>EEparameter</zorder>
   <zorder>test</zorder>
   <zorder>errorhistory</zorder>
+  <zorder>pushButton_ErrorSig</zorder>
+  <zorder>pushButton_5</zorder>
+  <zorder>pushButton_2</zorder>
+  <zorder>frame_History</zorder>
+  <zorder>runframe</zorder>
+  <zorder>EEparameter</zorder>
+  <zorder>SettingFrame</zorder>
  </widget>
  <customwidgets>
   <customwidget>
